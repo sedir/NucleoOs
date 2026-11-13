@@ -14,6 +14,8 @@ static const char *MANIFEST[] = {
     "hello", "how_are_you", "good_evening", "degrees",          // English
     "il", "di", "fa", "per_cento", "uguale_a", "elevato", "piu",   // mathspeak IT
     "of", "percent", "equals", "plus",                             // mathspeak EN
+    "sao", "horas", "hora", "graus", "de", "e_uma", "e_uma_hora", "meio_dia", "meia_noite",   // Portuguese
+    "duas", "vinte", "uma", "por_cento", "igual_a", "elevado_a", "mais", "o", "resultado",    // pt time + mathspeak
     "casa", "via", "sud", "porta",                                 // real words >=3 chars for the decompose boundaries
     // letter clips for acronym spelling (NB: q and z deliberately OMITTED -> "missing letter" test)
     "lett_u", "lett_s", "lett_b", "lett_g", "lett_p", "lett_m", "lett_h", "lett_t", "lett_l",
@@ -65,7 +67,7 @@ static void check_ms(const char *label, const char *lang, const char *in, const 
 }
 
 int main(void) {
-    printf("TTS planner (IT + EN) — testo -> clip\n");
+    printf("TTS planner (IT + EN + PT) — testo -> clip\n");
 
     // --- ITALIAN ---
     check("it saluto",     "it", "Ciao!",            "C:ciao P:360");
@@ -112,6 +114,45 @@ int main(void) {
     check("en decimal",    "en", "3.14",             "C:n3 C:point C:n1 C:n4");
     check("en negative",   "en", "-5 degrees",       "C:minus C:n5 C:degrees");
 
+    // --- BRAZILIAN PORTUGUESE (pt): cardinals with the "e" connector, cem/cento, mil ---
+    check("pt units",      "pt", "23 graus",         "C:n23 C:graus");
+    check("pt cem",        "pt", "100",              "C:cem");
+    check("pt cento e um", "pt", "101",              "C:cento C:e C:n1");
+    check("pt 234",        "pt", "234",              "C:duzentos C:e C:n34");
+    check("pt 500",        "pt", "500",              "C:quinhentos");
+    check("pt mil",        "pt", "1000",             "C:mil");
+    check("pt mil e cem",  "pt", "1100",             "C:mil C:e C:cem");
+    check("pt ano 1984",   "pt", "1984",             "C:mil C:novecentos C:e C:n84");
+    check("pt 2005",       "pt", "2005",             "C:n2 C:mil C:e C:n5");
+    check("pt 2345",       "pt", "2345",             "C:n2 C:mil C:trezentos C:e C:n45");
+    check("pt 12000",      "pt", "12000",            "C:n12 C:mil");
+    check("pt 100000",     "pt", "100000",           "C:cem C:mil");
+    check("pt 999999",     "pt", "999999",           "C:novecentos C:e C:n99 C:mil C:novecentos C:e C:n99");
+    check("pt decimal",    "pt", "3,14",             "C:n3 C:virgula C:n1 C:n4");
+    check("pt negativo",   "pt", "-5 graus",         "C:menos C:n5 C:graus");
+    check("pt hora",       "pt", "Sao 9 e 30.",      "C:sao C:n9 C:e C:n30 P:320");
+    check("pt uma hora",   "pt", "E uma hora",       "C:e_uma_hora");     // greedy phrase: "É uma hora", not "e" (and)
+    check("pt meio-dia",   "pt", "Meio-dia e 15",    "C:meio_dia C:e C:n15");
+    {   // speak_time pt: exact to the minute, feminine hours as words, never HH:MM
+        static const struct { int h, m; const char *want; } T[] = {
+            {9, 30, "Sao 9 e 30"}, {9, 0, "Sao 9 horas"}, {0, 0, "Meia-noite"}, {12, 0, "Meio-dia"},
+            {1, 0, "E uma hora"}, {1, 30, "E uma e 30"}, {2, 0, "Sao duas horas"}, {2, 5, "Sao duas e 5"},
+            {13, 0, "Sao 13 horas"}, {21, 7, "Sao vinte e uma e 7"}, {22, 0, "Sao vinte e duas horas"},
+            {0, 5, "Meia-noite e 5"}, {12, 45, "Meio-dia e 45"}, {23, 59, "Sao 23 e 59"},
+        };
+        for (unsigned i = 0; i < sizeof T / sizeof T[0]; i++) {
+            char tb[48], lb[48];
+            nucleo_tts_speak_time(tb, sizeof tb, T[i].h, T[i].m, "pt");
+            snprintf(lb, sizeof lb, "pt time %02d:%02d = \"%s\"", T[i].h, T[i].m, T[i].want);
+            chk(lb, !strcmp(tb, T[i].want));
+        }
+        char tb[48];
+        nucleo_tts_speak_time(tb, sizeof tb, 9, 30, "en");
+        chk("en time intatto", !strcmp(tb, "It is 9 30"));
+        nucleo_tts_speak_time(tb, sizeof tb, 9, 30, "it");
+        chk("it time intatto", !strcmp(tb, "Sono le 9 e mezza"));
+    }
+
     // --- content guard (no code / nothing too long -> "leggila", i.e. read it on screen) ---
     chk("ok frase breve",   nucleo_tts_text_speakable("Sono le 9 e 30.", 140));
     chk("ok frase normale", nucleo_tts_text_speakable("La batteria e al novanta per cento.", 140));
@@ -131,6 +172,9 @@ int main(void) {
     check_ms("ms it potenza", "it", "5^3 = 125.",          "C:n5 C:elevato C:n3 C:uguale_a C:cento C:n25 P:320");
     check_ms("ms en percent", "en", "20% of 150 = 30.",    "C:n20 C:percent C:of C:n1 C:hundred C:n50 C:equals C:n30 P:320");
     check_ms("ms it somma",   "it", "5 + 3 = 8.",          "C:n5 C:piu C:n3 C:uguale_a C:n8 P:320");
+    check_ms("ms pt percent", "pt", "20% de 150 = 30.",    "C:n20 C:por_cento C:de C:cento C:e C:n50 C:igual_a C:n30 P:320");
+    check_ms("ms pt potencia","pt", "5^3 = 125.",          "C:n5 C:elevado_a C:n3 C:igual_a C:cento C:e C:n25 P:320");
+    check_ms("ms pt soma",    "pt", "5 + 3 = 8.",          "C:n5 C:mais C:n3 C:igual_a C:n8 P:320");
     nucleo_tts_mathspeak("La media e 7.", fs_ms, sizeof fs_ms, "it");
     chk("ms no-op",          !strcmp(fs_ms, "La media e 7."));
 

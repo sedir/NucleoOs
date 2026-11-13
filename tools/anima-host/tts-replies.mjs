@@ -20,14 +20,15 @@ if (!gcc) { console.error('gcc non trovato'); process.exit(2); }
 const env = (!shell && process.platform === 'win32') ? { ...process.env, PATH: dirname(gcc) + ';' + (process.env.PATH || '') } : process.env;
 
 const exe = join(build, 'ttsreplies' + (process.platform === 'win32' ? '.exe' : ''));
-const cc = spawnSync(gcc, ['-std=gnu11', '-O0', '-static', '-I', inc,
+const cc = spawnSync(gcc, ['-std=gnu11', '-O0', ...(process.platform === 'win32' ? ['-static'] : []), '-I', inc,
   join(tts, 'nucleo_tts_plan.c'), join(tts, 'nucleo_tts_index.c'), join(here, 'tts-replies-check.c'), '-o', exe],
   { encoding: 'utf8', shell, env });
 if (cc.error || cc.status !== 0) { console.error('compile fail:\n' + (cc.stderr || cc.stdout || (cc.error && cc.error.message))); process.exit(1); }
 
 let bad = 0, ran = 0;
-for (const lang of ['it', 'en']) {
-  const idx = join(repo, 'deploy', 'sd-safe', 'data', 'tts', lang, 'index.bin');
+const ttsDir = process.env.NUCLEO_TTS_DIR || join(repo, 'deploy', 'sd-safe', 'data', 'tts');   // or a local staging root
+for (const lang of ['it', 'en', 'pt']) {
+  const idx = join(ttsDir, lang, 'index.bin');
   const rep = join(here, `test-replies.${lang}.txt`);
   if (!existsSync(idx)) { console.log(`[${lang}] SKIP (indice non generato: ${idx})`); continue; }
   if (!existsSync(rep)) { console.log(`[${lang}] SKIP (niente ${rep})`); continue; }

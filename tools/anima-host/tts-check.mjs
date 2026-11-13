@@ -28,7 +28,7 @@ const env = (!gcc.shell && process.platform === 'win32')
 
 function compileRun(label, srcs, exeName) {
   const exe = join(build, exeName + (process.platform === 'win32' ? '.exe' : ''));
-  const cc = spawnSync(gcc.cmd, ['-std=gnu11', '-O0', '-static', '-Wall', '-Wextra', '-I', inc, ...srcs, '-o', exe],
+  const cc = spawnSync(gcc.cmd, ['-std=gnu11', '-O0', ...(process.platform === 'win32' ? ['-static'] : []), '-Wall', '-Wextra', '-I', inc, ...srcs, '-o', exe],
                        { encoding: 'utf8', shell: gcc.shell, env });
   if (cc.error || cc.status !== 0) {
     console.error(`[${label}] compilazione fallita:\n` + (cc.error ? cc.error.message + '\n' : '') + (cc.stderr || cc.stdout || ''));

@@ -1,4 +1,4 @@
-// nucleo_tts_plan — the "brain" of the concatenative TTS: Italian text -> a sequence of tokens
+// nucleo_tts_plan — the "brain" of the concatenative TTS: IT/EN/PT text -> a sequence of tokens
 // CLIP/PAUSE tokens. Pure (string.h/ctype.h), allocation-free, host-compilable: see
 // tools/anima-host/tts-plan-ctest.c for the test. Logic documented in nucleo_tts.h.
 #include "nucleo_tts.h"
@@ -22,6 +22,20 @@ static const char *THOUSANDS[10] = {
     "", "mille", "duemila", "tremila", "quattromila", "cinquemila",
     "seimila", "settemila", "ottomila", "novemila"
 };
+// Brazilian Portuguese hundreds (100 alone is "cem", 101..199 "cento e ..."), mandatory pt pack clips.
+static const char *HUNDREDS_PT[10] = {
+    "", "cento", "duzentos", "trezentos", "quatrocentos", "quinhentos",
+    "seiscentos", "setecentos", "oitocentos", "novecentos"
+};
+
+// Voice language: "en" -> English, "pt" -> Brazilian Portuguese, anything else -> Italian (the default).
+typedef enum { TL_IT = 0, TL_EN, TL_PT } tts_lang_t;
+static tts_lang_t tts_lang(const char *lang)
+{
+    if (lang && lang[0] == 'e' && lang[1] == 'n') return TL_EN;
+    if (lang && lang[0] == 'p' && lang[1] == 't') return TL_PT;
+    return TL_IT;
+}
 
 // ---- normalization: UTF-8 -> lowercase ASCII, fold Italian accents --------------------------
 static void normalize_ascii(const char *in, char *out, int cap)
@@ -142,7 +156,7 @@ static int lex_units(const char *a, unit_t *u, int max)
 }
 
 // ---- token emission --------------------------------------------------------------------------
-typedef struct { tts_token_t *out; int max; int n; bool en; } sink_t;
+typedef struct { tts_token_t *out; int max; int n; tts_lang_t lg; } sink_t;
 
 static void push_clip(sink_t *s, const char *slug, bool fb)
 {
@@ -212,21 +226,46 @@ static void emit_int_en(sink_t *s, long v)
     emit_big_digits(s, v);
 }
 
-// NUMBER unit ("-?digits(,digits)?") -> clip. Sign -> "meno"/"minus"; decimal -> "virgola"/"point"
-// + digits. The language (s->en) picks the cardinals and connectors.
+// Integer -> BRAZILIAN PORTUGUESE cardinal. 0..99 atomic (the clip carries its own "e": "vinte e tres");
+// 100 -> "cem"; 101..999 = "cento"/"duzentos".. + "e" + remainder; 1000..999999 = ["dois".. ] "mil" + remainder,
+// with the "e" only before a remainder < 100 or a round hundred ("mil e cem", "dois mil e cinco", but
+// "mil novecentos e oitenta e quatro"). Cardinals are masculine ("dois"): the time text writes the feminine
+// hours ("uma", "duas") as words. Recursion bounded to 3 levels like IT/EN.
+static void emit_int_pt(sink_t *s, long v)
+{
+    if (v < 0) v = -v;
+    if (v < 100)     { push_num(s, (int)v, false); return; }
+    if (v < 1000)    { int h = (int)(v / 100), r = (int)(v % 100);
+                       if (v == 100) { push_clip(s, "cem", false); return; }
+                       push_clip(s, HUNDREDS_PT[h], false);
+                       if (r) { push_clip(s, "e", false); emit_int_pt(s, r); }
+                       return; }
+    if (v < 1000000) { int th = (int)(v / 1000), r = (int)(v % 1000);
+                       if (th > 1) emit_int_pt(s, th);
+                       push_clip(s, "mil", false);
+                       if (r) { if (r < 100 || r % 100 == 0) push_clip(s, "e", false); emit_int_pt(s, r); }
+                       return; }
+    emit_big_digits(s, v);
+}
+
+// NUMBER unit ("-?digits(,digits)?") -> clip. Sign -> "meno"/"minus"/"menos"; decimal -> "virgola"/"point"/
+// "virgula" + digits. The language (s->lg) picks the cardinals and connectors.
 static void emit_number(sink_t *s, const char *str)
 {
+    static const char *const MINUS[] = { "meno", "minus", "menos" };
+    static const char *const POINT[] = { "virgola", "point", "virgula" };
     const char *p = str;
-    if (*p == '-') { push_clip(s, s->en ? "minus" : "meno", false); p++; }
+    if (*p == '-') { push_clip(s, MINUS[s->lg], false); p++; }
     long ip = 0; int ndig = 0;
     while (*p && *p != ',' && ndig < 12) { if (*p >= '0' && *p <= '9') { ip = ip * 10 + (*p - '0'); ndig++; } p++; }
     if (ndig > 6) {                                  // too large for the value: digit-by-digit
         const char *q = str; if (*q == '-') q++;
         for (; *q && *q != ','; q++) if (*q >= '0' && *q <= '9') push_num(s, *q - '0', true);
-    } else if (s->en) emit_int_en(s, ip);
-    else              emit_int_it(s, ip);
-    if (*p == ',') {                                 // decimal part: "virgola"/"point" then digits
-        push_clip(s, s->en ? "point" : "virgola", false);
+    } else if (s->lg == TL_EN) emit_int_en(s, ip);
+    else if (s->lg == TL_PT) emit_int_pt(s, ip);
+    else                     emit_int_it(s, ip);
+    if (*p == ',') {                                 // decimal part: "virgola"/"point"/"virgula" then digits
+        push_clip(s, POINT[s->lg], false);
         for (p++; *p; p++) if (*p >= '0' && *p <= '9') push_num(s, *p - '0', false);
     }
 }
@@ -359,9 +398,31 @@ void nucleo_tts_speak_time(char *out, int n, int h, int m, const char *lang)
     if (!out || n <= 0) return;
     out[0] = 0;
     if (h < 0 || h > 23 || m < 0 || m > 59) return;
-    bool en = lang && lang[0] == 'e' && lang[1] == 'n';
+    tts_lang_t lg = tts_lang(lang);
 
-    if (en) {
+    if (lg == TL_PT) {
+        // Brazilian Portuguese (24h, ASCII like the pt reply catalog). Hours are FEMININE ("uma", "duas",
+        // "vinte e uma/duas") while the n1/n2 clips are masculine ("um", "dois"): those four hours are written
+        // as words. "E" (= "É") opens the singular hour; the pack voices "E uma"/"E uma hora" as phrases.
+        char base[32];
+        if      (h == 0)  snprintf(base, sizeof base, "Meia-noite");
+        else if (h == 12) snprintf(base, sizeof base, "Meio-dia");
+        else if (h == 1)  snprintf(base, sizeof base, "E uma");
+        else if (h == 2)  snprintf(base, sizeof base, "Sao duas");
+        else if (h == 21) snprintf(base, sizeof base, "Sao vinte e uma");
+        else if (h == 22) snprintf(base, sizeof base, "Sao vinte e duas");
+        else              snprintf(base, sizeof base, "Sao %d", h);
+        if (m == 0) {
+            if (h == 0 || h == 12) snprintf(out, n, "%s", base);           // "Meia-noite" / "Meio-dia"
+            else if (h == 1)       snprintf(out, n, "%s hora", base);      // "E uma hora"
+            else                   snprintf(out, n, "%s horas", base);     // "Sao 9 horas"
+        } else {
+            snprintf(out, n, "%s e %d", base, m);                          // "Sao 9 e 30" / "Meio-dia e 15"
+        }
+        return;
+    }
+
+    if (lg == TL_EN) {
         if (m == 0) {
             if      (h == 0)  snprintf(out, n, "It is midnight");
             else if (h == 12) snprintf(out, n, "It is noon");
@@ -408,11 +469,12 @@ void nucleo_tts_mathspeak(const char *in, char *out, int n, const char *lang)
     if (!out || n <= 0) return;
     out[0] = 0;
     if (!in) return;
-    bool en = lang && lang[0] == 'e' && lang[1] == 'n';
-    const char *EQ = en ? " equals "          : " uguale a ";
-    const char *PC = en ? " percent "         : " per cento ";
-    const char *PW = en ? " to the power of "  : " elevato ";
-    const char *PL = en ? " plus "             : " piu ";   // '+' in sums/perimeters ("3+4+5", "5 + 3")
+    static const char *const EQS[] = { " uguale a ", " equals ",          " igual a " };
+    static const char *const PCS[] = { " per cento ", " percent ",        " por cento " };
+    static const char *const PWS[] = { " elevato ",  " to the power of ", " elevado a " };
+    static const char *const PLS[] = { " piu ",      " plus ",            " mais " };   // '+' in sums ("3+4+5")
+    tts_lang_t lg = tts_lang(lang);
+    const char *EQ = EQS[lg], *PC = PCS[lg], *PW = PWS[lg], *PL = PLS[lg];
     int o = 0;
     for (int i = 0; in[i] && o < n - 1; i++) {
         const char *rep = (in[i] == '=') ? EQ : (in[i] == '%') ? PC :
@@ -565,7 +627,7 @@ int nucleo_tts_plan(const char *text, const char *lang,
                     tts_token_t *out, int max)
 {
     if (!text || !out || max <= 0) return 0;
-    bool en = lang && lang[0] == 'e' && lang[1] == 'n';   // "en" -> English, otherwise Italian
+    tts_lang_t lg = tts_lang(lang);   // "en" -> English, "pt" -> Portuguese, otherwise Italian
 
     char norm[1024];
     normalize_keepcase(text, norm, sizeof(norm));   // case preserved: the lexer flags acronyms (allcaps)
@@ -573,7 +635,7 @@ int nucleo_tts_plan(const char *text, const char *lang,
     unit_t u[MAX_UNITS];
     int nu = lex_units(norm, u, MAX_UNITS);
 
-    sink_t s = { out, max, 0, en };
+    sink_t s = { out, max, 0, lg };
     for (int i = 0; i < nu && s.n < max; ) {
         if (u[i].kind == U_PAUSE) { push_pause(&s, u[i].ms); i++; continue; }
         if (u[i].kind == U_NUMBER) { emit_number(&s, u[i].s); i++; continue; }

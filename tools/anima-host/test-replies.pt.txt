@@ -1,0 +1,72 @@
+# Real deterministic on-device ANIMA replies in Brazilian Portuguese (pt reply catalog, anima_pt.c + the pt
+# {value} fill in app_anima.cpp), slots filled. The gate checks the pt VOICE composes them.
+# Harness mirrors nucleo_tts_say(): mathspeak (= % ^ + -> words) then WHOLE/SPEAK/READ.
+#   READ(uncovered) = a word with no clip -> FAILURE. "# [...]" = variable content -> read it / say_or fallback.
+
+# ============ STATE / SYSTEM ============
+Sao 9 e 30.
+Sao 14 e 5.
+Sao 9 horas.
+E uma hora.
+E uma e 15.
+Sao duas e 40.
+Sao vinte e uma e 7.
+Meio-dia.
+Meia-noite e 5.
+Nao sei a hora: o relogio nao esta ajustado.
+Bateria: 87%.
+Bateria: indisponivel.
+Hoje e segunda-feira, 10 de junho de 2026.
+Hoje e sexta-feira, 25 de dezembro de 2026.
+Amanha e sabado, 14 de novembro de 2026.
+Depois de amanha e domingo, 15 de novembro de 2026.
+Ontem foi quinta-feira, 12 de novembro de 2026.
+Espaco no SD: 12.5 GB livres de 59.4 GB.
+Estamos em 2026.
+Estacao: outono.
+Estacao: verao.
+Ligado ha 2 dias e 3 horas.
+Ligado ha 3 horas e 15 minutos.
+Ligado ha 42 minutos.
+Nao sei.
+Sou a ANIMA, a assistente offline do NucleoOS. Funciono sem internet, no proprio aparelho.
+
+# ============ VOLUME / BRIGHTNESS ============
+Aumentando o volume.
+Abaixando o volume.
+Volume em 50%.
+Volume em 100%.
+Aumentando o brilho.
+Diminuindo o brilho.
+Brilho em 20%.
+
+# ============ APPS ============
+Abrindo a Calculadora.
+Abrindo as Configuracoes.
+Abrindo o Relogio.
+Abrindo o Calendario.
+Abrindo o Bloco de notas.
+Abrindo o Player de musica.
+Fechando a Calculadora.
+Fechando o Cronometro.
+Qual delas: a Calculadora ou o Conversor?
+
+# ============ TIMERS / ALARMS / REMINDERS ============
+Timer de 5 min: aviso as 10:35.
+Alarme para amanha as 07:00.
+Alarme para as 19:00.
+# [the user's own text] Lembrete "ligar para a mae" amanha as 10:00.
+Feito
+Erro
+
+# ============ MATH / CONVERSIONS / CALENDAR ============
+Da 84.
+Da 42.
+15% de 200 = 30.
+10 km = 6.21371 milhas.
+70 kg = 154.324 libras.
+Faltam 42 dias para 25 de dezembro de 2026.
+Falta 1 dia para 25 de dezembro de 2026.
+25 de dezembro de 2026 e hoje.
+25 de dezembro de 2026 cai em sexta-feira.
+O resultado e 78.5398.

@@ -4813,7 +4813,10 @@ done: {
         session_save();                        // persist context if it changed
         diag_count(&r);                        // cumulative tier/abstain telemetry for /api/diag (cheap)
         nucleo_anima_online_turn_end();        // disarm: other callers (transcribe...) keep their own limits
-        if (pt && r.tier != ANIMA_TIER_REMOTE) a_pt_reply(r.intent, r.reply, sizeof r.reply);   // the LLM already wrote pt
+        if (pt && r.tier != ANIMA_TIER_REMOTE) {           // the LLM already wrote pt
+            a_pt_reply(r.intent, r.reply, sizeof r.reply);
+            if (!strcmp(r.intent, "add_event")) a_pt_event_label(s_tool_content, sizeof s_tool_content);
+        }
         free(pt_line);
         return r;
     }

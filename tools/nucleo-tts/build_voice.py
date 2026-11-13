@@ -54,6 +54,23 @@ def cardinal_en(n):
     t, u = n // 10, n % 10
     return EN_TENS[t] + ("-" + EN_U[u] if u else "")    # twenty-three
 
+# ---- BRAZILIAN PORTUGUESE ---------------------------------------------------------------------
+# n0..n99 are ATOMIC and carry their own "e" ("vinte e tres"); the planner (emit_int_pt) adds the free-standing
+# "e" between hundreds/thousands and the rest ("duzentos e trinta", "mil e cem"). Masculine forms ("um", "dois"):
+# the time text writes the feminine hours ("uma", "duas") as words, voiced by lexicon.pt.txt.
+PT_U   = ["zero","um","dois","três","quatro","cinco","seis","sete","oito","nove"]
+PT_T   = ["dez","onze","doze","treze","catorze","quinze","dezesseis","dezessete","dezoito","dezenove"]
+PT_TENS= ["","","vinte","trinta","quarenta","cinquenta","sessenta","setenta","oitenta","noventa"]
+PT_HUND= {"cem":"cem","cento":"cento","duzentos":"duzentos","trezentos":"trezentos","quatrocentos":"quatrocentos",
+          "quinhentos":"quinhentos","seiscentos":"seiscentos","setecentos":"setecentos","oitocentos":"oitocentos",
+          "novecentos":"novecentos"}   # slug == nucleo_tts_plan.c HUNDREDS_PT (+ "cem" for exactly 100)
+
+def cardinal_pt(n):
+    if n < 10: return PT_U[n]
+    if n < 20: return PT_T[n - 10]
+    t, u = n // 10, n % 10
+    return PT_TENS[t] + (" e " + PT_U[u] if u else "")   # vinte e três
+
 # ---- letter names (to spell out acronyms: USB -> "u esse bi") -----------------------
 # slug lett_<a..z>; the text is HOW the letter is pronounced in the language (Edge says it naturally).
 IT_LETT = {"a":"a","b":"bi","c":"ci","d":"di","e":"e","f":"effe","g":"gi","h":"acca","i":"i",
@@ -62,6 +79,9 @@ IT_LETT = {"a":"a","b":"bi","c":"ci","d":"di","e":"e","f":"effe","g":"gi","h":"a
 EN_LETT = {"a":"ay","b":"bee","c":"see","d":"dee","e":"ee","f":"ef","g":"gee","h":"aitch","i":"eye",
            "j":"jay","k":"kay","l":"el","m":"em","n":"en","o":"oh","p":"pee","q":"cue","r":"ar",
            "s":"ess","t":"tee","u":"you","v":"vee","w":"double u","x":"ex","y":"why","z":"zee"}
+PT_LETT = {"a":"á","b":"bê","c":"cê","d":"dê","e":"é","f":"éfe","g":"gê","h":"agá","i":"i",
+           "j":"jota","k":"cá","l":"éle","m":"ême","n":"ene","o":"ó","p":"pê","q":"quê","r":"érre",
+           "s":"ésse","t":"tê","u":"u","v":"vê","w":"dáblio","x":"xis","y":"ípsilon","z":"zê"}
 
 # ---- mandatory pack per language --------------------------------------------------------
 def mandatory(lang):
@@ -72,6 +92,12 @@ def mandatory(lang):
         m["point"]="point"; m["minus"]="minus"
         for c, name in EN_LETT.items(): m["lett_%s" % c] = name   # acronym spelling
         m["read_it"] = "I can't say this out loud, please read it on the screen."
+    elif lang == "pt":
+        for n in range(100): m["n%d" % n] = cardinal_pt(n)
+        m.update(PT_HUND)
+        m["mil"]="mil"; m["e"]="e"; m["virgula"]="vírgula"; m["menos"]="menos"
+        for c, name in PT_LETT.items(): m["lett_%s" % c] = name   # acronym spelling
+        m["read_it"] = "Leia na tela."
     else:
         for n in range(100): m["n%d" % n] = cardinal_it(n)
         for h in range(1,10): m[IT_HUND[h]] = IT_HUND[h]
@@ -120,8 +146,9 @@ def read_lines(path, col0_only):
 def synth_lang(engine, espeak_bin, model, lang, text, raw):
     """Synthesize `text` for `lang` with the chosen engine -> raw WAV `raw`."""
     if engine == "espeak":
-        p = subprocess.run([espeak_bin,"-v","en" if lang=="en" else "it","-w",raw,text], capture_output=True)
+        p = subprocess.run([espeak_bin,"-v",{"en":"en","pt":"pt-br"}.get(lang,"it"),"-w",raw,text], capture_output=True)
     elif engine == "pico":
+        if lang == "pt": sys.exit("pico has no Portuguese voice: use --engine espeak or piper for pt")
         p = subprocess.run(["pico2wave","-l","en-US" if lang=="en" else "it-IT","-w",raw,text], capture_output=True)
     elif engine == "piper":
         if not model: sys.exit("piper: serve --model (o --model-it/--model-en) per la lingua %s" % lang)
@@ -173,14 +200,14 @@ def main():
         sys.exit("espeak-ng non trovato. Installa (winget install eSpeak-NG.eSpeak-NG) o passa --espeak-bin <path>.")
     here = os.path.dirname(__file__)
     dict_for = {"it": "dict-it-en.tsv", "en": "dict-en-it.tsv"}
-    model_for = {"it": args.model_it or args.model, "en": args.model_en or args.model}
+    model_for = {"it": args.model_it or args.model, "en": args.model_en or args.model, "pt": args.model}
 
     for lang in [x.strip() for x in args.langs.split(",") if x.strip()]:
         out = os.path.abspath(os.path.join(args.out, lang))
         os.makedirs(out, exist_ok=True)
         entries = mandatory(lang)
         entries.update(read_lines(os.path.join(here, "lexicon.%s.txt" % lang), col0_only=False))
-        if not args.no_dict:
+        if not args.no_dict and lang in dict_for:   # pt has no dictionary: mandatory + lexicon only
             d = read_lines(os.path.join(args.dict_dir, dict_for[lang]), col0_only=True)
             if args.limit: d = dict(list(d.items())[:args.limit])
             for k, v in d.items(): entries.setdefault(k, v)

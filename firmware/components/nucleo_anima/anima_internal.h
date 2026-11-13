@@ -78,6 +78,8 @@ bool l0_legacy(void);
 bool a_pt_bridge(const char *in, char *out, size_t cap);
 // a_pt_reply: rewrite an English reply in place from the pt catalog; false (unchanged) if unknown.
 bool a_pt_reply(const char *intent, char *reply, size_t cap);
+// a_pt_event_label: the calendar text of a bare timer/alarm/reminder ("text=Alarm") in Portuguese.
+void a_pt_event_label(char *content, size_t cap);
 
 #ifdef __cplusplus
 }

@@ -21,15 +21,16 @@ The device speaks ONLY the **on-device** answers that make sense to say aloud:
   online answers).
 
 ## Firmware architecture (`firmware/components/nucleo_tts`)
-- `nucleo_tts_plan.c` (PURE, testable): IT/EN text → `CLIP`/`PAUSE`/`UNKNOWN` tokens. Expands numbers
-  into per-language cardinals (IT with elision: *ventitré*, *millenovecento…*; EN *twenty-three*), **greedy
+- `nucleo_tts_plan.c` (PURE, testable): IT/EN/PT text → `CLIP`/`PAUSE`/`UNKNOWN` tokens. Expands numbers
+  into per-language cardinals (IT with elision: *ventitré*, *millenovecento…*; EN *twenty-three*; PT
+  *duzentos e trinta e quatro*, *mil novecentos e oitenta e quatro*, *cem*), **greedy
   phrase** matching (common phrases win over single words), `nucleo_tts_text_speakable()` (content
   guard) and `nucleo_tts_full_slug()` (slug of the whole text, == the pipeline's `slugify`).
   - `nucleo_tts_speak_time(h, m, lang)` (PURE): composes the TIME into a **speakable phrase exact to the
     minute** made only of clips in the pack — IT *"Sono le 9 e 30" / "…in punto" / "…e un quarto" /
     "…e mezza" / "…meno un quarto" / "Mezzogiorno" / "Mezzanotte"* (≈ "It is 9:30" / "…o'clock" /
     "…quarter past" / "…half past" / "…quarter to" / "Noon" / "Midnight"); EN *"It is 9 30" / "…o'clock" /
-    "noon" / "midnight"*. **Never** `HH:MM` (the `:` would become a pause and `:00` a "zero"). The same
+    "noon" / "midnight"*; PT *"Sao 9 e 30" / "Sao 9 horas" / "E uma hora" / "Meio-dia" / "Meia-noite e 5"*. **Never** `HH:MM` (the `:` would become a pause and `:00` a "zero"). The same
     text goes to the screen and to the voice. The call sites (`app_anima.cpp`, `anima_get` in httpd, the
     `serve-shell.mjs` simulator) use it with an RTC guard (`now > 2023-01-01`, otherwise "orologio non
     impostato" — "clock not set").
@@ -51,6 +52,31 @@ The device speaks ONLY the **on-device** answers that make sense to say aloud:
 
 On-device call sites: `app_anima.cpp` (`speak_result`) and `nucleo_voice.c` (PTT, only with no web client).
 Toggle: native Settings ("Voce" / Voice row) + web Settings (AI tab) via `/api/tts`.
+
+## Brazilian Portuguese (pt)
+`lang` is `"en"`, `"pt"` or anything else = Italian (`tts_lang()` in the planner). pt has its own branch for:
+- **Numbers** (`emit_int_pt`): `n0..n99` atomic (the clip carries its "e": *vinte e três*); `100` → `cem`;
+  `101..999` → `cento`/`duzentos`…`novecentos` + `e` + rest; thousands → `[n] mil` + rest, with `e` only before a
+  rest < 100 or a round hundred (*mil e cem*, *dois mil e cinco*, *mil novecentos e oitenta e quatro*). Sign
+  `menos`, decimal `virgula`. Cardinals are masculine (*um*, *dois*).
+- **Time** (`nucleo_tts_speak_time(…, "pt")`): hours are feminine, so 1, 2, 21, 22 are written as words
+  (*"E uma e 30"*, *"Sao duas horas"*, *"Sao vinte e uma e 7"*); `"E uma"`/`"E uma hora"` are lexicon phrases
+  voiced from "É uma", so the planner never reads that "E" as the conjunction. ASCII, like the pt reply catalog.
+- **Mathspeak**: `= % ^ +` → *igual a* / *por cento* / *elevado a* / *mais*.
+- **Call sites**: `app_anima.cpp` `voice_lang()` returns `"pt"` when `nucleo_i18n_lang()` is pt (`speak_result`,
+  the TOOL confirmation `say_or`); `fill_system_value_pt` uses the pt time text (screen = voice). The PTT path
+  (`nucleo_voice.c` `VOICE_LANG`) is still it/en.
+- **Pack** (`build_voice.py` `mandatory("pt")` + `lexicon.pt.txt`, no dictionary/freq layer): numbers 0..99,
+  `cem`/`cento`/…/`novecentos`, `mil`, `e`, `virgula`, `menos`, letter names, `read_it` = *"Leia na tela."*; the
+  lexicon is built from `anima_pt.c` (PT_REPLIES fixed parts, PT_TERMS) and the pt `{value}` words. Voice
+  `pt-BR-FranciscaNeural` (`gen_edge.py --voice-pt` to change). 328 clips → `index.bin` 18 KB + `clips.pcm`
+  11.7 MB (24 kHz). Generate into a staging folder, never straight onto the SD tree:
+  `python gen_edge.py --langs pt --no-dict --out <wav dir>` then
+  `python build_index.py --in <wav dir>/pt --out build/tts-staging/pt`.
+  Check it: `NUCLEO_TTS_DIR=build/tts-staging npm run anima:tts-time` (0/1440) and `… anima:tts-replies`
+  (`tools/anima-host/test-replies.pt.txt`, 57 replies, 0 uncovered).
+- **To verify by ear:** the lone `e` clip (296 ms) — Edge may voice it as the letter "é" instead of the
+  conjunction /i/; it is used between hundreds and the rest and in "9 e 30".
 
 ## File format (on SD: `/sd/data/tts/<lang>/`)
 - `index.bin`: `"NTI1"` | u32 rate | u32 count | count SORTED records `{ char slug[48]; u32 off; u32 len }`.
@@ -90,10 +116,10 @@ is **streamed** (fixed 1KB buffer), no large resident structure → the TTS adds
   device's `strcmp`). `gen_enrich.ps1` / `gen_all.ps1` orchestrate gen→pack→(copy to H: with `-CopyToSd`).
 
 ## Tests
-- `npm run anima:tts` (also inside `npm run anima:gate`): compiles the real firmware C with MinGW and
-  verifies the **planner** (IT/EN: numbers/dates/decimals, phrases, UNKNOWN, code/length guard,
+- `npm run anima:tts` (also inside `npm run anima:gate`): compiles the real firmware C with MinGW (or the host
+  gcc/clang on macOS/Linux) and verifies the **planner** (IT/EN/PT: numbers/dates/decimals, pt time, phrases, UNKNOWN, code/length guard,
   full_slug, mathspeak, eq_result, translator, **decompose boundaries**, **anti-click** incl. per-chunk
-  equivalence) and the **index** (binary search). 87/87 + 11/11. No hardware.
+  equivalence) and the **index** (binary search). 131/131 + 11/11. No hardware.
 - **ANTI-REGRESSION IS PART OF THE BUILD:** the planner ctest is not just a separate command — the
   `CMakeLists.txt` of `nucleo_tts` compiles+runs it **inside `idf.py build`** (via `find_program(gcc)` +
   `cmake -E env PATH=<mingw bin>` because gcc loads its DLLs from there). If the text→clip logic regresses,

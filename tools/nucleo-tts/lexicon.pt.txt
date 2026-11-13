@@ -1,0 +1,208 @@
+# Targeted lexicon for ANIMA's real spoken output (Brazilian Portuguese). Built from the pt reply catalog
+# (firmware/components/nucleo_anima/anima_pt.c: PT_REPLIES fixed parts + PT_TERMS) and the pt {value} words
+# (app_anima.cpp fill_system_value_pt, nucleo_tts_speak_time "pt"). The device replies are ASCII ("Nao sei",
+# "Espaco no SD"); the text here carries the accents so the voice pronounces them, and slugify() folds them
+# back to the same slug the firmware computes ("Não sei" -> nao_sei). Numbers, "e", "mil", "cem"... come from
+# the mandatory pack (build_voice.py). Whole phrases where prosody matters; pieces for the variable parts.
+# "slug<TAB>spoken text" lines give a lowercase slug an explicit reading (acronyms, units).
+
+# ===== WHOLE PHRASES (natural prosody) =====
+Sou a ANIMA, a assistente offline do NucleoOS. Funciono sem internet, no próprio aparelho.
+Não sei.
+Não sei
+Não entendi
+Feito
+Erro
+Um momento
+Olá! Como posso ajudar?
+Como posso ajudar?
+Aumentando o volume
+Abaixando o volume
+Aumentando o brilho
+Diminuindo o brilho
+Não sei a hora: o relógio não está ajustado
+o relógio não está ajustado
+sem conexão
+indisponível
+O resultado é
+
+# ===== TIME (nucleo_tts_speak_time "pt") =====
+São
+hora
+horas
+É uma
+É uma hora
+São duas
+São vinte e uma
+São vinte e duas
+uma
+duas
+vinte e uma
+vinte e duas
+Meio-dia
+Meia-noite
+
+# ===== REPLY CATALOG fixed parts (PT_REPLIES) =====
+Abrindo
+Fechando
+Qual delas
+ou
+Volume em
+Brilho em
+Bateria
+Espaço no SD
+Estamos em
+Estação
+Versão
+Ligado há
+Hoje é
+Amanhã é
+Depois de amanhã é
+Ontem foi
+de
+Lembrete
+hoje
+amanhã
+hoje às
+amanhã às
+daqui a
+dias
+dia
+às
+aviso às
+para amanhã às
+para as
+para
+Criando
+em
+com
+Dá
+é hoje
+Falta
+dia para
+Faltam
+dias para
+foi há
+cai em
+Daqui a
+será
+Há
+foi
+por cento
+igual a
+elevado a
+mais
+menos
+vezes
+dividido por
+
+# ===== TERMS (PT_TERMS: weekdays, months, labels, units, app names with their article) =====
+domingo
+segunda-feira
+terça-feira
+quarta-feira
+quinta-feira
+sexta-feira
+sábado
+janeiro
+fevereiro
+março
+abril
+maio
+junho
+julho
+agosto
+setembro
+outubro
+novembro
+dezembro
+Alarme
+Timer
+lembrete
+Documentos
+Notas
+milhas
+milha
+metros
+pés
+polegadas
+libras
+gramas
+litros
+galões
+quilômetros
+centímetros
+onças
+km	quilômetros
+kg	quilos
+min	minutos
+quilos
+a Calculadora
+o Relógio
+o Cronômetro
+o Calendário
+as Configurações
+o Player de música
+as Fotos
+o Bloco de notas
+os Arquivos
+o Gravador
+o Navegador
+os Jogos
+a Previsão do tempo
+a Lixeira
+os Contatos
+a Planilha
+o Conversor
+as Tarefas
+as Atualizações
+o Terminal
+o Rádio
+o Player de vídeo
+o Paint
+o Controle remoto
+o Metrônomo
+o Autenticador
+o Monitor do sistema
+o Pomodoro
+Calculadora
+Relógio
+Cronômetro
+Calendário
+Configurações
+Fotos
+Arquivos
+Navegador
+Jogos
+Lixeira
+Contatos
+Planilha
+Tarefas
+Terminal
+note_txt	nota
+txt	tê xis tê
+
+# ===== {value} words (fill_system_value_pt) =====
+inverno
+primavera
+verão
+outono
+gb	gigabytes
+kb	kilobytes
+ram	rã
+livres
+livres de
+GB livres de
+KB de RAM livres
+de RAM livres
+dias e
+horas e
+minutos
+minuto
+Sou um hotspot Wi-Fi
+Wi-Fi
+ip	i pê
+conectado a
+sd	ésse dê
+nucleoos	Núcleo O S
+anima	Ânima

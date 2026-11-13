@@ -108,6 +108,7 @@ static const char *act_name(anima_action_t a) {
     }
 }
 
+extern bool g_anima_pt_miss;   // anima_pt.c (ANIMA_HOST): the pt reply catalog had no row
 static void print_result(const char *q, const anima_result_t *r) {
     printf("Q: %s\n", q);
     if (r->corrected[0]) printf("   (interpretato: \"%s\")\n", r->corrected);
@@ -122,7 +123,10 @@ static void print_result(const char *q, const anima_result_t *r) {
         float c1 = -2, c2 = -2; nucleo_anima_l1_last_band(&c1, &c2);
         printf("   [trace] L1 top1=%.3f top2=%.3f\n", c1, c2);
     }
-    printf("   reply: %s\n\n", r->reply[0] ? r->reply : "(vuoto)");
+    printf("   reply: %s\n", r->reply[0] ? r->reply : "(vuoto)");
+    if (g_anima_pt_miss) printf("   pt: untranslated\n");
+    g_anima_pt_miss = false;
+    printf("\n");
 }
 
 #ifdef _WIN32

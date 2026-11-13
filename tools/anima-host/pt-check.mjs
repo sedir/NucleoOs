@@ -18,7 +18,8 @@ const exe  = join(here, 'build', 'anima.exe');
 if (!existsSync(exe)) { console.error('anima.exe missing — run `npm run anima:build`.'); process.exit(2); }
 const show = process.argv.includes('--show');
 
-// [lang, query, intent, arg, reply]  (arg/reply: null = not checked; reply may be a RegExp)
+// [lang, query, intent, arg, reply, content?]  (null = not checked; reply/content may be a RegExp).
+// content = the tool payload the device writes (calendar entry, note body): the user's own words must survive.
 const CASES = [
   // open / close an app
   ['pt', 'abre a calculadora',                 'open_app',       'calculator',   'Abrindo a Calculadora.'],
@@ -51,6 +52,29 @@ const CASES = [
   ['pt', 'quanto espaço livre tem no cartão sd','storage',       'storage',      'Espaco no SD: {value}.'],
   ['pt', 'quem é você',                        'whoami',         null,           /^Sou a ANIMA/],
   ['pt', 'o que você sabe fazer',              'capabilities',   'capabilities', '{value}'],
+  // timers, alarms, reminders: the user's text is kept as typed, accents included
+  ['pt', 'coloca um timer de 5 minutos',       'add_event',      null,           /^Timer de 5 min: aviso as \d\d:\d\d\.$/, /;text=Timer$/],
+  ['pt', 'liga um timer de meia hora',         'add_event',      null,           /^Timer de 30 min: aviso as \d\d:\d\d\.$/, /;text=Timer$/],
+  ['pt', 'me acorda às 7',                     'add_event',      null,           /^Alarme para (amanha )?as 07:00\.$/, /time=07:00;text=Alarme$/],
+  ['pt', 'define um alarme às 7 da noite',     'add_event',      null,           /^Alarme para (amanha )?as 19:00\.$/, /time=19:00;text=Alarme$/],
+  ['pt', 'me lembra de ligar para a mãe amanhã às 10', 'add_event', null,         'Lembrete "ligar para a mãe" amanha as 10:00.', 'off=1;time=10:00;text=ligar para a mãe'],
+  ['pt', 'me lembre de comprar pão daqui a 20 minutos', 'add_event', null,        /^Lembrete "comprar pão": aviso as \d\d:\d\d\.$/, /;text=comprar pão$/],
+  ['pt', 'lembrete de pagar a conta amanhã',   'add_event',      null,           'Lembrete "pagar a conta" amanha.', 'off=1;time=;text=pagar a conta'],
+  // notes and files
+  ['pt', 'anota: comprar leite e café',        'create_file',    null,           'Criando note.txt com: comprar leite e café', 'comprar leite e café'],
+  ['pt', 'cria uma nota chamada compras',      'create_file',    null,           'Criando compras.txt em Documentos.'],
+  ['pt', 'cria o arquivo teste.txt',           'create_file',    null,           'Criando teste.txt em Documentos.'],
+  // arithmetic, percentages, conversions, calendar
+  ['pt', 'quanto é 12 vezes 7',                'calc',           null,           'Da 84.'],
+  ['pt', 'quanto é 12 mais 30',                'calc',           null,           'Da 42.'],
+  ['pt', 'quanto é 100 dividido por 4',        'calc',           null,           'Da 25.'],
+  ['pt', 'quanto é 15 por cento de 200',       'percent',        null,           '15% de 200 = 30.'],
+  ['pt', 'converte 10 quilômetros para milhas','convert',        null,           '10 km = 6.21371 milhas.'],
+  ['pt', 'converte 70 quilos para libras',     'convert',        null,           '70 kg = 154.324 libras.'],
+  ['pt', 'quantos dias faltam para o natal',   'date',           null,           /^(Faltam \d+ dias para|Falta 1 dia para) 25 de dezembro de \d{4}\.|^25 de dezembro de \d{4} e hoje\.$/],
+  ['pt', 'que dia cai o natal',                'date',           null,           /^25 de dezembro de \d{4} cai em [a-z-]+\.$/],
+  ['pt', 'que dia é amanhã',                   'date',           null,           /^Amanha e [a-z-]+, \d{1,2} de [a-z]+ de \d{4}\.$/],
+  ['pt', 'para o cronômetro',                  'close_app',      'chrono',       'Fechando o Cronometro.'],
   // the pt layer must leave the other languages alone
   ['en', 'open the calculator',                'open_app',       'calculator',   'Opening calculator.'],
   ['en', 'turn up the volume',                 'set_volume',     '+10',          'Raising the volume.'],
@@ -76,6 +100,7 @@ function run(lang, queries) {
     return {
       q: b.split('\n')[0].trim(),
       action: g(/action=(\S+)/), intent: g(/intent=(\S*)/), arg: g(/^\s*arg=(.*)$/m), reply: g(/^\s*reply: (.*)$/m),
+      content: g(/^\s*content: (.*)$/m), untranslated: /^\s*pt: untranslated$/m.test(b),
     };
   });
 }
@@ -84,13 +109,16 @@ let fail = 0, pass = 0;
 for (const lang of ['pt', 'en', 'it']) {
   const cs = CASES.filter(c => c[0] === lang);
   const res = run(lang, cs.map(c => c[1]));
-  cs.forEach(([, q, intent, arg, reply], i) => {
+  cs.forEach(([, q, intent, arg, reply, content = null], i) => {
     const r = res[i] || {};
     const errs = [];
     if (r.intent !== intent) errs.push(`intent ${r.intent || '-'} != ${intent}`);
     if (arg !== null && r.arg !== arg) errs.push(`arg ${r.arg || '-'} != ${arg}`);
     if (reply instanceof RegExp ? !reply.test(r.reply || '') : (reply !== null && r.reply !== reply))
       errs.push(`reply "${r.reply}" != ${reply}`);
+    if (content instanceof RegExp ? !content.test(r.content || '') : (content !== null && r.content !== content))
+      errs.push(`content "${r.content}" != ${content}`);
+    if (r.untranslated) errs.push('reply left in English (no pt catalog row)');
     if (errs.length) { fail++; console.log(`  FAIL [${lang}] ${q}: ${errs.join('; ')}`); }
     else { pass++; if (show) console.log(`  ok   [${lang}] ${q} -> ${r.intent} ${r.arg} | ${r.reply}`); }
   });

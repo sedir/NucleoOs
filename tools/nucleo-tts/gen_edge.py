@@ -21,7 +21,7 @@ from build_voice import mandatory, read_lines   # vocabolario condiviso
 import edge_tts
 
 RATE = 24000
-VOICES = {"it": "it-IT-ElsaNeural", "en": "en-US-AriaNeural"}
+VOICES = {"it": "it-IT-ElsaNeural", "en": "en-US-AriaNeural", "pt": "pt-BR-FranciscaNeural"}
 DICT   = {"it": "dict-it-en.tsv",   "en": "dict-en-it.tsv"}
 
 # Trim silenzio ai due bordi (reverse trick) + loudnorm. -50dB = togli solo vero silenzio, lascia 20ms.
@@ -95,7 +95,7 @@ def build_entries(lang, here, dict_dir, no_dict, limit):
     # ha precedenza; le freq riempiono solo gli slug nuovi. File opzionale freq.<lang>.txt (uno/riga).
     for k, v in read_lines(os.path.join(here, "freq.%s.txt" % lang), col0_only=False).items():
         entries.setdefault(k, v)
-    if not no_dict:
+    if not no_dict and lang in DICT:   # pt has no dictionary: mandatory + lexicon (+ freq if present)
         d = read_lines(os.path.join(dict_dir, DICT[lang]), col0_only=True)
         if limit: d = dict(list(d.items())[:limit])
         for k, v in d.items(): entries.setdefault(k, v)
@@ -105,6 +105,7 @@ async def main():
     ap = argparse.ArgumentParser(description="Genera le clip voce con Edge-TTS (qualita' alta).")
     ap.add_argument("--langs", default="it,en")
     ap.add_argument("--voice-it", default=VOICES["it"]); ap.add_argument("--voice-en", default=VOICES["en"])
+    ap.add_argument("--voice-pt", default=VOICES["pt"])
     ap.add_argument("--dict-dir", default=os.path.join(os.path.dirname(__file__), "..", "..", "deploy", "sd", "data", "anima"))
     ap.add_argument("--no-dict", action="store_true")
     ap.add_argument("--limit", type=int, default=0)
@@ -118,7 +119,7 @@ async def main():
     import shutil
     if not shutil.which("ffmpeg"): sys.exit("ffmpeg non trovato nel PATH.")
     here = os.path.dirname(os.path.abspath(__file__))
-    voice = {"it": args.voice_it, "en": args.voice_en}
+    voice = {"it": args.voice_it, "en": args.voice_en, "pt": args.voice_pt}
     for lang in [x.strip() for x in args.langs.split(",") if x.strip()]:
         entries = build_entries(lang, here, os.path.abspath(args.dict_dir), args.no_dict, args.limit)
         outdir = os.path.abspath(os.path.join(args.out, lang))

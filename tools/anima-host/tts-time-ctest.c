@@ -2,7 +2,7 @@
 // (24x60 = 1440) it composes the time with nucleo_tts_speak_time() and plans it (nucleo_tts_plan) against
 // the REAL clip INDEX (generated index.bin) -> every minute must yield 0 UNKNOWN tokens, otherwise it
 // would end up as "read it on the screen". Links the real firmware C. Usage:
-//   tts-time-ctest <it_index.bin> <en_index.bin>
+//   tts-time-ctest <it_index.bin> <en_index.bin> [<pt_index.bin>]
 #include "nucleo_tts.h"
 #include "nucleo_tts_index.h"
 #include <stdio.h>
@@ -43,10 +43,11 @@ static int check_lang(const char *idxp, const char *lang)
 
 int main(int argc, char **argv)
 {
-    if (argc < 3) { fprintf(stderr, "uso: %s <it_index.bin> <en_index.bin>\n", argv[0]); return 2; }
+    if (argc < 3) { fprintf(stderr, "uso: %s <it_index.bin> <en_index.bin> [<pt_index.bin>]\n", argv[0]); return 2; }
     int bad = 0, ran = 0, r;
     if ((r = check_lang(argv[1], "it")) >= 0) { ran++; bad += r; }
     if ((r = check_lang(argv[2], "en")) >= 0) { ran++; bad += r; }
+    if (argc > 3 && (r = check_lang(argv[3], "pt")) >= 0) { ran++; bad += r; }
     if (!ran) { printf("Nessun indice da verificare (genera prima le clip).\n"); return 0; }
     printf(bad ? "FALLITO: %d minuti scoperti\n" : "OK: ogni minuto del giorno e' pronunciabile (0 scoperti)\n", bad);
     return bad ? 1 : 0;

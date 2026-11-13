@@ -20,16 +20,17 @@ if (!gcc) { console.error('gcc non trovato'); process.exit(2); }
 const env = (!shell && process.platform === 'win32') ? { ...process.env, PATH: dirname(gcc) + ';' + (process.env.PATH || '') } : process.env;
 
 const exe = join(build, 'ttstime' + (process.platform === 'win32' ? '.exe' : ''));
-const cc = spawnSync(gcc, ['-std=gnu11', '-O0', '-static', '-I', inc,
+const cc = spawnSync(gcc, ['-std=gnu11', '-O0', ...(process.platform === 'win32' ? ['-static'] : []), '-I', inc,
   join(tts, 'nucleo_tts_plan.c'), join(tts, 'nucleo_tts_index.c'), join(here, 'tts-time-ctest.c'), '-o', exe],
   { encoding: 'utf8', shell, env });
 if (cc.error || cc.status !== 0) { console.error('compile fail:\n' + (cc.stderr || cc.stdout || (cc.error && cc.error.message))); process.exit(1); }
 
-const itIdx = join(repo, 'deploy', 'sd-safe', 'data', 'tts', 'it', 'index.bin');
-const enIdx = join(repo, 'deploy', 'sd-safe', 'data', 'tts', 'en', 'index.bin');
-if (!existsSync(itIdx) && !existsSync(enIdx)) { console.log(`SKIP (indici non generati sotto deploy/sd-safe/data/tts/)`); process.exit(0); }
+// NUCLEO_TTS_DIR points the check at another pack root (e.g. a local pt staging folder), default the SD tree.
+const ttsDir = process.env.NUCLEO_TTS_DIR || join(repo, 'deploy', 'sd-safe', 'data', 'tts');
+const [itIdx, enIdx, ptIdx] = ['it', 'en', 'pt'].map(l => join(ttsDir, l, 'index.bin'));
+if (![itIdx, enIdx, ptIdx].some(existsSync)) { console.log(`SKIP (indici non generati sotto ${ttsDir})`); process.exit(0); }
 
-const r = spawnSync(exe, [itIdx, enIdx], { encoding: 'utf8', env });
+const r = spawnSync(exe, [itIdx, enIdx, ptIdx], { encoding: 'utf8', env });
 process.stdout.write(r.stdout || '');
 if (r.stderr) process.stderr.write(r.stderr);
 process.exit(r.status || 0);

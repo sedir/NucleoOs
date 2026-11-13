@@ -43,7 +43,7 @@ typedef struct {
 typedef bool (*tts_has_clip_fn)(const char *slug, void *ud);
 
 // Plans an utterance into a sequence of tokens. Normalizes (lowercase, fold accents), expands
-// numbers/decimals/sign into the language's cardinals (lang "en" -> English, otherwise Italian),
+// numbers/decimals/sign into the language's cardinals (lang "en" -> English, "pt" -> Brazilian Portuguese, otherwise Italian),
 // tries a PHRASE match (greedy, MOSAICO-style) BEFORE a word match — so common phrases
 // take precedence — and falls back to spelling for unknown words. Returns the tokens written (<= max).
 int nucleo_tts_plan(const char *text, const char *lang,
@@ -65,12 +65,12 @@ bool nucleo_tts_text_speakable(const char *text, int max_chars);
 // mandatory package (numbers 0..99 + "sono le"/"e"/"in punto"/"e un quarto"/"e mezza"/"meno un quarto"/"mezzogiorno"/
 // "mezzanotte" for IT; "it is"/"o'clock"/"noon"/"midnight" for EN). 24h. NO ":"/zero-padding
 // (which the planner would read as a pause/"zero"). The same text goes to BOTH the SCREEN and the VOICE, so it stays
-// readable. lang "en" -> English, otherwise Italian. Pure/testable (see tts-time-ctest.c).
+// readable. lang "en" -> English, "pt" -> Portuguese ("Sao 9 e 30", "E uma hora", "Meio-dia"), otherwise Italian. Pure/testable (see tts-time-ctest.c).
 void nucleo_tts_speak_time(char *out, int n, int h, int m, const char *lang);
 
 // "Speech-ifies" the math symbols in solver answers: '=' -> "uguale a"/"equals",
 // '%' -> "per cento"/"percent", '^' -> "elevato"/"to the power of". Without this, '=' would trip the
-// "looks like code" guard (everything falls back to "leggila") and '%'/'^' would be dropped (losing the meaning). The
+// "looks like code" guard (everything falls back to "leggila"; pt: "igual a"/"por cento"/"elevado a"/"mais") and '%'/'^' would be dropped (losing the meaning). The
 // other symbols (/ · ² ³ ( ) π) remain as-is: if present, the utterance falls back to "leggila" (ohm,
 // geometry). nucleo_tts_say()/say_or() already apply it internally. Pure/testable (tts-plan-ctest).
 void nucleo_tts_mathspeak(const char *in, char *out, int n, const char *lang);

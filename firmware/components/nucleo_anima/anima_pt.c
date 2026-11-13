@@ -22,9 +22,15 @@
 // 1. Input bridge
 // ---------------------------------------------------------------------------------------------------------
 // pt: one or more folded words (single spaces). en: the replacement ("" deletes the words).
-// cue: the entry names a device command/state (verb, setting, reading, app) -> the line is a command.
+// flags: PT_CUE   the entry names a device command/state (verb, setting, reading, app, tool) -> bridge the line;
+//        PT_TEXT  after this entry the line is the USER'S TEXT (a reminder, a note, a file name): words are copied
+//                 as typed, accents included, so "me lembra de ligar para a mae" keeps "ligar para a mae";
+//        PT_KEEP  translated even inside the user's text (time words the tool must still parse: "amanha").
 // Longest match wins, so phrases ("que horas sao") must simply be listed; order does not matter.
-typedef struct { const char *pt; const char *en; unsigned char cue; } a_pt_word_t;
+#define PT_CUE  1
+#define PT_TEXT 2
+#define PT_KEEP 4
+typedef struct { const char *pt; const char *en; unsigned char flags; } a_pt_word_t;
 
 static const a_pt_word_t PT_WORDS[] = {
     // --- time / date / readings ---------------------------------------------------------------------
@@ -180,6 +186,102 @@ static const a_pt_word_t PT_WORDS[] = {
     { "filmes",               "movies", 1 },
     { "videos",               "videos", 1 },
     { "monitor do sistema",   "system monitor", 1 },
+    // --- reminders, notes, files: the rest of the line is the user's text (PT_TEXT) --------------------
+    { "me lembra de",         "remind me to", PT_CUE | PT_TEXT },
+    { "me lembre de",         "remind me to", PT_CUE | PT_TEXT },
+    { "lembre-me de",         "remind me to", PT_CUE | PT_TEXT },
+    { "me lembra",            "remind me to", PT_CUE | PT_TEXT },
+    { "me lembre",            "remind me to", PT_CUE | PT_TEXT },
+    { "lembre-me",            "remind me to", PT_CUE | PT_TEXT },
+    { "lembra de",            "remind me to", PT_CUE | PT_TEXT },
+    { "cria um lembrete para","remind me to", PT_CUE | PT_TEXT },
+    { "crie um lembrete para","remind me to", PT_CUE | PT_TEXT },
+    { "cria um lembrete de",  "remind me to", PT_CUE | PT_TEXT },
+    { "lembrete para",        "remind me to", PT_CUE | PT_TEXT },
+    { "lembrete de",          "remind me to", PT_CUE | PT_TEXT },
+    { "anota ai",             "write a note:", PT_CUE | PT_TEXT },
+    { "anota",                "write a note:", PT_CUE | PT_TEXT },
+    { "anote",                "write a note:", PT_CUE | PT_TEXT },
+    { "escreve uma nota",     "write a note:", PT_CUE | PT_TEXT },
+    { "escreva uma nota",     "write a note:", PT_CUE | PT_TEXT },
+    { "cria uma nota chamada","create a note called", PT_CUE | PT_TEXT },
+    { "crie uma nota chamada","create a note called", PT_CUE | PT_TEXT },
+    { "cria um arquivo chamado","create a file called", PT_CUE | PT_TEXT },
+    { "crie um arquivo chamado","create a file called", PT_CUE | PT_TEXT },
+    { "cria o arquivo",       "create the file", PT_CUE | PT_TEXT },
+    { "crie o arquivo",       "create the file", PT_CUE | PT_TEXT },
+    { "cria um arquivo",      "create a file", PT_CUE | PT_TEXT },
+    { "crie um arquivo",      "create a file", PT_CUE | PT_TEXT },
+    { "amanha",               "tomorrow", PT_KEEP },
+    { "depois de amanha",     "the day after tomorrow", PT_KEEP },
+    { "hoje",                 "today", PT_KEEP },
+    { "meia hora",            "30 minutes", PT_KEEP },
+    { "uma hora",             "1 hour", PT_KEEP },
+    { "ao meio-dia",          "at 12:00", PT_KEEP },
+    { "ao meio dia",          "at 12:00", PT_KEEP },
+    { "a meia-noite",         "at 0:00", PT_KEEP },
+    // --- timers / alarms -----------------------------------------------------------------------------
+    { "timer",                "timer", PT_CUE },
+    { "temporizador",         "timer", PT_CUE },
+    { "contagem regressiva",  "countdown", PT_CUE },
+    { "alarme",               "alarm", PT_CUE },
+    { "me acorda",            "wake me", PT_CUE },
+    { "me acorde",            "wake me", PT_CUE },
+    { "um timer",             "timer", PT_CUE },
+    { "um alarme",            "alarm", PT_CUE },
+    { "liga",                 "start", PT_CUE },
+    { "ligue",                "start", PT_CUE },
+    { "de meia hora",         "for 30 minutes", PT_KEEP },
+    { "por meia hora",        "for 30 minutes", PT_KEEP },
+    { "em meia hora",         "in 30 minutes", PT_KEEP },
+        { "cria",                 "create", PT_CUE },
+    { "crie",                 "create", PT_CUE },
+    // --- arithmetic and conversions --------------------------------------------------------------------
+    { "quanto e",             "how much is", PT_CUE },
+    { "quanto da",            "how much is", PT_CUE },
+    { "quanto sao",           "how much is", PT_CUE },
+    { "calcula",              "calculate", PT_CUE },
+    { "calcule",              "calculate", PT_CUE },
+    { "vezes",                "times", PT_CUE },
+    { "multiplicado por",     "times", PT_CUE },
+    { "dividido por",         "divided by", PT_CUE },
+    { "elevado a",            "to the power of", PT_CUE },
+    { "raiz quadrada de",     "square root of", PT_CUE },
+    { "por cento de",         "percent of", PT_CUE },
+    { "converte",             "convert", PT_CUE },
+    { "converta",             "convert", PT_CUE },
+    { "converter",            "convert", PT_CUE },
+    { "quantos quilometros sao","how many km is", PT_CUE },
+    { "quilometros",          "km", 0 },
+    { "quilometro",           "km", 0 },
+    { "metros",               "meters", 0 },
+    { "metro",                "meter", 0 },
+    { "centimetros",          "centimeters", 0 },
+    { "milhas",               "miles", 0 },
+    { "milha",                "mile", 0 },
+    { "pes",                  "feet", 0 },
+    { "polegadas",            "inches", 0 },
+    { "quilos",               "kg", 0 },
+    { "quilo",                "kg", 0 },
+    { "gramas",               "grams", 0 },
+    { "libras",               "pounds", 0 },
+    { "litros",               "liters", 0 },
+    { "litro",                "liter", 0 },
+    { "galoes",               "gallons", 0 },
+    { "graus celsius",        "celsius", 0 },
+    { "graus fahrenheit",     "fahrenheit", 0 },
+    { "celsius",              "celsius", 0 },
+    { "fahrenheit",           "fahrenheit", 0 },
+    // --- calendar questions --------------------------------------------------------------------------
+    { "quantos dias faltam para", "how many days until", PT_CUE },
+    { "quantos dias faltam pro",  "how many days until", PT_CUE },
+    { "quantos dias ate",     "how many days until", PT_CUE },
+    { "em que dia cai",       "what day is", PT_CUE },
+    { "que dia cai",          "what day is", PT_CUE },
+    { "natal",                "christmas", 0 },
+    { "ano novo",             "new year", 0 },
+    { "amanha e que dia",     "what day is tomorrow", PT_CUE },
+    { "que dia e amanha",     "what day is tomorrow", PT_CUE },
     // --- glue (never a cue on its own) ----------------------------------------------------------------
     { "por favor",            "", 0 },
     { "pra mim",              "", 0 },
@@ -206,7 +308,6 @@ static const a_pt_word_t PT_WORDS[] = {
     { "quanta",               "how much", 0 },
     { "quantos",              "how many", 0 },
     { "agora",                "now", 0 },
-    { "hoje",                 "today", 0 },
     { "um pouco",             "", 0 },
     { "mais",                 "more", 0 },
     { "menos",                "less", 0 },
@@ -231,60 +332,148 @@ static char pt_fold_c3(unsigned char d)
     }
 }
 
-// Fold to lowercase ASCII words separated by single spaces. Keeps digits and the characters a tool may read
-// from the raw line (% . , : / - _ +); ?!;"() and other punctuation become separators.
-static void pt_fold(const char *in, char *out, size_t cap)
+// One word of the line: where it is in the input (copied as typed inside the user's text) and its folded form
+// (lowercase ASCII, used for matching and emitted everywhere else). Kept small: this frame is on the query path.
+#define PT_MAXW  32
+#define PT_WLEN  20
+typedef struct { const char *raw; unsigned char rawlen; char f[PT_WLEN]; } pt_tok_t;
+
+// Split on whitespace; fold each word. Sentence punctuation (?!;"() and a final , .) leaves the folded form,
+// and ?! leaves the raw one too. Returns the number of words.
+static int pt_split(const char *in, pt_tok_t *w)
 {
-    size_t n = 0; bool sp = true;
-    for (const unsigned char *p = (const unsigned char *)in; *p && n + 1 < cap; p++) {
-        char c = 0;
-        if (*p == 0xC3 && p[1]) c = pt_fold_c3(*++p);
-        else if (*p < 0x80 && (isalnum(*p) || strchr("%.,:/-_+'", *p))) c = (char)tolower(*p);
-        if (c == '\'') c = 0;                      // "d'agua" -> "d agua"
-        if (c) { out[n++] = c; sp = false; }
-        else if (!sp) { out[n++] = ' '; sp = true; }
+    int n = 0;
+    const unsigned char *p = (const unsigned char *)in;
+    while (*p && n < PT_MAXW) {
+        while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') p++;
+        if (!*p) break;
+        const unsigned char *st = p;
+        while (*p && *p != ' ' && *p != '\t' && *p != '\n' && *p != '\r') p++;
+        size_t rl = (size_t)(p - st);
+        while (rl && strchr("?!;\")(", st[rl - 1])) rl--;          // "horas?" -> "horas"
+        int k = 0;
+        for (size_t i = 0; i < rl && k < PT_WLEN - 1; i++) {
+            char c = 0;
+            if (st[i] == 0xC3 && i + 1 < rl) c = pt_fold_c3(st[++i]);
+            else if (st[i] < 0x80 && (isalnum(st[i]) || strchr("%.,:/-_+", st[i]))) c = (char)tolower(st[i]);
+            if (c) w[n].f[k++] = c;
+        }
+        while (k && strchr(".,:", w[n].f[k - 1])) k--;   // "calculadora," / "anota:" -> the bare word
+        w[n].f[k] = 0;
+        if (!k && !rl) continue;
+        if (rl > 255) rl = 255;
+        w[n].raw = (const char *)st; w[n].rawlen = (unsigned char)rl;
+        n++;
     }
-    while (n && out[n - 1] == ' ') n--;
-    // a sentence's final '.' / ',' is punctuation, not part of the last word
-    while (n && (out[n - 1] == '.' || out[n - 1] == ',')) n--;
-    out[n] = 0;
+    return n;
 }
 
-// Does the entry's word sequence `pt` start at `s` (a position in the folded line, on a word start)?
-// Returns the length matched (up to a word boundary) or 0.
-static size_t pt_match_at(const char *s, const char *pt)
+// Does entry `pt` (space-separated folded words) match the words starting at w[i]? Returns how many words.
+static int pt_match_words(const pt_tok_t *w, int n, int i, const char *pt)
 {
-    size_t l = strlen(pt);
-    if (strncmp(s, pt, l) != 0) return 0;
-    char e = s[l];
-    if (e == ' ' || e == 0) return l;
-    // trailing punctuation glued to the word ("calculadora," / "horas?") still matches
-    if ((e == ',' || e == '.') && (s[l + 1] == ' ' || s[l + 1] == 0)) return l + 1;
+    int used = 0;
+    while (*pt) {
+        if (i + used >= n) return 0;
+        size_t l = strcspn(pt, " ");
+        if (strlen(w[i + used].f) != l || strncmp(w[i + used].f, pt, l)) return 0;
+        used++; pt += l; while (*pt == ' ') pt++;
+    }
+    return used;
+}
+
+// Small Portuguese number words -> value (0 = not one).
+static int pt_numword(const char *f)
+{
+    static const struct { const char *w; int v; } N[] = {
+        {"um",1},{"uma",1},{"dois",2},{"duas",2},{"tres",3},{"quatro",4},{"cinco",5},{"seis",6},{"sete",7},
+        {"oito",8},{"nove",9},{"dez",10},{"onze",11},{"doze",12},{"treze",13},{"quatorze",14},{"catorze",14},
+        {"quinze",15},{"dezesseis",16},{"dezessete",17},{"dezoito",18},{"dezenove",19},{"vinte",20},{"trinta",30},
+        {"quarenta",40},{"quarenta e cinco",45},{"cinquenta",50},{"sessenta",60},{"noventa",90},{"cem",100} };
+    for (size_t i = 0; i < sizeof N / sizeof N[0]; i++) if (!strcmp(N[i].w, f)) return N[i].v;
     return 0;
+}
+static bool pt_isnum(const pt_tok_t *t) { return isdigit((unsigned char)t->f[0]) || pt_numword(t->f); }
+
+// A time unit after a number -> its English word ("5 horas" -> "5 hours"); NULL if not a unit.
+static const char *pt_unit(const char *f)
+{
+    static const char *const U[][2] = { {"segundo","second"},{"segundos","seconds"},{"minuto","minute"},
+        {"minutos","minutes"},{"min","min"},{"hora","hour"},{"horas","hours"},{"dia","day"},{"dias","days"},
+        {"semana","week"},{"semanas","weeks"} };
+    for (size_t i = 0; i < sizeof U / sizeof U[0]; i++) if (!strcmp(U[i][0], f)) return U[i][1];
+    return NULL;
+}
+
+// Context rules that a word table cannot express (they look at the neighbours). Return the English for w[i]
+// (consuming *used words) or NULL. They apply in the user's text too: they are time/arithmetic structure.
+static const char *pt_context(const pt_tok_t *w, int n, int i, int *used, char *num, size_t numcap)
+{
+    const char *f = w[i].f;
+    bool next_num = i + 1 < n && pt_isnum(&w[i + 1]);
+    bool prev_num = i > 0 && pt_isnum(&w[i - 1]);
+    *used = 1;
+    // "para/pare o cronometro" at the start of a line is the verb "to stop", not the preposition "to"
+    if (i == 0 && (!strcmp(f, "para") || !strcmp(f, "pare")) && !next_num) return "stop";
+    // "7 da manha" -> "7am", "7 da tarde/noite" -> "7pm" (the timer reads am/pm glued to the number)
+    if (isdigit((unsigned char)f[0]) && !strchr(f, ':') && i + 2 < n && !strcmp(w[i + 1].f, "da")) {
+        const char *ap = !strcmp(w[i + 2].f, "manha") ? "am"
+                       : (!strcmp(w[i + 2].f, "tarde") || !strcmp(w[i + 2].f, "noite")) ? "pm" : NULL;
+        if (ap) { snprintf(num, numcap, "%s%s", f, ap); *used = 3; return num; }
+    }
+    // "as 7" / "para as 7" / "ate as 7" -> "at 7"
+    if ((!strcmp(f, "para") || !strcmp(f, "ate")) && i + 2 < n && !strcmp(w[i + 1].f, "as") && pt_isnum(&w[i + 2])) { *used = 2; return "at"; }
+    if ((!strcmp(f, "as") || !strcmp(f, "a")) && next_num && !(i + 2 < n && pt_unit(w[i + 2].f))) return "at";
+    // "daqui a 5 minutos" / "em 5 minutos" -> "in 5 minutes"; "de/por/durante 5 minutos" -> "for 5 minutes"
+    bool num_unit = next_num && i + 2 < n && pt_unit(w[i + 2].f);
+    if (!strcmp(f, "daqui") && i + 1 < n && !strcmp(w[i + 1].f, "a")) { *used = 2; return "in"; }
+    if (!strcmp(f, "dentro") && i + 1 < n && !strcmp(w[i + 1].f, "de")) { *used = 2; return "in"; }
+    if (num_unit && !strcmp(f, "em")) return "in";
+    if (num_unit && (!strcmp(f, "de") || !strcmp(f, "por") || !strcmp(f, "durante"))) return "for";
+    // a number word before a unit or next to an operator -> digits ("cinco minutos" -> "5 minutes")
+    int v = pt_numword(f);
+    if (v && ((i + 1 < n && (pt_unit(w[i + 1].f) || !strcmp(w[i + 1].f, "vezes") || !strcmp(w[i + 1].f, "mais") ||
+                              !strcmp(w[i + 1].f, "menos"))) || (i > 0 && !strcmp(w[i - 1].f, "as")))) {
+        snprintf(num, numcap, "%d", v); return num;
+    }
+    if (prev_num) { const char *u = pt_unit(f); if (u) return u; }
+    // arithmetic between two numbers: "12 mais 3", "10 menos 4", "6 x 7"
+    if (prev_num && next_num) {
+        if (!strcmp(f, "mais"))  return "plus";
+        if (!strcmp(f, "menos")) return "minus";
+    }
+    return NULL;
 }
 
 bool a_pt_bridge(const char *in, char *out, size_t cap)
 {
-    char f[256];
+    pt_tok_t w[PT_MAXW];
+    char num[12];
     if (!in || !out || cap < 2) return false;
-    pt_fold(in, f, sizeof f);
-    size_t n = 0; bool cue = false;
-    const char *s = f;
-    while (*s) {
-        while (*s == ' ') s++;
-        if (!*s) break;
-        const a_pt_word_t *best = NULL; size_t bl = 0;
-        for (size_t i = 0; i < sizeof PT_WORDS / sizeof PT_WORDS[0]; i++) {
-            size_t l = pt_match_at(s, PT_WORDS[i].pt);
-            if (l > bl) { bl = l; best = &PT_WORDS[i]; }
+    int nw = pt_split(in, w);
+    size_t n = 0; bool cue = false, text = false;
+    for (int i = 0; i < nw; ) {
+        const char *e = NULL; size_t el = 0; int used = 1;
+        const char *c = pt_context(w, nw, i, &used, num, sizeof num);
+        if (c) { e = c; el = strlen(c); }
+        else {
+            const a_pt_word_t *best = NULL; int bu = 0;
+            for (size_t k = 0; k < sizeof PT_WORDS / sizeof PT_WORDS[0]; k++) {
+                if (text && !(PT_WORDS[k].flags & PT_KEEP)) continue;   // the user's text: only time words translate
+                int u = pt_match_words(w, nw, i, PT_WORDS[k].pt);
+                if (u > bu) { bu = u; best = &PT_WORDS[k]; }
+            }
+            if (best) {
+                e = best->en; el = strlen(e); used = bu;
+                if (best->flags & PT_CUE) cue = true;
+                if (best->flags & PT_TEXT) text = true;
+            } else if (text) { e = w[i].raw; el = w[i].rawlen; }        // as typed, accents kept
+            else             { e = w[i].f;   el = strlen(w[i].f); }
         }
-        const char *w; size_t wl;
-        if (best) { w = best->en; wl = strlen(w); cue |= best->cue; s += bl; }
-        else      { w = s; wl = strcspn(s, " "); s += wl; }
-        if (wl == 0) continue;                                   // deleted glue ("por favor")
+        i += used;
+        if (el == 0) continue;                                           // deleted glue ("por favor")
         if (n && n + 1 < cap) out[n++] = ' ';
-        if (n + wl >= cap) wl = cap - 1 - n;
-        memcpy(out + n, w, wl); n += wl;
+        if (n + el >= cap) el = cap - 1 - n;
+        memcpy(out + n, e, el); n += el;
     }
     out[n] = 0;
     return cue;
@@ -293,8 +482,8 @@ bool a_pt_bridge(const char *in, char *out, size_t cap)
 // ---------------------------------------------------------------------------------------------------------
 // 2. Reply catalog
 // ---------------------------------------------------------------------------------------------------------
-// en/pt templates: "%s" in en is a wildcard capture (up to 4, non-empty); "%1".."%4" in pt is that capture,
-// localized through PT_TERMS when it is an app id / weekday / month. Every other byte is literal.
+// en/pt templates: "%s" in en is a wildcard capture (up to 5, non-empty); "%1".."%5" in pt is that capture,
+// localized through PT_TERMS (app ids, weekdays, months, units...). Every other byte is literal.
 // intent: NULL = any; else the entry applies only to that intent (the same EN text can need two translations).
 typedef struct { const char *intent; const char *en; const char *pt; } a_pt_reply_t;
 
@@ -308,6 +497,8 @@ static const a_pt_reply_t PT_REPLIES[] = {
     { NULL,       "Raising the brightness.",         "Aumentando o brilho." },
     { NULL,       "Lowering the brightness.",        "Diminuindo o brilho." },
     { NULL,       "Setting the brightness to %s.",   "Brilho em %1." },
+    { NULL,       "{value}.",                        "{value}." },   // the executor fills a pt value
+    { NULL,       "{value}",                         "{value}" },
     { NULL,       "Battery: {value}.",               "Bateria: {value}." },
     { NULL,       "SD space: {value}.",              "Espaco no SD: {value}." },
     { "year",     "It's {value}.",                   "Estamos em {value}." },
@@ -318,6 +509,32 @@ static const a_pt_reply_t PT_REPLIES[] = {
     { "date",     "Tomorrow is %s, %s %s, %s.",      "Amanha e %1, %3 de %2 de %4." },
     { "date",     "The day after tomorrow is %s, %s %s, %s.", "Depois de amanha e %1, %3 de %2 de %4." },
     { "date",     "Yesterday was %s, %s %s, %s.",    "Ontem foi %1, %3 de %2 de %4." },
+    // reminders / timers / alarms (tool_event, tool_timer)
+    { "add_event", "Reminder \"%s\" today at %s.",     "Lembrete \"%1\" hoje as %2." },
+    { "add_event", "Reminder \"%s\" tomorrow at %s.",  "Lembrete \"%1\" amanha as %2." },
+    { "add_event", "Reminder \"%s\" in %s days at %s.","Lembrete \"%1\" daqui a %2 dias as %3." },
+    { "add_event", "Reminder \"%s\" today.",           "Lembrete \"%1\" hoje." },
+    { "add_event", "Reminder \"%s\" tomorrow.",        "Lembrete \"%1\" amanha." },
+    { "add_event", "Reminder \"%s\" in %s days.",      "Lembrete \"%1\" daqui a %2 dias." },
+    { "add_event", "Reminder \"%s\" — I'll alert you at %s.", "Lembrete \"%1\": aviso as %2." },
+    { "add_event", "%s of %s — I'll alert you at %s.", "%1 de %2: aviso as %3." },
+    { "add_event", "%s set for %s tomorrow.",         "%1 para amanha as %2." },
+    { "add_event", "%s set for %s.",                  "%1 para as %2." },
+    // files and notes
+    { NULL,       "Creating %s in %s.",               "Criando %1 em %2." },
+    { NULL,       "Creating %s with: %s",             "Criando %1 com: %2" },
+    // arithmetic, percentages, conversions
+    { "calc",     "It's %s.",                         "Da %1." },
+    { "percent",  "%s% of %s = %s.",                  "%1% de %2 = %3." },
+    { "convert",  "%s %s = %s %s.",                   "%1 %2 = %3 %4." },
+    // calendar questions (anima_solve.c): "December 25, 2026" -> "25 de dezembro de 2026"
+    { "date",     "%s %s, %s is today.",              "%2 de %1 de %3 e hoje." },
+    { "date",     "1 day until %s %s, %s.",           "Falta 1 dia para %2 de %1 de %3." },
+    { "date",     "%s days until %s %s, %s.",         "Faltam %1 dias para %3 de %2 de %4." },
+    { "date",     "%s %s, %s was %s days ago.",       "%2 de %1 de %3 foi ha %4 dias." },
+    { "date",     "%s %s, %s falls on a %s.",         "%2 de %1 de %3 cai em %4." },
+    { "date",     "In %s days it will be %s, %s %s, %s.", "Daqui a %1 dias sera %2, %4 de %3 de %5." },
+    { "date",     "%s days ago it was %s, %s %s, %s.", "Ha %1 dias foi %2, %4 de %3 de %5." },
     { NULL,       "I'm ANIMA, NucleoOS's offline assistant. I work with no internet, on the device.",
                   "Sou a ANIMA, a assistente offline do NucleoOS. Funciono sem internet, no proprio aparelho." },
     { NULL,       "I don't know.",                   "Nao sei." },
@@ -333,6 +550,10 @@ static const a_pt_app_t PT_TERMS[] = {
     { "January", "janeiro" }, { "February", "fevereiro" }, { "March", "marco" }, { "April", "abril" },
     { "May", "maio" }, { "June", "junho" }, { "July", "julho" }, { "August", "agosto" },
     { "September", "setembro" }, { "October", "outubro" }, { "November", "novembro" }, { "December", "dezembro" },
+    { "Alarm", "Alarme" }, { "reminder", "lembrete" }, { "Documents", "Documentos" }, { "Notes", "Notas" },
+    { "miles", "milhas" }, { "mile", "milha" }, { "meters", "metros" }, { "feet", "pes" }, { "inches", "polegadas" },
+    { "pounds", "libras" }, { "grams", "gramas" }, { "liters", "litros" }, { "gallons", "galoes" },
+    { "kilometers", "quilometros" }, { "centimeters", "centimetros" }, { "ounces", "oncas" },
     { "calculator",      "a Calculadora" },     { "clock",          "o Relogio" },
     { "chrono",          "o Cronometro" },      { "calendar",       "o Calendario" },
     { "settings",        "as Configuracoes" },  { "media-player",   "o Player de musica" },
@@ -371,17 +592,24 @@ static bool pt_tmatch(const char *t, const char *s, const char **cap, size_t *cl
     return *t == *s && pt_tmatch(t + 1, s + 1, cap, cl, k, kmax);
 }
 
+#ifdef ANIMA_HOST
+bool g_anima_pt_miss;   // host harness only: the last pt reply had no catalog row (pt-check lists them)
+#endif
+
 bool a_pt_reply(const char *intent, char *reply, size_t cap)
 {
+#ifdef ANIMA_HOST
+    g_anima_pt_miss = reply && reply[0];
+#endif
     if (!reply || !reply[0]) return false;
     for (size_t i = 0; i < sizeof PT_REPLIES / sizeof PT_REPLIES[0]; i++) {
         const a_pt_reply_t *e = &PT_REPLIES[i];
         if (e->intent && (!intent || strcmp(e->intent, intent))) continue;
-        const char *c[4]; size_t cl[4];
-        if (!pt_tmatch(e->en, reply, c, cl, 0, 4)) continue;
+        const char *c[5]; size_t cl[5];
+        if (!pt_tmatch(e->en, reply, c, cl, 0, 5)) continue;
         char out[320]; size_t n = 0;
         for (const char *p = e->pt; *p && n + 1 < sizeof out; p++) {
-            if (p[0] == '%' && p[1] >= '1' && p[1] <= '4') {
+            if (p[0] == '%' && p[1] >= '1' && p[1] <= '5') {
                 int k = p[1] - '1'; p++;
                 const char *v = c[k]; size_t vl = cl[k];
                 const char *t = pt_term(v, vl);
@@ -391,8 +619,23 @@ bool a_pt_reply(const char *intent, char *reply, size_t cap)
             } else out[n++] = *p;
         }
         out[n] = 0;
+#ifdef ANIMA_HOST
+        g_anima_pt_miss = false;
+#endif
         snprintf(reply, cap, "%s", out);
         return true;
     }
     return false;
+}
+
+// A timer/alarm/reminder with no text of its own is saved with the English label ("off=1;time=07:00;text=Alarm").
+// The calendar shows that text, so it is relabelled. A user's own text is never touched (it is not a label).
+void a_pt_event_label(char *content, size_t cap)
+{
+    static const char *const L[][2] = { {"Alarm","Alarme"}, {"Timer","Timer"}, {"reminder","lembrete"} };
+    char *t = content ? strstr(content, ";text=") : NULL;
+    if (!t) return;
+    t += 6;
+    for (size_t i = 0; i < sizeof L / sizeof L[0]; i++)
+        if (!strcmp(t, L[i][0])) { snprintf(t, cap - (size_t)(t - content), "%s", L[i][1]); return; }
 }

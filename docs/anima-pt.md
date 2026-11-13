@@ -25,8 +25,14 @@ No third branch at any of the ~450 sites. `anima_pt.c` adds two flash-only table
    rewritten into the English the cascade already reads: "abre a calculadora" -> "open the calculator",
    "que horas são?" -> "what time is it", "deixa a tela mais escura" -> "set the brightness darker". Longest match wins.
    The bridge is used **only when the line carries a device-command cue** (a command verb, a setting, a reading, an app
-   name). A line with no cue ("quem foi Santos Dumont") goes through **as typed**, so the online tier (which answers in pt)
-   never gets a half-translated pidgin.
+   name, a tool). A line with no cue ("quem foi Santos Dumont") goes through **as typed**, so the online tier (which
+   answers in pt) never gets a half-translated pidgin.
+   - **The user's text is kept.** After a reminder/note/file frame ("me lembra de", "anota", "cria o arquivo") the words
+     are copied as typed, accents included; only time words still translate (`PT_KEEP`: "amanhã", "meia hora"). So
+     "me lembra de ligar para a mãe amanhã às 10" saves `text=ligar para a mãe` for tomorrow 10:00.
+   - **Context rules** a word table cannot express: "às 7" / "para as 7" -> "at 7", "7 da noite" -> "7pm",
+     "daqui a / em 5 minutos" -> "in 5 minutes", "de 5 minutos" -> "for 5 minutes", a number word before a unit
+     ("cinco minutos"), "12 mais 3" -> "12 plus 3", and "para/pare" at the start of a line -> "stop".
 2. **Reply catalog** (`a_pt_reply`). The cascade runs with `en = true` (pt was already on the English floor), and in the
    `done:` epilogue, the single point every path converges on, the English reply is matched against EN templates
    (`"Opening %s."`) and rewritten from a pt template (`"Abrindo %1."`). Captures are localized too (app id ->
@@ -46,42 +52,54 @@ questions go to the LLM, which already answers in pt. Offline, they get the hone
 
 | | |
 |---|---|
-| Flash | `anima_pt.c.obj`: 1.1 KB code + 6.8 KB rodata (tables + strings). The pt values in `app_anima.cpp` add ~1 KB more |
+| Flash | `anima_pt.c.obj`: 14.2 KB (code + tables + strings). The pt values in `app_anima.cpp` ~1 KB; the 120 ANIMA screen strings in the UI catalog (`nucleo_i18n_pt.c`) a few KB |
 | Static RAM (.data/.bss) | **0** |
 | Heap | 256 B (`A_PT_LINE`), malloc'd on **pt turns only**, freed at the end of the turn. If the allocation fails, the raw line is used |
-| Stack | `nucleo_anima_query` frame +16 B (0xd40 -> 0xd50). Transient: the bridge 320 B at entry, the reply rewrite 400 B in the epilogue (both after/before the deep calls) |
+| Stack | `nucleo_anima_query` frame +16 B (0xd40 -> 0xd50). Transient, outside the deep calls: the bridge ~1 KB at entry (32 words x 20 chars), the reply rewrite ~0.4 KB in the epilogue |
 | it/en behaviour | byte-identical: a 707-query A/B (`queries.txt` + action/math/reason/skill eval files) against the pre-change harness, `--it` and `--en`, 0 diff lines |
 
 A first version wrapped the cascade in a new function that copied the 1.4 KB result: +1.7 KB of stack on every query
 in every language. It was replaced by the epilogue hook above. Don't wrap `nucleo_anima_query` by value.
 
-## Shipped (slice 1): device commands
+## Shipped
 
-Recognized offline and answered in pt, pinned by `npm run anima:pt` (`tools/anima-host/pt-check.mjs`, also in
-`npm run anima:gate`):
-- open/close apps: "abre a calculadora", "abra as configurações, por favor", "fecha a calculadora" (~45 app names);
-- volume: "aumenta/abaixa o volume", "coloca o volume em 50", "volume no máximo", "deixa o som mudo";
-- brightness: "aumenta/diminui o brilho", "brilho em 20", "deixa a tela mais escura";
-- time, date, year, battery, SD space, version, "quem é você", "o que você sabe fazer".
-- Guards: a pt question with no command cue never becomes an action, and the same it/en phrasings still route and
-  reply in their own language.
+Pinned by `npm run anima:pt` (`tools/anima-host/pt-check.mjs`, also in `npm run anima:gate`): the routed intent and
+arg, the exact pt reply, the payload the device writes (calendar entry, note body), and **no reply left in English**
+(the host build marks a pt reply with no catalog row: `pt: untranslated` in `anima.exe` output).
+
+- **Device commands:** open/close apps ("abre a calculadora", "fecha a calculadora", ~45 app names), volume ("aumenta o
+  volume", "coloca o volume em 50", "deixa o som mudo"), brightness ("diminui o brilho", "deixa a tela mais escura"),
+  time, date, year, battery, SD space, version, "quem é você", "o que você sabe fazer", "para o cronômetro".
+- **Timers, alarms, reminders:** "coloca um timer de 5 minutos", "liga um timer de meia hora", "me acorda às 7",
+  "define um alarme às 7 da noite", "me lembra de ligar para a mãe amanhã às 10", "me lembre de comprar pão daqui a 20
+  minutos". A bare timer/alarm is saved in the calendar as "Alarme"/"lembrete" (`a_pt_event_label`).
+- **Notes and files:** "anota: comprar leite e café", "cria uma nota chamada compras", "cria o arquivo teste.txt".
+- **Arithmetic, percentages, conversions:** "quanto é 12 vezes 7", "quanto é 100 dividido por 4", "quanto é 15 por
+  cento de 200", "converte 10 quilômetros para milhas", "converte 70 quilos para libras".
+- **Calendar questions:** "quantos dias faltam para o natal", "que dia cai o natal", "que dia é amanhã".
+- **Guards:** a pt question with no command cue never becomes an action; the same it/en phrasings still route and reply
+  in their own language (and a 707-query A/B stays byte-identical).
+- **The ANIMA app's screen** (`app_anima.cpp`): its 145 `s_en ? "EN" : "IT"` texts (hints, menus, confirmations,
+  "Criei %s.", "Criado \"%s\" %s as %s.") are `TR("IT", "EN")` now, with 120 new rows in `tools/native-i18n/pt.json`
+  (`node tools/native-i18n/native-i18n.mjs gen pt --check`: 2000 strings, 0 missing). it/en unchanged: `TR` picks the
+  same literal `s_en` did.
 
 Host: `npm run anima -- --pt "abre a calculadora"`, the REPL's `/pt`.
 
-## Next slices (in cost order)
+## Not done, and why
 
-1. **Reply coverage.** Add catalog rows for timers/alarms, reminders (`add_event`), notes/`create_file`, calculator
-   ("12 vezes 7"), clarify questions and the decline paths, plus the bridge words they need ("lembrete", "vezes",
-   "amanhã", "daqui a N minutos"). Add a host check that lists every English reply a pt turn still returns.
-2. **Native ANIMA chrome** (`app_anima.cpp` `s_en ? ... : ...`, e.g. "Opening %s...", "(stopped)") through `TR()` and
-   `pt.json`: UI i18n, not the cascade.
-3. **Browser engine.** `apps/anima/local/` (not in this clone) builds the same C sources to WASM: rerun its
-   `build.ps1` so the browser cascade gains the bridge (the gate's `anima-local` parity check flags a stale WASM). Its
-   `cascade.js` `guessLang`/`commandHint` vocabulary (it/en/es/fr/de) needs `pt` as well.
-4. **Voice.** No pt clip pack: under pt the English voice gets Portuguese text and falls back to the "read it on the
-   screen" hint. A pt pack follows `docs/tts.md` (numbers + the catalog's fixed phrases).
-5. **Knowledge.** Only if a pt corpus appears: a pt L1 encoder/index (~11.6 MB SD). Until then, online or "Nao sei."
+1. **Browser engine.** `apps/anima/www/local/anima-local.{mjs,wasm}` and `cascade.js` are pinned in `webos.lock`: they
+   come from nucleo-webos, not this repo. The WASM must be rebuilt there (Emscripten, `apps/anima/local/build.ps1`) so
+   the browser cascade gains the bridge, and `cascade.js` `guessLang`/`commandHint` (it/en/es/fr/de) needs `pt`. Until
+   then the gate's `anima-local` parity check reports the engine as stale.
+2. **Voice on the card.** The pt voice is done in code and as a pack (docs/tts.md, "Brazilian Portuguese"): pt numbers,
+   time and mathspeak in `nucleo_tts_plan.c`, `voice_lang()` in `app_anima.cpp`, a 328-clip pack
+   (`pt-BR-FranciscaNeural`, 11.7 MB) built into `build/tts-staging/pt/` and checked there (0/1440 minutes, 57/57
+   replies). Not done: copying it to `/sd/data/tts/pt/` (an SD sync, only on request). Until then a pt turn finds no
+   pt index and stays silent instead of the English "read it on the screen" hint. The pack covers the device
+   replies only (no dictionary/frequency layer), so knowledge answers still fall to "Leia na tela."; the PTT path
+   (`nucleo_voice.c`) still speaks it/en.
+3. **Knowledge.** Only if a pt corpus appears: a pt L1 encoder/index (~11.6 MB SD). Until then, online or "Nao sei."
 
-Known limits: "tempo" means the Weather app (as in Italian), never the clock; the bridge truncates a line at 255
-bytes (command lines are short); when a pt line has a command cue and still falls through to the LLM, the LLM gets
-the bridged text.
+Known limits: "tempo" means the Weather app (as in Italian), never the clock; the bridge reads the first 32 words of
+a line; when a pt line has a command cue and still falls through to the LLM, the LLM gets the bridged text.

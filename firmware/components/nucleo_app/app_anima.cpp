@@ -814,12 +814,11 @@ static void load_chat(void)
         struct stat st;
         if (stat(CHAT_PATH, &st) == 0) {
             struct tm *tm = localtime(&st.st_mtime);
-            if (tm) snprintf(sep, sizeof sep, s_en ? "-- session %02d/%02d %02d:%02d --"
-                                                    : "-- ripresa %02d/%02d %02d:%02d --",
+            if (tm) snprintf(sep, sizeof sep, TR("-- ripresa %02d/%02d %02d:%02d --", "-- session %02d/%02d %02d:%02d --"),
                              tm->tm_mday, tm->tm_mon + 1, tm->tm_hour, tm->tm_min);
-            else    snprintf(sep, sizeof sep, s_en ? "-- restored --" : "-- ripresa --");
+            else    snprintf(sep, sizeof sep, TR("-- ripresa --", "-- restored --"));
         } else {
-            snprintf(sep, sizeof sep, s_en ? "-- restored --" : "-- ripresa --");
+            snprintf(sep, sizeof sep, TR("-- ripresa --", "-- restored --"));
         }
         // Free slot before the logical head: (mhead - mcount - 1) % MSG_MAX
         int slot = (s_mhead - s_mcount - 1 + MSG_MAX * 2) % MSG_MAX;
@@ -944,6 +943,15 @@ static int voice_wait(uint32_t max_ms)
     return TK_NONE;
 }
 
+// Voice language for the clip pool (/sd/data/tts/<lang>/): Portuguese (pt) has its own pack and planner branch
+// (numbers/time/mathspeak, docs/tts.md), otherwise the it/en mirror of the OS language.
+static const char *voice_lang(bool en)
+{
+    const char *ul = nucleo_i18n_lang();
+    if (ul && !strcmp(ul, "pt")) return "pt";
+    return en ? "en" : "it";
+}
+
 static void speak_result(const anima_result_t &r, bool en)
 {
     if (!r.reply[0]) return;
@@ -951,7 +959,7 @@ static void speak_result(const anima_result_t &r, bool en)
     // "media-player" id, which isn't covered -> "leggila") and the operation's OUTCOME (-> a "Fatto" confirmation). Nothing here,
     // so the voice doesn't double up or read an id out loud as if it were speech.
     if (r.action == ANIMA_ACT_LAUNCH || r.action == ANIMA_ACT_TOOL) return;
-    const char *lang = en ? "en" : "it";
+    const char *lang = voice_lang(en);
     bool knowledge = r.tier == ANIMA_TIER_FACT || r.tier == ANIMA_TIER_STITCH || r.tier == ANIMA_TIER_REMOTE;
     if (knowledge) {
         if (!nucleo_tts_enabled()) return;   // voice off -> skip the whole loop (no useless WAV-plan attempts)
@@ -1046,7 +1054,8 @@ static void speak_result(const anima_result_t &r, bool en)
         // of "leggila". Otherwise (formula with no number, e.g. "A = π·r²") -> normal say -> "leggila".
         char res[48];
         if (nucleo_tts_eq_result(r.reply, res, sizeof res)) {
-            char spoken[80]; snprintf(spoken, sizeof spoken, en ? "The result is %s." : "Il risultato e' %s.", res);
+            const bool pt = !strcmp(lang, "pt");
+            char spoken[80]; snprintf(spoken, sizeof spoken, pt ? "O resultado e %s." : en ? "The result is %s." : "Il risultato e' %s.", res);
             nucleo_tts_say(spoken, lang);
         } else nucleo_tts_say(r.reply, lang);
     } else {
@@ -1114,7 +1123,7 @@ static void cal_refresh(bool force)
     if (!force && S->cal_ok && S->cal_size == sz && S->cal_mtime == mt && S->cal_en == s_en && !strcmp(S->cal_key, key)) return;
     S->cal_ok = true; S->cal_size = sz; S->cal_mtime = mt; S->cal_en = s_en;
     snprintf(S->cal_key, sizeof S->cal_key, "%s", key);
-    snprintf(S->today_hdr, sizeof S->today_hdr, s_en ? "Today, %s %d %s" : "Oggi, %s %d %s",
+    snprintf(S->today_hdr, sizeof S->today_hdr, TR("Oggi, %s %d %s", "Today, %s %d %s"),
              (s_en ? WD3_EN : WD3_IT)[t.tm_wday], t.tm_mday, (s_en ? MO3_EN : MO3_IT)[t.tm_mon]);
     s_today_n = s_today_count = 0; S->agenda_n = 0; S->agenda[0] = 0; S->cal_next[0] = 0;
     cJSON *root = exists ? cal_load(nullptr) : nullptr;
@@ -1158,7 +1167,7 @@ static void cal_refresh(bool force)
                 const cJSON *tx = cJSON_GetObjectItem(ev, "text");
                 const char *txs = cJSON_IsString(tx) ? tx->valuestring : "";
                 int yy, mm, dd; char line[72];
-                if (sscanf(bestk, "%d-%d-%d", &yy, &mm, &dd) == 3) snprintf(line, sizeof line, s_en ? "next %d/%d  %s" : "poi %d/%d  %s", dd, mm, txs);
+                if (sscanf(bestk, "%d-%d-%d", &yy, &mm, &dd) == 3) snprintf(line, sizeof line, TR("poi %d/%d  %s", "next %d/%d  %s"), dd, mm, txs);
                 else snprintf(line, sizeof line, "%s", txs);
                 app_ui_ascii_fold(line, S->today[s_today_n++], 72);
             }
@@ -1190,7 +1199,7 @@ static void load_today(void) { cal_refresh(false); }
 static bool fill_system_value_pt(const char *arg, char *out, size_t n, time_t now, const struct tm *tm)
 {
     if (!strcmp(arg, "time")) {
-        if (tm && now > 1672531200) snprintf(out, n, "%s %d:%02d", tm->tm_hour == 1 ? "E" : "Sao", tm->tm_hour, tm->tm_min);
+        if (tm && now > 1672531200) nucleo_tts_speak_time(out, (int)n, tm->tm_hour, tm->tm_min, "pt");   // "Sao 9 e 30" (screen = voice)
         else                        snprintf(out, n, "Nao sei a hora: o relogio nao esta ajustado");
     } else if (!strcmp(arg, "date") && tm) {
         static const char *WD[] = {"domingo","segunda-feira","terca-feira","quarta-feira","quinta-feira","sexta-feira","sabado"};
@@ -1352,8 +1361,8 @@ static bool apply_event(const char *spec, char *reply, size_t rcap)
         // is already using the SD -> if that write contends/blocks, the mutex stays taken forever and
         // every task using the bus (httpd included) blocks = TOTAL device FREEZE. The reminder must ONLY
         // write the file. (The web path in nucleo_httpd.c still publishes the event, a client may be there.)
-        if (tm[0]) snprintf(reply, rcap, s_en ? "Added \"%s\" on %s at %s." : "Aggiunto \"%s\" il %s alle %s.", text, date, tm);
-        else       snprintf(reply, rcap, s_en ? "Added \"%s\" on %s."       : "Aggiunto \"%s\" il %s.",       text, date);
+        if (tm[0]) snprintf(reply, rcap, TR("Aggiunto \"%s\" il %s alle %s.", "Added \"%s\" on %s at %s."), text, date, tm);
+        else       snprintf(reply, rcap, TR("Aggiunto \"%s\" il %s.", "Added \"%s\" on %s."),       text, date);
     }
     return ok;
 }
@@ -1460,7 +1469,7 @@ static void code_outbox_show(void)             // what Code did for the last job
         *o = 0;
     }
     char t[560];
-    if (js[0]) snprintf(t, sizeof t, s_en ? "Code: %s\nEnter = open %s" : "Code: %s\nInvio = apri %s", b, js);
+    if (js[0]) snprintf(t, sizeof t, TR("Code: %s\nInvio = apri %s", "Code: %s\nEnter = open %s"), b, js);
     else snprintf(t, sizeof t, "Code: %s", b);
     push_anima(t, ACC);                            // as an answer of ANIMA's, in Code's own words
     if (js[0] && code_installed()) {
@@ -1532,14 +1541,14 @@ static void present_result(int ms)
         char *slash = strrchr(dir, '/'); if (slash && slash != dir) { *slash = 0; mkdir(dir, 0775); }
         if (esp_task_wdt_status(NULL) == ESP_OK) esp_task_wdt_reset();   // pet the WDT before the SD write (like apply_event)
         FILE *ex = fopen(path, "rb");
-        if (ex) { fclose(ex); snprintf(reply, sizeof(reply), s_en ? "%s already exists: I won't overwrite it." : "%s esiste gia: non lo sovrascrivo.", bn); nucleo_anima_note_file(s_ses->res.arg); nucleo_anima_observe("create_file", true); }
+        if (ex) { fclose(ex); snprintf(reply, sizeof(reply), TR("%s esiste gia: non lo sovrascrivo.", "%s already exists: I won't overwrite it."), bn); nucleo_anima_note_file(s_ses->res.arg); nucleo_anima_observe("create_file", true); }
         else {
             FILE *cf = fopen(path, "wb");
             if (cf) { const char *body = nucleo_anima_tool_content();
-                      if (body && body[0]) { fwrite(body, 1, strlen(body), cf); snprintf(reply, sizeof(reply), s_en ? "I created %s with the content." : "Ho creato %s con il contenuto.", bn); }
-                      else snprintf(reply, sizeof(reply), s_en ? "I created %s." : "Ho creato %s.", bn);
+                      if (body && body[0]) { fwrite(body, 1, strlen(body), cf); snprintf(reply, sizeof(reply), TR("Ho creato %s con il contenuto.", "I created %s with the content."), bn); }
+                      else snprintf(reply, sizeof(reply), TR("Ho creato %s.", "I created %s."), bn);
                       fclose(cf); nucleo_anima_note_file(s_ses->res.arg); nucleo_anima_observe("create_file", true); }
-            else    { snprintf(reply, sizeof(reply), s_en ? "I can't create %s." : "Non riesco a creare %s.", bn); nucleo_anima_observe("create_file", false); tool_ok = false; }
+            else    { snprintf(reply, sizeof(reply), TR("Non riesco a creare %s.", "I can't create %s."), bn); nucleo_anima_observe("create_file", false); tool_ok = false; }
         }
     } else if (s_ses->res.action == ANIMA_ACT_TOOL &&
                (!strcmp(s_ses->res.intent, "set_volume") || !strcmp(s_ses->res.intent, "set_brightness"))) {
@@ -1564,17 +1573,16 @@ static void present_result(int ms)
         ESP_LOGW(ATAG, "add_event WRITTEN ok=%d free=%u largest=%u", _w,
             (unsigned)esp_get_free_heap_size(), (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
         if (_w) nucleo_anima_observe("add_event", true);
-        else { snprintf(reply, sizeof(reply), s_en ? "I couldn't add the reminder." : "Non sono riuscito ad aggiungere il promemoria."); nucleo_anima_observe("add_event", false); tool_ok = false; }
+        else { snprintf(reply, sizeof(reply), TR("Non sono riuscito ad aggiungere il promemoria.", "I couldn't add the reminder.")); nucleo_anima_observe("add_event", false); tool_ok = false; }
     } else if (s_ses->res.action == ANIMA_ACT_TOOL && !strcmp(s_ses->res.intent, "open_file")) {
         // Follow-up "aprilo" on a remembered file. In ANIMA Solo the assistant runs alone (no viewer apps),
         // so we can't hand the file off — point the user to the launcher instead of faking an "Opening...".
         const char *bn = strrchr(s_ses->res.arg, '/'); bn = bn ? bn + 1 : s_ses->res.arg;
-        snprintf(reply, sizeof(reply), s_en ? "Press Esc to leave ANIMA, then open %s from the launcher."
-                                            : "Premi Esc per uscire da ANIMA, poi apri %s dal launcher.", bn);
+        snprintf(reply, sizeof(reply), TR("Premi Esc per uscire da ANIMA, poi apri %s dal launcher.", "Press Esc to leave ANIMA, then open %s from the launcher."), bn);
     } else if (s_ses->res.action == ANIMA_ACT_TOOL && !strcmp(s_ses->res.intent, "create_file")) {
         // create_file whose arg failed the absolute-path guard above -> honest error, never a silent
         // "success" via the generic reply (which would confirm a file that was never written).
-        snprintf(reply, sizeof(reply), s_en ? "Invalid file path." : "Percorso file non valido.");
+        snprintf(reply, sizeof(reply), TR("Percorso file non valido.", "Invalid file path."));
         nucleo_anima_observe("create_file", false); tool_ok = false;
     } else if (s_ses->res.action == ANIMA_ACT_LAUNCH && !strcmp(s_ses->res.intent, "code_offer")) {
         // Code or the chat? Enter = Code (the offered request), "qui" = the code in the chat (the engine's next turn)
@@ -1588,31 +1596,28 @@ static void present_result(int ms)
             if (run) snprintf(s_code_job, sizeof s_code_job, "run\n%s", nucleo_anima_code_file());
             else snprintf(s_code_job, sizeof s_code_job, "task\n%s", task);
             snprintf(s_ses->launch, sizeof s_ses->launch, "code");
-            if (run) snprintf(reply, sizeof(reply), s_en ? "Enter = open %s in Code" : "Invio = apro %s in Code", nucleo_anima_code_file());
-            else snprintf(reply, sizeof(reply), "%s", s_en ? "Code writes it, runs it and tests it here. Enter = start, then it comes back to me."
-                                                           : "Lo scrive Code, lo esegue e lo prova qui. Invio = inizia, poi torna da me.");
+            if (run) snprintf(reply, sizeof(reply), TR("Invio = apro %s in Code", "Enter = open %s in Code"), nucleo_anima_code_file());
+            else snprintf(reply, sizeof(reply), "%s", TR("Lo scrive Code, lo esegue e lo prova qui. Invio = inizia, poi torna da me.", "Code writes it, runs it and tests it here. Enter = start, then it comes back to me."));
         } else {
             snprintf(s_ses->launch, sizeof s_ses->launch, "store");
-            snprintf(reply, sizeof(reply), "%s", s_en ? "Writing and running programs here takes Code, from the Store (Native C). Enter = open the Store"
-                                                      : "Per scrivere ed eseguire programmi qui serve Code, dallo Store (Native C). Invio = apri lo Store");
+            snprintf(reply, sizeof(reply), "%s", TR("Per scrivere ed eseguire programmi qui serve Code, dallo Store (Native C). Invio = apri lo Store", "Writing and running programs here takes Code, from the Store (Native C). Enter = open the Store"));
         }
     } else if (s_ses->res.action == ANIMA_ACT_LAUNCH) {
         // ANIMA Solo hosts no other app, so the answer OFFERS the launch: Enter on the empty line stages the
         // native id in RTC and reboots into the full OS, which opens it (launch_now / nucleo_anima_take_launch).
         char nm[32]; const char *nat = launch_target(s_ses->res.arg, nm, sizeof nm);
-        if (nat && !strcmp(nat, "anima")) snprintf(reply, sizeof(reply), "%s", s_en ? "You are already in ANIMA." : "Sei gia' in ANIMA.");
+        if (nat && !strcmp(nat, "anima")) snprintf(reply, sizeof(reply), "%s", TR("Sei gia' in ANIMA.", "You are already in ANIMA."));
         else if (nat) {
             snprintf(s_ses->launch, sizeof s_ses->launch, "%s", nat);
-            snprintf(reply, sizeof(reply), s_en ? "Enter = open %s" : "Invio = apri %s", nm);
-        } else snprintf(reply, sizeof(reply), s_en ? "%s is only in the web OS: open the device's IP in a browser."
-                                                   : "%s c'e' solo nel web OS: apri l'IP del device nel browser.", s_ses->res.arg);
+            snprintf(reply, sizeof(reply), TR("Invio = apri %s", "Enter = open %s"), nm);
+        } else snprintf(reply, sizeof(reply), TR("%s c'e' solo nel web OS: apri l'IP del device nel browser.", "%s is only in the web OS: open the device's IP in a browser."), s_ses->res.arg);
     } else {
         // Show the FULL cloud answer: grok_chat keeps anything over the 360-char on-card clip on the heap
         // overflow channel (nucleo_anima_long_reply); the engine clips s_ses->res.reply to 360. Prefer the overflow
         // so a long LLM answer is shown WHOLE (up to reply[1024]), read aloud in chunks. NULL for offline turns
         // (set_long_reply(NULL) at each query start), so those fall back to s_ses->res.reply unchanged.
         const char *full = nucleo_anima_long_reply();
-        const char *body = (full && full[0]) ? full : (s_ses->res.reply[0] ? s_ses->res.reply : (s_en ? "I don't know." : "Non lo so."));
+        const char *body = (full && full[0]) ? full : (s_ses->res.reply[0] ? s_ses->res.reply : (TR("Non lo so.", "I don't know.")));
         snprintf(reply, sizeof(reply), "%s", body);
     }
     // The CURRENT answer is shown IN FULL: store the full (folded) text in s_ses->full; that message will be
@@ -1636,7 +1641,7 @@ static void present_result(int ms)
     make_tag(s_msg[s_full_idx].tag, MSG_TAG, s_ses->res, ms);            // "L1 . 0.4 s" at the answer's end
     snprintf(s_ses->last_tag, sizeof s_ses->last_tag, "%s", s_msg[s_full_idx].tag);
     rebuild_rows();                                   // re-wrap that message from the full text
-    if (s_ses->res.corrected[0]) { char c[80]; snprintf(c, sizeof(c), s_en ? "(understood: %s)" : "(ho inteso: %s)", s_ses->res.corrected); push_meta(c, DIM); }
+    if (s_ses->res.corrected[0]) { char c[80]; snprintf(c, sizeof(c), TR("(ho inteso: %s)", "(understood: %s)"), s_ses->res.corrected); push_meta(c, DIM); }
     // Reasoning trace (Claude-Code-style steps): only for genuine multi-step agent turns (those whose
     // trace has a step separator). Single-tier answers stay clean — the badge already shows tier+conf.
     if (strstr(s_ses->res.trace, " > ")) { char tr[120]; snprintf(tr, sizeof(tr), "|_ %s", s_ses->res.trace); push_meta(tr, DIM); }
@@ -1647,8 +1652,8 @@ static void present_result(int ms)
         const char *ip = nucleo_setup_ip();
         if (s_omode == OM_OFF && ip && ip[0]) {
             s_ses->retry_online = true;
-            push_msg(R_META, GRN, MSG_EPHEMERAL, s_en ? "fn / : try online" : "fn / : prova online");
-        } else push_msg(R_META, GRN, MSG_EPHEMERAL, s_en ? "TAB > IDEAS: what I can do" : "TAB > IDEE: cosa so fare");
+            push_msg(R_META, GRN, MSG_EPHEMERAL, TR("fn / : prova online", "fn / : try online"));
+        } else push_msg(R_META, GRN, MSG_EPHEMERAL, TR("TAB > IDEE: cosa so fare", "TAB > IDEAS: what I can do"));
     }
 
     s_last_conf = (s_ses->res.action == ANIMA_ACT_NONE) ? -1 : s_ses->res.confidence;
@@ -1665,7 +1670,7 @@ static void present_result(int ms)
     if (s_ses->res.action == ANIMA_ACT_TOOL) {
         if (_tool_write) ESP_LOGW(ATAG, "TOOL %s SPEAK start largest=%u", s_ses->res.intent,
             (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
-        nucleo_tts_say_or(reply, tool_ok ? (s_en ? "Done" : "Fatto") : (s_en ? "Error" : "Errore"), s_en ? "en" : "it");
+        nucleo_tts_say_or(reply, tool_ok ? (TR("Fatto", "Done")) : (TR("Errore", "Error")), voice_lang(s_en));
         if (_tool_write) ESP_LOGW(ATAG, "TOOL %s SPEAK done", s_ses->res.intent);
     }
 
@@ -1686,12 +1691,12 @@ static const char *chat_hint(void);        // footer hint (used by cancel_query/
 // stopped from inside submit() (turn_key) — the loop can't deliver keys while it runs.
 static void cancel_query(void)
 {
-    if (!s_busy) { push_meta(s_en ? "Nothing to stop." : "Niente da fermare.", DIM); return; }
+    if (!s_busy) { push_meta(TR("Niente da fermare.", "Nothing to stop."), DIM); return; }
     nucleo_audio_stop();                            // hush any sentence being read aloud right now
     s_busy = false; s_spin = 0;
     s_d_hdr = true; s_d_input = true;   // repaint the input row: clears the "pensa" dots (also the NK_DEL path)
     nucleo_app_set_hint(chat_hint());   // restore the normal footer
-    push_meta(s_en ? "(stopped)" : "(annullato)", DIM);
+    push_meta(TR("(annullato)", "(stopped)"), DIM);
 }
 
 // Enter on the empty line after an "Enter = open <app>" answer: stage the app in RTC and leave. leave() saves
@@ -1704,7 +1709,7 @@ static void launch_now(void)
     snprintf(s_rtc_preset, sizeof s_rtc_preset, "%s", s_ses->launch);
     s_rtc_preset_magic = ANIMA_LAUNCH_MAGIC;
     s_ses->launch[0] = 0;
-    snprintf(t, sizeof t, s_en ? "Opening %s..." : "Apro %s...", nm);
+    snprintf(t, sizeof t, TR("Apro %s...", "Opening %s..."), nm);
     s_ses->vmode = V_FOLLOW; push_meta(t, GRN);                // kept in the chat: the history says what happened
     nucleo_app_set_hint(t); launcher_render_hint_bar();        // the reboot pause reads as intentional
     draw();
@@ -1758,7 +1763,7 @@ static const char *mode_name(int m)
 }
 static void push_mode(void)
 {
-    char t[40]; snprintf(t, sizeof t, s_en ? "Mode: %s" : "Modalita: %s", mode_name(s_omode)); push_meta(t, GRN);
+    char t[40]; snprintf(t, sizeof t, TR("Modalita: %s", "Mode: %s"), mode_name(s_omode)); push_meta(t, GRN);
 }
 // Quick mode switch: Offline -> Ibrido -> Solo online -> ...
 static void cycle_mode(void)
@@ -1774,45 +1779,45 @@ static void cycle_l1(void)
 {
     // set_mode can free the L1 index (OFF / AUTO with a cloud brain): only under the spine gate, or a
     // worker mid-query reads freed buffers. Busy = tell the user to retry, don't corrupt.
-    if (!nucleo_anima_try_lock()) { push_meta(s_en ? "ANIMA busy, retry" : "ANIMA occupata, riprova", AMBER); return; }
+    if (!nucleo_anima_try_lock()) { push_meta(TR("ANIMA occupata, riprova", "ANIMA busy, retry"), AMBER); return; }
     int md = (nucleo_anima_l1_get_mode() + 1) % 3;     // 0 AUTO, 1 ON, 2 OFF
     nucleo_anima_l1_set_mode(md);
     nucleo_anima_unlock();
-    const char *s = md == 1 ? (s_en ? "Offline AI (L1): ON (forced)"  : "AI offline (L1): ON (forzata)")
-                  : md == 2 ? (s_en ? "Offline AI (L1): OFF"          : "AI offline (L1): OFF")
-                  :           (s_en ? "Offline AI (L1): AUTO"         : "AI offline (L1): AUTO");
+    const char *s = md == 1 ? (TR("AI offline (L1): ON (forzata)", "Offline AI (L1): ON (forced)"))
+                  : md == 2 ? (TR("AI offline (L1): OFF", "Offline AI (L1): OFF"))
+                  :           (TR("AI offline (L1): AUTO", "Offline AI (L1): AUTO"));
     push_meta(s, GRN);
 }
 
 static void push_help(void)
 {
-    push_meta(s_en ? "Commands:" : "Comandi:", ACC);
-    push_meta(s_en ? "/stop  /mode  /offline  /hybrid  /online" : "/stop  /modo  /offline  /ibrido  /online", DIM);
-    push_meta(s_en ? "/l1  /clear  /info  /help" : "/l1  /cancella  /info  /aiuto", DIM);
-    push_meta(s_en ? "/l1: offline brain AUTO/ON/OFF (RAM)" : "/l1: AI offline AUTO/ON/OFF (RAM)", DIM);
-    push_meta(s_en ? "fn ;/. page the chat, ctrl ;/. history." : "fn ;/. pagina la chat, ctrl ;/. cronologia.", DIM);
-    push_meta(s_en ? "Enter on an empty line: full-screen reader." : "Invio a riga vuota: lettore a schermo pieno.", DIM);
-    push_meta(s_en ? "fn /: complete, or switch mode. TAB: menu." : "fn /: completa, o cambia modalita. TAB: menu.", DIM);
-    push_meta(s_en ? "Hold G0: push-to-talk. Esc: leave." : "Tieni premuto G0: parla (push-to-talk). Esc: esci.", DIM);
+    push_meta(TR("Comandi:", "Commands:"), ACC);
+    push_meta(TR("/stop  /modo  /offline  /ibrido  /online", "/stop  /mode  /offline  /hybrid  /online"), DIM);
+    push_meta(TR("/l1  /cancella  /info  /aiuto", "/l1  /clear  /info  /help"), DIM);
+    push_meta(TR("/l1: AI offline AUTO/ON/OFF (RAM)", "/l1: offline brain AUTO/ON/OFF (RAM)"), DIM);
+    push_meta(TR("fn ;/. pagina la chat, ctrl ;/. cronologia.", "fn ;/. page the chat, ctrl ;/. history."), DIM);
+    push_meta(TR("Invio a riga vuota: lettore a schermo pieno.", "Enter on an empty line: full-screen reader."), DIM);
+    push_meta(TR("fn /: completa, o cambia modalita. TAB: menu.", "fn /: complete, or switch mode. TAB: menu."), DIM);
+    push_meta(TR("Tieni premuto G0: parla (push-to-talk). Esc: esci.", "Hold G0: push-to-talk. Esc: leave."), DIM);
 }
 
 static void push_info(void)
 {
     char b[64];
-    snprintf(b, sizeof b, s_en ? "Free RAM: %u KB" : "RAM libera: %u KB", (unsigned)(heap_caps_get_free_size(MALLOC_CAP_DEFAULT) / 1024)); push_meta(b, MUTED);
+    snprintf(b, sizeof b, TR("RAM libera: %u KB", "Free RAM: %u KB"), (unsigned)(heap_caps_get_free_size(MALLOC_CAP_DEFAULT) / 1024)); push_meta(b, MUTED);
     const char *ssid = nucleo_setup_ssid(), *ip = nucleo_setup_ip();
-    if (ip && ip[0]) snprintf(b, sizeof b, s_en ? "Network: %s  %s" : "Rete: %s  %s", (ssid && ssid[0]) ? ssid : "-", ip);
-    else             snprintf(b, sizeof b, "%s", s_en ? "Network: not connected" : "Rete: non connesso");
+    if (ip && ip[0]) snprintf(b, sizeof b, TR("Rete: %s  %s", "Network: %s  %s"), (ssid && ssid[0]) ? ssid : "-", ip);
+    else             snprintf(b, sizeof b, "%s", TR("Rete: non connesso", "Network: not connected"));
     push_meta(b, MUTED);
     // ANIMA always runs in Solo: every query runs inline on the Solo task (there is no worker).
-    snprintf(b, sizeof b, s_en ? "Mode: %s   Worker: inline (Solo)" : "Modalita: %s   Worker: inline (Solo)", mode_name(s_omode)); push_meta(b, MUTED);
+    snprintf(b, sizeof b, TR("Modalita: %s   Worker: inline (Solo)", "Mode: %s   Worker: inline (Solo)"), mode_name(s_omode)); push_meta(b, MUTED);
     int l1m = nucleo_anima_l1_get_mode();
-    snprintf(b, sizeof b, s_en ? "Offline AI (L1): %s  (%s)" : "AI offline (L1): %s  (%s)",
+    snprintf(b, sizeof b, TR("AI offline (L1): %s  (%s)", "Offline AI (L1): %s  (%s)"),
              l1m == 1 ? "ON" : l1m == 2 ? "OFF" : "AUTO",
-             nucleo_anima_l1_serving() ? (s_en ? "active" : "attiva") : (s_en ? "stood down" : "a riposo"));
+             nucleo_anima_l1_serving() ? (TR("attiva", "active")) : (TR("a riposo", "stood down")));
     push_meta(b, MUTED);
     if (nucleo_anima_solo_active())   // dedicated boot personality: make the (reboot-based) exit discoverable
-        push_meta(s_en ? "Solo mode - Esc returns to the OS" : "Modalita Solo - Esc torna all'OS", ACC);
+        push_meta(TR("Modalita Solo - Esc torna all'OS", "Solo mode - Esc returns to the OS"), ACC);
 }
 
 // Handle a "/command" typed in the chat. Returns true if it was a recognised command.
@@ -1828,7 +1833,7 @@ static bool handle_slash(const char *in)
     else if (!strcmp(in, "/l1"))      cycle_l1();
     else if (!strcmp(in, "/info") || !strcmp(in, "/stato")) push_info();
     else if (!strcmp(in, "/aiuto") || !strcmp(in, "/help")) push_help();
-    else push_meta(s_en ? "Unknown command. /help for the list." : "Comando sconosciuto. /aiuto per la lista.", DIM);
+    else push_meta(TR("Comando sconosciuto. /aiuto per la lista.", "Unknown command. /help for the list."), DIM);
     return true;
 }
 
@@ -1858,7 +1863,7 @@ static void submit(void)
     // only thing running anyway), then paints the answer. (ANIMA only ever runs in Solo: enter() reboots
     // into it, so this is the only query path.)
     s_busy = true;
-    nucleo_app_set_hint(s_en ? "Enter to stop" : "Invio per fermare");   // footer: how to stop while running
+    nucleo_app_set_hint(TR("Invio per fermare", "Enter to stop"));   // footer: how to stop while running
     launcher_render_hint_bar();                                          // ...painted IMMEDIATELY (the framework loop is blocked for the whole inline turn)
     // CHAT-FEEL: the inline query BLOCKS this UI task -> without this, the screen stays frozen on the
     // pre-submit state until the answer. Paint the user bubble + the "pensa" dots IMMEDIATELY.
@@ -1908,7 +1913,7 @@ static void submit(void)
     // Keys pressed during the query/reveal: Enter/Esc = STOP (skips the voice, the text stays on screen); a
     // printable key skips the voice AND becomes the first character of the next question (s_ses->carry).
     if (stop == TK_NONE) stop = drain_turn_keys();
-    if (stop == TK_STOP) push_meta(s_en ? "(stopped)" : "(annullato)", DIM);
+    if (stop == TK_STOP) push_meta(TR("(annullato)", "(stopped)"), DIM);
     else if (stop == TK_NONE) speak_result(s_ses->res, s_en);   // on-device voice, interruptible (turn_key)
     esp_task_wdt_add(NULL);                   // turn finished (query + slow-SD voice render): re-subscribe the task WDT
     if (s_ses->carry) { char c = s_ses->carry; s_ses->carry = 0; chat_type(c); }   // start the next question
@@ -1935,7 +1940,7 @@ static void clear_chat(void)
 static void ask_clear(void)
 {
     s_ses->clear_confirm = true; s_ses->clear_yes = false;
-    nucleo_app_set_hint(s_en ? "</> pick   enter ok   esc back" : "</> scegli   invio ok   esc annulla");
+    nucleo_app_set_hint(TR("</> scegli   invio ok   esc annulla", "</> pick   enter ok   esc back"));
     nucleo_app_request_draw();
 }
 static void menu_hint(void);               // footer hint for the menu (defined with the menu)
@@ -2187,7 +2192,7 @@ static int tab_rows(int t)
 // exactly this text — submit() still applies the calculator chain to what the engine receives.
 static void send_query(const char *q)
 {
-    if (s_busy) { push_meta(s_en ? "One at a time, wait..." : "Una alla volta, attendi...", DIM); return; }   // don't strand pre-filled text
+    if (s_busy) { push_meta(TR("Una alla volta, attendi...", "One at a time, wait..."), DIM); return; }   // don't strand pre-filled text
     snprintf(s_ses->input, sizeof(s_ses->input), "%s", q);
     s_ilen = (int)strlen(s_ses->input);
     submit();
@@ -2335,7 +2340,7 @@ static void enter(void)
         ESP_LOGE(ATAG, "session alloc (%u B) failed: free=%u largest=%u", (unsigned)sizeof(AnimaSession),
                  (unsigned)heap_caps_get_free_size(MALLOC_CAP_DEFAULT),
                  (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
-        nucleo_app_set_hint(s_en ? "esc exit" : "esc esci");
+        nucleo_app_set_hint(TR("esc esci", "esc exit"));
         nucleo_app_request_draw();
         return;
     }
@@ -2395,11 +2400,11 @@ static void leave(void)
 // footer's cap). It teaches the arrow layer — plain ; . , / type, fn+key is the arrow (header note).
 static const char *chat_hint(void)
 {
-    if (deck_active()) return s_en ? "fn ;/. pick  1-9 try  fn / mode" : "fn ;/. scegli  1-9 prova  fn / modo";
-    if (s_ilen > 0)    return s_en ? "enter send  fn / complete  tab menu" : "invio invia  fn / completa  tab menu";
-    if (s_ses && s_ses->launch[0]) return s_en ? "enter open app  fn ;. page  fn / mode" : "invio apri app  fn ;. pagina  fn / modo";
-    if (s_rown > 0) return s_en ? "enter read  fn ;. page  fn / mode" : "invio leggi  fn ;. pagina  fn / modo";
-    return s_en ? "esc exit  fn ;/. scroll  fn / mode" : "esc esci  fn ;/. scorri  fn / modo";
+    if (deck_active()) return TR("fn ;/. scegli  1-9 prova  fn / modo", "fn ;/. pick  1-9 try  fn / mode");
+    if (s_ilen > 0)    return TR("invio invia  fn / completa  tab menu", "enter send  fn / complete  tab menu");
+    if (s_ses && s_ses->launch[0]) return TR("invio apri app  fn ;. pagina  fn / modo", "enter open app  fn ;. page  fn / mode");
+    if (s_rown > 0) return TR("invio leggi  fn ;. pagina  fn / modo", "enter read  fn ;. page  fn / mode");
+    return TR("esc esci  fn ;/. scorri  fn / modo", "esc exit  fn ;/. scroll  fn / mode");
 }
 
 // Footer hint for the live menu state: slider-adjust, tab-bar (row -1), or a per-tab row hint.
@@ -2407,42 +2412,42 @@ static void menu_hint(void)
 {
     if (s_edit) {
         if (s_tab == TAB_IA && s_mrow == IA_SPEED) {   // show the % value while adjusting the voice speed
-            char h[40]; snprintf(h, sizeof h, s_en ? "speed %d%%   l/r   enter ok" : "vel %d%%   sx/dx   invio ok", nucleo_tts_speed());
+            char h[40]; snprintf(h, sizeof h, TR("vel %d%%   sx/dx   invio ok", "speed %d%%   l/r   enter ok"), nucleo_tts_speed());
             nucleo_app_set_hint(h); return;
         }
-        nucleo_app_set_hint(s_en ? "l/r adjust   enter ok" : "sx/dx regola   invio ok"); return;
+        nucleo_app_set_hint(TR("sx/dx regola   invio ok", "l/r adjust   enter ok")); return;
     }
     if (s_tab == TAB_IA && s_mrow == IA_MODEL) {                // the exact model id the requests carry
         char id[48];
-        if (nucleo_anima_model_label(NULL, 0, id, sizeof id)) { char h[64]; snprintf(h, sizeof h, "%s  %s", id, s_en ? "enter next" : "invio cambia"); nucleo_app_set_hint(h); }
-        else nucleo_app_set_hint(s_en ? "add a key in the web OS: Settings > AI" : "chiave: web OS > Impostazioni > IA");
+        if (nucleo_anima_model_label(NULL, 0, id, sizeof id)) { char h[64]; snprintf(h, sizeof h, "%s  %s", id, TR("invio cambia", "enter next")); nucleo_app_set_hint(h); }
+        else nucleo_app_set_hint(TR("chiave: web OS > Impostazioni > IA", "add a key in the web OS: Settings > AI"));
         return;
     }
     if (s_tab == TAB_IA && s_mrow == IA_EFFORT) {
         char e[8];
-        nucleo_app_set_hint(!nucleo_anima_effort_get(e, sizeof e) ? (s_en ? "this model has no effort setting" : "questo modello non ha impegno")
-                            : (s_en ? "more effort: better, slower, costlier" : "piu impegno: meglio, piu lento e caro"));
+        nucleo_app_set_hint(!nucleo_anima_effort_get(e, sizeof e) ? (TR("questo modello non ha impegno", "this model has no effort setting"))
+                            : (TR("piu impegno: meglio, piu lento e caro", "more effort: better, slower, costlier")));
         return;
     }
     if (s_tab == TAB_IDEE && s_form_leaf >= 0) {               // adapt: last slot sends, earlier ones advance
         bool last = s_form_slot >= LEAVES[s_form_leaf].slots - 1;
         if (LEAVES[s_form_leaf].slots < 2)                     // single field: nothing to hop between
-            nucleo_app_set_hint(s_en ? "type  fn / fill  enter send" : "digita  fn / riempi  invio invia");
+            nucleo_app_set_hint(TR("digita  fn / riempi  invio invia", "type  fn / fill  enter send"));
         else                                                   // ; . , / type; fn+;/. hop fields, fn+/ fills
             nucleo_app_set_hint(s_en ? (last ? "fn / fill  fn ;. field  enter send" : "fn / fill  fn ;. field  enter next")
                                      : (last ? "fn / riempi  fn ;. campo  invio invia" : "fn / riempi  fn ;. campo  invio avanti"));
         return;
     }
-    if (s_mrow == -1) { nucleo_app_set_hint(s_en ? "l/r tab   down enter   esc" : "sx/dx scheda  giu entra  esc"); return; }
+    if (s_mrow == -1) { nucleo_app_set_hint(TR("sx/dx scheda  giu entra  esc", "l/r tab   down enter   esc")); return; }
     switch (s_tab) {
         case TAB_IDEE:
-            if (s_idee_cat < 0) nucleo_app_set_hint(s_en ? "up/dn  enter open  l/r tab" : "su giu  invio apri  sx/dx");
-            else                nucleo_app_set_hint(s_en ? "up/dn  enter send  esc back" : "su giu  invio invia  esc su");
+            if (s_idee_cat < 0) nucleo_app_set_hint(TR("su giu  invio apri  sx/dx", "up/dn  enter open  l/r tab"));
+            else                nucleo_app_set_hint(TR("su giu  invio invia  esc su", "up/dn  enter send  esc back"));
             break;
-        case TAB_OGGI:  nucleo_app_set_hint(s_en ? "up/dn scroll   l/r tab"      : "su giu scorri  sx/dx scheda");  break;
-        case TAB_GUIDA: nucleo_app_set_hint(s_en ? "up/dn page  1-9 jump  l/r"   : "su giu pag  1-9  sx/dx sch");   break;
-        case TAB_IA:    nucleo_app_set_hint(s_en ? "up/dn  enter change  l/r tab" : "su giu  invio cambia sx/dx"); break;
-        default:        nucleo_app_set_hint(s_en ? "l/r tab   esc close"          : "sx/dx scheda  esc chiudi");
+        case TAB_OGGI:  nucleo_app_set_hint(TR("su giu scorri  sx/dx scheda", "up/dn scroll   l/r tab"));  break;
+        case TAB_GUIDA: nucleo_app_set_hint(TR("su giu pag  1-9  sx/dx sch", "up/dn page  1-9 jump  l/r"));   break;
+        case TAB_IA:    nucleo_app_set_hint(TR("su giu  invio cambia sx/dx", "up/dn  enter change  l/r tab")); break;
+        default:        nucleo_app_set_hint(TR("sx/dx scheda  esc chiudi", "l/r tab   esc close"));
     }
 }
 
@@ -2702,7 +2707,7 @@ static void editor_open(const char *path)
 {
     if (!s_ed) s_ed = (AnimaEditor *)calloc(1, sizeof *s_ed);   // ~1.6 KB, only while the editor is open
     if (!s_ed) {                                     // no RAM for the buffer: say so instead of a dead key
-        push_meta(s_en ? "Not enough memory for the editor." : "Memoria insufficiente per l'editor.", AMBER);
+        push_meta(TR("Memoria insufficiente per l'editor.", "Not enough memory for the editor."), AMBER);
         mark_all_dirty(); nucleo_app_request_draw();
         return;
     }
@@ -2711,8 +2716,7 @@ static void editor_open(const char *path)
     else                snprintf(s_ed->path, sizeof s_ed->path, "/data/%s", path);   // default to /data/
     s_ed->buf[0] = 0; s_ed_len = 0; s_ed_scroll = 0; s_ed_open = true; s_ed->full = true;
     s_form_leaf = -1; s_menu_open = false; reset_idee();
-    nucleo_app_set_hint(s_en ? "Enter=newline  Ctrl+S save  Esc cancel"
-                             : "Invio=a capo  Ctrl+S salva  Esc annulla");
+    nucleo_app_set_hint(TR("Invio=a capo  Ctrl+S salva  Esc annulla", "Enter=newline  Ctrl+S save  Esc cancel"));
     mark_all_dirty(); nucleo_app_request_draw();
 }
 // Write the buffer to the SD path (guarded: absolute "/..." path, no ".."). NEVER overwrites: the
@@ -2741,17 +2745,17 @@ static void editor_save(void)
     if (!ok) {                                                            // keep the editor + text; say what happened
         bool in_notes = !strncmp(s_ed->path, "/data/note/", 11);
         if (!in_notes) quick_note_path(s_ed->path, sizeof s_ed->path);     // rescue target for the retry
-        nucleo_app_set_hint(in_notes ? (s_en ? "ERROR: not saved. Ctrl+S to retry" : "ERRORE: non salvato. Ctrl+S riprova")
-                                     : (s_en ? "Not saved. Ctrl+S: save to note/" : "Non salvato. Ctrl+S: salva in note/"));
+        nucleo_app_set_hint(in_notes ? (TR("ERRORE: non salvato. Ctrl+S riprova", "ERROR: not saved. Ctrl+S to retry"))
+                                     : (TR("Non salvato. Ctrl+S: salva in note/", "Not saved. Ctrl+S: save to note/")));
         mark_all_dirty(); nucleo_app_request_draw();
         return;
     }
     nucleo_anima_note_file(s_ed->path);
     char reply[120];
     const char *bn = strrchr(s_ed->path, '/'); bn = bn ? bn + 1 : s_ed->path;
-    snprintf(reply, sizeof reply, s_en ? "Saved %s (%d chars)." : "Salvato %s (%d caratteri).", bn, s_ed_len);
+    snprintf(reply, sizeof reply, TR("Salvato %s (%d caratteri).", "Saved %s (%d chars)."), bn, s_ed_len);
     editor_close();                                  // frees s_ed: bn is not used past this point
-    push_user(s_en ? "[new file]" : "[nuovo file]");
+    push_user(TR("[nuovo file]", "[new file]"));
     push_anima(reply, ACC);
     s_user_sent = true;
     nucleo_app_set_hint(chat_hint());
@@ -2865,7 +2869,7 @@ static void cycle_mode_key(void)
     if (deck_active()) { s_omode = (s_omode + 1) % 3; apply_online_mode(); save_settings(); }
     else cycle_mode();
     char t[40];
-    snprintf(t, sizeof t, s_en ? "Mode: %s  (fn / next)" : "Modo: %s  (fn / cambia)", mode_name(s_omode));
+    snprintf(t, sizeof t, TR("Modo: %s  (fn / cambia)", "Mode: %s  (fn / next)"), mode_name(s_omode));
     nucleo_app_set_hint(t);
     s_toast_until = esp_timer_get_time() + 2500000;         // tick() puts the key hint back after 2.5 s
     s_d_hdr = true; nucleo_app_request_draw();
@@ -2877,7 +2881,7 @@ static void retry_online(void)
 {
     s_ses->retry_online = false;
     s_omode = OM_ON; apply_online_mode(); save_settings();
-    push_meta(s_en ? "Mode: Hybrid - asking online" : "Modo: Ibrido - chiedo online", GRN);
+    push_meta(TR("Modo: Ibrido - chiedo online", "Mode: Hybrid - asking online"), GRN);
     // Straight into the input line (no local copy: this frame stays on the 26 KB Solo stack for the whole
     // blocking query). A bounded memmove — the source may be another member of the same session block.
     const char *h = hist_at(0), *src = h ? h : s_ses->req;
@@ -3124,19 +3128,19 @@ static int build_ia(IAItem *it)
         else if (!strcmp(e, "max"))    snprintf(it[IA_EFFORT].val, 14, "%s", TR5("Massimo", "Max", "Maximo", "Maximum", "Maximal"));
         else                           snprintf(it[IA_EFFORT].val, 14, "%s", TR5("Medio", "Medium", "Medio", "Moyen", "Mittel"));
     }
-    it[IA_LANG].label = s_en ? "Lang" : "Lingua"; it[IA_LANG].kind = SV_TEXT;   // the OS language (Enter: IT <-> EN)
+    it[IA_LANG].label = TR("Lingua", "Lang"); it[IA_LANG].kind = SV_TEXT;   // the OS language (Enter: IT <-> EN)
     snprintf(it[IA_LANG].val, 14, "%.2s", nucleo_i18n_lang());
     for (char *c = it[IA_LANG].val; *c; c++) if (*c >= 'a' && *c <= 'z') *c -= 32;
-    it[IA_TEXT].label = s_en ? "Text" : "Testo"; it[IA_TEXT].kind = SV_TEXT;
-    snprintf(it[IA_TEXT].val, 14, "%s", s_big ? (s_en ? "Big" : "Grande") : (s_en ? "Small" : "Piccolo"));
-    it[IA_VOICE].label = s_en ? "Voice" : "Voce"; it[IA_VOICE].kind = SV_TOGGLE;
+    it[IA_TEXT].label = TR("Testo", "Text"); it[IA_TEXT].kind = SV_TEXT;
+    snprintf(it[IA_TEXT].val, 14, "%s", s_big ? (TR("Grande", "Big")) : (TR("Piccolo", "Small")));
+    it[IA_VOICE].label = TR("Voce", "Voice"); it[IA_VOICE].kind = SV_TOGGLE;
     it[IA_VOICE].on = nucleo_tts_available() && nucleo_tts_enabled();
     // Reading speed: slider mapped from the % range [MIN..MAX] to 0..100 for drawing the bar.
-    it[IA_SPEED].label = s_en ? "Speed" : "Velocita"; it[IA_SPEED].kind = SV_SLIDER;
+    it[IA_SPEED].label = TR("Velocita", "Speed"); it[IA_SPEED].kind = SV_SLIDER;
     it[IA_SPEED].slider = (nucleo_tts_speed() - TTS_SPEED_MIN) * 100 / (TTS_SPEED_MAX - TTS_SPEED_MIN);
     it[IA_VOL].label = "Volume"; it[IA_VOL].kind = SV_SLIDER; it[IA_VOL].slider = nucleo_audio_volume();
-    it[IA_BRI].label = s_en ? "Light" : "Luce"; it[IA_BRI].kind = SV_SLIDER; it[IA_BRI].slider = nucleo_app_brightness();
-    it[IA_CLEAR].label = s_en ? "Clear chat" : "Pulisci"; it[IA_CLEAR].kind = SV_ACTION;
+    it[IA_BRI].label = TR("Luce", "Light"); it[IA_BRI].kind = SV_SLIDER; it[IA_BRI].slider = nucleo_app_brightness();
+    it[IA_CLEAR].label = TR("Pulisci", "Clear chat"); it[IA_CLEAR].kind = SV_ACTION;
     return IA_ROWS;
 }
 
@@ -3337,12 +3341,12 @@ static void draw_stato(int ch)
 
     nucleo_storage_refresh(); const nucleo_storage_info_t *st = nucleo_storage_info();
     if (st && st->mounted) snprintf(v, sizeof v, "%.1f GB", st->free_bytes / 1e9);
-    else                   snprintf(v, sizeof v, "%s", s_en ? "n/a" : "n/d");
+    else                   snprintf(v, sizeof v, "%s", TR("n/d", "n/a"));
     stato_row(y, "SD", v, FG); y += step;
 
     const char *ssid = nucleo_setup_ssid(), *ip = nucleo_setup_ip();
     if (ip && ip[0]) snprintf(v, sizeof v, "%s", ip);
-    else             snprintf(v, sizeof v, "%s", s_en ? "offline" : "non conn.");
+    else             snprintf(v, sizeof v, "%s", TR("non conn.", "offline"));
     stato_row(y, TR5("Rete", "Net", "Red", "Reseau", "Netz"), v, (ip && ip[0]) ? GRN : MUTED);
     if (ip && ip[0] && ssid && ssid[0]) {                                // SSID as a small grey tag, right-aligned
         char sb[18]; snprintf(sb, sizeof sb, "%.16s", ssid);
@@ -3355,19 +3359,19 @@ static void draw_stato(int ch)
     snprintf(v, sizeof v, "%s  %s", mode_name(s_omode), lc);
     // Plain FG: the old "amber if no worker" was a permanent false alarm — ANIMA always runs in Solo, where
     // queries run inline and a worker never exists.
-    stato_row(y, s_en ? "Mode" : "Modo", v, FG); y += step;
+    stato_row(y, TR("Modo", "Mode"), v, FG); y += step;
 
     long up = (long)(esp_timer_get_time() / 1000000);
     int uh = (int)(up / 3600), um = (int)((up % 3600) / 60);
     char ut[16]; if (uh) snprintf(ut, sizeof ut, "%dh%dm", uh, um); else snprintf(ut, sizeof ut, "%dm", um);
-    snprintf(v, sizeof v, s_en ? "%s  %d ev" : "%s  %d oggi", ut, s_today_count);
-    stato_row(y, s_en ? "On" : "Acceso", v, FG); y += step;
+    snprintf(v, sizeof v, TR("%s  %d oggi", "%s  %d ev"), ut, s_today_count);
+    stato_row(y, TR("Acceso", "On"), v, FG); y += step;
 
     if (s_ses->last_tag[0] && y <= ymax) {                               // last answer's source + time + confidence
         char tg[MSG_TAG]; snprintf(tg, sizeof tg, "%s", s_ses->last_tag);
         char *bar = strchr(tg, '|'); if (bar) *bar = ' ';
         snprintf(v, sizeof v, "%s  %d%%", tg, s_last_conf < 0 ? 0 : s_last_conf);
-        stato_row(y, s_en ? "Last" : "Ultima", v, ACC); y += step;
+        stato_row(y, TR("Ultima", "Last"), v, ACC); y += step;
     }
 }
 
@@ -3594,7 +3598,7 @@ static void draw_idee_form(int ch)
     } else {
         G.setTextSize(1);
         cx = ix0 + 1;
-        box_text(cx + 5, iy0, ix1 - cx - 5, ih, vx, by + (bh - 16) / 2, s_en ? "type..." : "scrivi...", DIM, BG);
+        box_text(cx + 5, iy0, ix1 - cx - 5, ih, vx, by + (bh - 16) / 2, TR("scrivi...", "type..."), DIM, BG);
         G.fillRect(ix0, iy0, 1, ih, BG);
     }
     G.fillRect(cx, iy0, 1, ih, BG); G.fillRect(cx + 1, vy, 3, 30, GRN); G.fillRect(cx + 4, iy0, 1, ih, BG);   // big caret
@@ -3675,7 +3679,7 @@ static void draw_today(int ch)
     const int top = 44, f = s_mrow;
     if (s_ses->mfull) {                                                         // header: static for the scene
         set_font(F_MED); G.setTextColor(ACC, BG);                               // bigger, accented date header
-        G.setCursor(8, 24); G.print(s_ses->today_hdr[0] ? s_ses->today_hdr : (s_en ? "Today" : "Oggi"));
+        G.setCursor(8, 24); G.print(s_ses->today_hdr[0] ? s_ses->today_hdr : (TR("Oggi", "Today")));
         if (s_today_count > 0) { char cb[6]; snprintf(cb, sizeof cb, "%d", s_today_count);
             G.setFont(&fonts::Font0); G.setTextSize(1); G.setTextColor(MUTED, BG);
             G.setCursor((AW - 8) - (int)strlen(cb) * 6, 28); G.print(cb); }
@@ -3684,9 +3688,9 @@ static void draw_today(int ch)
     if (s_today_n == 0) {                                                       // friendly, bigger empty state
         if (!s_ses->mfull) return;
         set_font(F_BIG); G.setTextColor(MUTED, BG);
-        G.setCursor(10, top + 10); G.print(s_en ? "No events today" : "Niente in agenda oggi");
+        G.setCursor(10, top + 10); G.print(TR("Niente in agenda oggi", "No events today"));
         G.setFont(&fonts::Font0); G.setTextSize(1); G.setTextColor(DIM, BG);
-        G.setCursor(10, top + 36); G.print(s_en ? "Try: remind me ..." : "Prova: ricordami ...");
+        G.setCursor(10, top + 36); G.print(TR("Prova: ricordami ...", "Try: remind me ..."));
         return;
     }
     G.setClipRect(0, top, AW, ch - top);
@@ -3718,7 +3722,7 @@ static void put_badge(int top)
     char a[24] = "", b[8] = ""; unsigned short ca = AMBER;
     if (s_busy) {
         static const char *dots[] = { "", ".", "..", "..." };
-        snprintf(a, sizeof a, "%s%s", s_en ? "thinking" : "pensa", dots[s_spin & 3]); ca = GRN;
+        snprintf(a, sizeof a, "%s%s", TR("pensa", "thinking"), dots[s_spin & 3]); ca = GRN;
     } else {
         time_t now = time(NULL); struct tm *tm = localtime(&now);
         const bool clk = tm && now > 1672531200;                // pre-NTP: no clock/date yet
@@ -3749,7 +3753,7 @@ static void draw_header(int top)
         back_pill(4, top + 4, 22);                              // Back: leave (behind the confirm) / one level up
         G.setFont(&fonts::Font2); G.setTextSize(1);
         G.setTextColor(ACC, BG); G.setCursor(52, top + 7); G.print("ANIMA");
-        const char *ml = s_omode == OM_OFF ? "offline" : s_omode == OM_ONLY ? "online" : (s_en ? "hybrid" : "ibrido");
+        const char *ml = s_omode == OM_OFF ? "offline" : s_omode == OM_ONLY ? "online" : (TR("ibrido", "hybrid"));
         G.setTextColor(s_omode == OM_OFF ? DIM : s_omode == OM_ONLY ? GRN : ACC, BG);
         G.setCursor(108, top + 7); G.print(ml);                 // tap: cycles the mode
         put_badge(top);
@@ -3760,7 +3764,7 @@ static void draw_header(int top)
     }
     G.setFont(&fonts::Font0); G.setTextSize(1);
     G.setTextColor(ACC, BG); G.setCursor(8, top + 4); G.print("ANIMA");
-    char ml[8]; snprintf(ml, sizeof ml, "%-7s", s_omode == OM_OFF ? "offline" : s_omode == OM_ONLY ? "online" : (s_en ? "hybrid" : "ibrido"));
+    char ml[8]; snprintf(ml, sizeof ml, "%-7s", s_omode == OM_OFF ? "offline" : s_omode == OM_ONLY ? "online" : (TR("ibrido", "hybrid")));
     G.setTextColor(s_omode == OM_OFF ? DIM : s_omode == OM_ONLY ? GRN : ACC, BG);
     G.setCursor(60, top + 4); G.print(ml);                      // fixed 7-cell field: a shorter label erases the longer
     put_badge(top);                                             // page / date + clock, right-aligned cluster
@@ -3787,7 +3791,7 @@ static void draw_deck(int ty0, int avail)
     // Glance line: the next reminder if there's one, otherwise a hint that TAB opens the full skill
     // catalog (so first-timers discover the IDEE tree beyond these quick picks). One dim Font0 line.
     bool reminder = s_ses->complics[0] != 0;
-    const char *glance = reminder ? s_ses->complics : (s_en ? "TAB: full skill catalog" : "TAB: catalogo completo");
+    const char *glance = reminder ? s_ses->complics : (TR("TAB: catalogo completo", "TAB: full skill catalog"));
     box_text(0, ty0 + 16, AW, 12, 8, ty0 + 16, glance, reminder ? MUTED : DIM, BG);
     G.setFont(&fonts::Font2); G.setTextSize(1);
     if (s_sug_sel < 0) s_sug_sel = 0;
@@ -3883,7 +3887,7 @@ static void reader_status(void)
     if (answer_pos(RD_BODY, &p, &n)) snprintf(a, sizeof a, "%d/%d", p, n);
     G.fillRect(0, RD_BODY, AW, 1, BG);
     seg_field(0, (AW / 2), RD_BODY + 1, false, a, ACC, "", MUTED);
-    seg_field((AW / 2), AW, RD_BODY + 1, true, s_en ? ";/. page  esc" : ";/. pagina  esc", DIM, "", DIM);
+    seg_field((AW / 2), AW, RD_BODY + 1, true, TR(";/. pagina  esc", ";/. page  esc"), DIM, "", DIM);
 }
 static void draw_reader(void)
 {
@@ -3934,7 +3938,7 @@ static void draw_input(int top, int h)
             unsigned short col = dist == 0 ? GRN : dist == 1 ? ACC : DIM;
             G.fillCircle(PROMPT_X + 8 + i * 14, cy, r, col);
         }
-        const char *note = s_ses->cloud_note ? (s_en ? "cloud: up to 12 s" : "cloud: max 12 s") : "";
+        const char *note = s_ses->cloud_note ? (TR("cloud: max 12 s", "cloud: up to 12 s")) : "";
         set_font(F_MED);
         box_text(72, ty, (AW - 72), fh, 76, ty + (fh - (int)G.fontHeight()) / 2, note, MUTED, BG);
         return;
@@ -3943,7 +3947,7 @@ static void draw_input(int top, int h)
     const int pe = box_text(0, ty, 8 + (int)G.textWidth(">"), fh, PROMPT_X, ty, ">", ACC, BG);
     if (x0 > pe) G.fillRect(pe, ty, x0 - pe, fh, BG);
     if (s_ilen == 0) {                                       // empty -> a dim placeholder cue (smartwatch style)
-        box_text(x0, ty, AW - x0, fh, x0, ty, s_awaiting ? (s_en ? "reply..." : "rispondi...") : (s_en ? "type..." : "scrivi..."), DIM, BG);
+        box_text(x0, ty, AW - x0, fh, x0, ty, s_awaiting ? (TR("rispondi...", "reply...")) : (TR("scrivi...", "type...")), DIM, BG);
         return;
     }
     int startc = 0; while (s_ses->input[startc] && (int)G.textWidth(s_ses->input + startc) > availw) startc++;   // scroll to keep the caret visible
@@ -4068,7 +4072,7 @@ static void draw_exit_modal(void)
         G.fillRoundRect(bx, by, bw, bh, 12, LINE);
         G.drawRoundRect(bx, by, bw, bh, 12, ACC);
         G.setFont(&fonts::FreeSansBold12pt7b); G.setTextColor(FG, LINE); G.setTextDatum(middle_center);
-        G.drawString(ed ? (s_en ? "Discard the text?" : "Scartare il testo?") : (s_en ? "Leave ANIMA?" : "Uscire da ANIMA?"), AW / 2, by + 30);
+        G.drawString(ed ? (TR("Scartare il testo?", "Discard the text?")) : (TR("Uscire da ANIMA?", "Leave ANIMA?")), AW / 2, by + 30);
         const int w = (bw - 36) / 2, y = by + 64, hh = 48;
         s_xm_y = (short)y; s_xm_bw = (short)w;
         G.fillRoundRect(bx + 12, y, w, hh, 12, ed ? AMBER : GRN);
@@ -4076,9 +4080,9 @@ static void draw_exit_modal(void)
         G.drawRoundRect(bx + 24 + w, y, w, hh, 12, MUTED);
         G.setFont(&fonts::FreeSansBold9pt7b);
         G.setTextColor(INK, ed ? AMBER : GRN);
-        G.drawString(ed ? (s_en ? "Discard" : "Scarta") : (s_en ? "Leave" : "Esci"), bx + 12 + w / 2, y + hh / 2);
+        G.drawString(ed ? (TR("Scarta", "Discard")) : (TR("Esci", "Leave")), bx + 12 + w / 2, y + hh / 2);
         G.setTextColor(FG, BG);
-        G.drawString(ed ? (s_en ? "Keep writing" : "Continua") : (s_en ? "Stay" : "Resta"), bx + 24 + w + w / 2, y + hh / 2);
+        G.drawString(ed ? (TR("Continua", "Keep writing")) : (TR("Resta", "Stay")), bx + 24 + w + w / 2, y + hh / 2);
         G.setTextDatum(top_left); G.setFont(&fonts::Font0); G.setTextSize(1);
         return;
     }
@@ -4088,12 +4092,12 @@ static void draw_exit_modal(void)
     G.drawRoundRect(bx, by, bw, bh, 10, ACC);
     G.drawRoundRect(bx + 1, by + 1, bw - 2, bh - 2, 9, ACC);          // double border = more pronounced
     set_font(F_BIG); G.setTextColor(FG, BG);
-    const char *q = ed ? (s_en ? "Discard the text?" : "Scartare il testo?") : (s_en ? "Leave ANIMA?" : "Uscire da ANIMA?");
+    const char *q = ed ? (TR("Scartare il testo?", "Discard the text?")) : (TR("Uscire da ANIMA?", "Leave ANIMA?"));
     G.setCursor((AW / 2) - (int)G.textWidth(q) / 2, by + 14); G.print(q);
     set_font(F_MED);
-    const char *yes = ed ? (s_en ? "Enter = Discard" : "Invio = Scarta") : (s_en ? "Enter = Exit" : "Invio = Esci");
+    const char *yes = ed ? (TR("Invio = Scarta", "Enter = Discard")) : (TR("Invio = Esci", "Enter = Exit"));
     G.setTextColor(ed ? AMBER : GRN, BG); G.setCursor((AW / 2) - (int)G.textWidth(yes) / 2, by + 44); G.print(yes);
-    const char *no = ed ? (s_en ? "Esc = Keep writing" : "Esc = Continua") : (s_en ? "Esc = Stay" : "Esc = Resta");
+    const char *no = ed ? (TR("Esc = Continua", "Esc = Keep writing")) : (TR("Esc = Resta", "Esc = Stay"));
     G.setTextColor(MUTED, BG); G.setCursor((AW / 2) - (int)G.textWidth(no) / 2, by + 66); G.print(no);
     G.setFont(&fonts::Font0); G.setTextSize(1);
 }
@@ -4104,9 +4108,9 @@ static void draw_main(void)
     if (!s_ses) {                                           // session block failed to allocate (see enter)
         G.fillRect(0, top, AW, h, BG);
         set_font(F_MED); G.setTextColor(AMBER, BG);
-        G.setCursor(8, top + 20); G.print(s_en ? "ANIMA: out of memory." : "ANIMA: memoria esaurita.");
+        G.setCursor(8, top + 20); G.print(TR("ANIMA: memoria esaurita.", "ANIMA: out of memory."));
         G.setTextColor(MUTED, BG);
-        G.setCursor(8, top + 44); G.print(s_en ? "Esc returns to the OS." : "Esc torna all'OS.");
+        G.setCursor(8, top + 44); G.print(TR("Esc torna all'OS.", "Esc returns to the OS."));
         G.setFont(&fonts::Font0); G.setTextSize(1);
         return;
     }
@@ -4118,8 +4122,8 @@ static void draw_main(void)
     if (s_ses->clear_confirm) {                             // the kit's confirm card over the current scene
         if (s_d_clear) { G.fillRect(0, top, AW, h, BG); s_d_clear = false; }   // an overlay painted over: clean backdrop
         G.setFont(&fonts::Font0); G.setTextSize(1);
-        app_ui_confirm(s_en ? "Clear the chat?" : "Pulire la chat?",
-                       s_en ? "Deletes the saved conversation" : "Cancella la conversazione salvata", s_ses->clear_yes);
+        app_ui_confirm(TR("Pulire la chat?", "Clear the chat?"),
+                       TR("Cancella la conversazione salvata", "Deletes the saved conversation"), s_ses->clear_yes);
         G.setFont(&fonts::Font0); G.setTextSize(1);
         return;
     }
@@ -4212,7 +4216,7 @@ static void draw_companion(void)
         G.fillRect(0, 0, AW, 4, BG);
         G.setTextColor(ACC, BG); G.setCursor(8, 4); G.print("ANIMA ");
         G.setTextColor(s_omode == OM_OFF ? DIM : s_omode == OM_ONLY ? GRN : ACC, BG);
-        G.print(s_omode == OM_OFF ? "offline" : s_omode == OM_ONLY ? "online " : (s_en ? "hybrid " : "ibrido "));
+        G.print(s_omode == OM_OFF ? "offline" : s_omode == OM_ONLY ? "online " : (TR("ibrido ", "hybrid ")));
         int sx = G.getCursorX();
         char hm[16] = "";
         const int bp = nucleo_power_battery_pct();
@@ -4229,13 +4233,13 @@ static void draw_companion(void)
         char foot[64] = ""; unsigned short fcol = MUTED;
         if (scene == 1) {
             const bool ed = s_ed_open;
-            cmp_card(ed ? (s_en ? "Editor" : "Editor") : "ANIMA",
-                     ed ? (s_en ? "Discard the text?" : "Scartare il testo?") : (s_en ? "Leave ANIMA?" : "Uscire da ANIMA?"), FG,
-                     ed ? (s_en ? "Enter discards  Esc keeps" : "Invio scarta  Esc continua") : (s_en ? "Enter exits  Esc stays" : "Invio esce  Esc resta"));
+            cmp_card(ed ? (TR("Editor", "Editor")) : "ANIMA",
+                     ed ? (TR("Scartare il testo?", "Discard the text?")) : (TR("Uscire da ANIMA?", "Leave ANIMA?")), FG,
+                     ed ? (TR("Invio scarta  Esc continua", "Enter discards  Esc keeps")) : (TR("Invio esce  Esc resta", "Enter exits  Esc stays")));
         } else if (scene == 2) {
-            cmp_card("ANIMA", s_en ? "Clear the chat?" : "Pulire la chat?", FG, s_ses->clear_yes ? (s_en ? "> Yes" : "> Si") : "> No");
+            cmp_card("ANIMA", TR("Pulire la chat?", "Clear the chat?"), FG, s_ses->clear_yes ? (TR("> Si", "> Yes")) : "> No");
         } else if (scene == 3) {
-            char cnt[24]; snprintf(cnt, sizeof cnt, s_en ? "%d characters" : "%d caratteri", s_ed_len);
+            char cnt[24]; snprintf(cnt, sizeof cnt, TR("%d caratteri", "%d characters"), s_ed_len);
             cmp_card("Editor", s_ed && s_ed->path[0] ? s_ed->path : "(file)", FG, cnt);
         } else if (scene == 4) {
             // The menu: the tab, then the focused entry big (what Enter would open), its detail below.
@@ -4247,7 +4251,7 @@ static void draw_companion(void)
                     snprintf(val, sizeof val, "%s", s_ses->slot[s_form_slot][0] ? s_ses->slot[s_form_slot] : "...");
                     snprintf(sub, sizeof sub, "%s", s_en ? L->l_en : L->l_it);
                 } else if (s_idee_cat < 0) {
-                    if (s_mrow >= 0) { snprintf(val, sizeof val, "%s", cat_label(s_mrow)); snprintf(sub, sizeof sub, "%d %s", cat_leaf_count(s_mrow), s_en ? "skills" : "abilita"); }
+                    if (s_mrow >= 0) { snprintf(val, sizeof val, "%s", cat_label(s_mrow)); snprintf(sub, sizeof sub, "%d %s", cat_leaf_count(s_mrow), TR("abilita", "skills")); }
                 } else if (s_mrow >= 0) {
                     const Leaf *L = &LEAVES[cat_leaf_at(s_idee_cat, s_mrow)];
                     snprintf(val, sizeof val, "%s", s_en ? L->l_en : L->l_it);
@@ -4265,10 +4269,10 @@ static void draw_companion(void)
                 snprintf(sub, sizeof sub, "%d / %d", pg + 1, GUIDE_N);
             } else if (s_tab == TAB_OGGI) {
                 snprintf(val, sizeof val, "%s", s_ses->today_hdr);
-                snprintf(sub, sizeof sub, "%d %s", s_today_count, s_en ? "events today" : "eventi oggi");
+                snprintf(sub, sizeof sub, "%d %s", s_today_count, TR("eventi oggi", "events today"));
             } else if (s_tab == TAB_STATO) {
                 snprintf(val, sizeof val, "%u KB", (unsigned)(heap_caps_get_free_size(MALLOC_CAP_DEFAULT) / 1024));
-                snprintf(sub, sizeof sub, "%s", s_en ? "free RAM" : "RAM libera");
+                snprintf(sub, sizeof sub, "%s", TR("RAM libera", "free RAM"));
             }
             cmp_card(tab, val[0] ? val : tab, val[0] ? FG : DIM, sub);
         } else if (s_busy) {
@@ -4280,12 +4284,12 @@ static void draw_companion(void)
                 G.fillCircle(AW / 2 - 39 + i * 26, cy, dist == 0 ? 8 : dist == 1 ? 6 : 4, dist == 0 ? GRN : dist == 1 ? ACC : DIM);
             }
             G.setFont(&fonts::Font2);
-            const char *t = s_ses->cloud_note ? (s_en ? "cloud: up to 12 s" : "cloud: max 12 s") : (s_en ? "thinking" : "sto pensando");
+            const char *t = s_ses->cloud_note ? (TR("cloud: max 12 s", "cloud: up to 12 s")) : (TR("sto pensando", "thinking"));
             G.setTextColor(MUTED, BG); G.setCursor((AW - (int)G.textWidth(t)) / 2, cy + 18); G.print(t);
             char q[A_INMAX + 4]; snprintf(q, sizeof q, "\"%s\"", s_ses->req);   // what it is answering
             fit_w(q, AW - 16);
             G.setTextColor(FG, BG); G.setCursor((AW - (int)G.textWidth(q)) / 2, cy + 40); G.print(q);
-            snprintf(foot, sizeof foot, "%s", s_en ? "Enter stops" : "Invio ferma");
+            snprintf(foot, sizeof foot, "%s", TR("Invio ferma", "Enter stops"));
         } else {
             // The composer: the line in FreeSans 12 pt, wrapped by pixels, the last three lines shown.
             G.setFont(&fonts::FreeSans12pt7b);
@@ -4322,7 +4326,7 @@ static void draw_companion(void)
                 G.fillRect(0, CMP_TOP + 50, 8, 2, BG); G.drawFastHLine(8, CMP_TOP + 51, AW - 16, LINE);
                 G.fillRect(8, CMP_TOP + 50, AW - 16, 1, BG); G.fillRect(AW - 8, CMP_TOP + 50, 8, 2, BG);
                 char rm[80];
-                snprintf(rm, sizeof rm, "%s", s_ses->complics[0] ? s_ses->complics : (s_en ? "No reminders" : "Nessun promemoria"));
+                snprintf(rm, sizeof rm, "%s", s_ses->complics[0] ? s_ses->complics : (TR("Nessun promemoria", "No reminders")));
                 fit_w(rm, AW - 16);
                 box_text(0, CMP_TOP + 52, AW, 22, 8, CMP_TOP + 55, rm, s_ses->complics[0] ? AMBER : DIM, BG);
                 // The last answer's opening words, a line of it.
@@ -4340,7 +4344,7 @@ static void draw_companion(void)
                 y = CMP_BOT;
             } else if (n == 0) {
                 G.setFont(&fonts::FreeSans12pt7b);
-                cmp_line(y, lh, s_en ? "reply..." : "rispondi...", AMBER, BG);
+                cmp_line(y, lh, TR("rispondi...", "reply..."), AMBER, BG);
                 s_cmp_cx = 9; s_cmp_cy = (short)(y + 5); y += lh;
             }
             for (int l = first; l < nl && n > 0; l++, y += lh) {
@@ -4363,11 +4367,11 @@ static void draw_companion(void)
             if (s_ses->launch[0] && n == 0) {
                 char nm[32]; const char *ln = launcher_app_localized_name(s_ses->launch);
                 snprintf(nm, sizeof nm, "%s", ln ? ln : s_ses->launch);
-                snprintf(foot, sizeof foot, s_en ? "Enter opens %s" : "Invio apre %s", nm); fcol = GRN;
+                snprintf(foot, sizeof foot, TR("Invio apre %s", "Enter opens %s"), nm); fcol = GRN;
             } else if (deck_active()) {
                 snprintf(foot, sizeof foot, "%d  %s", s_sug_sel + 1, cur_sug(s_sug_sel)); fcol = ACC;
             } else if (s_awaiting) {
-                snprintf(foot, sizeof foot, "%s", s_en ? "ANIMA is waiting for your reply" : "ANIMA aspetta la tua risposta"); fcol = AMBER;
+                snprintf(foot, sizeof foot, "%s", TR("ANIMA aspetta la tua risposta", "ANIMA is waiting for your reply")); fcol = AMBER;
             } else {
                 const char *tg = "";
                 for (int i = s_mcount - 1; i >= 0; i--) {
