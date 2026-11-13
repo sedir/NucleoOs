@@ -1184,10 +1184,64 @@ static void load_today(void) { cal_refresh(false); }
 // -> "leggila" (this was the "l'inglese non risponde all'ora" bug). The wrapper templates ({value}) are already
 // chosen per language by INTENTS[]; here we produce the matching VALUE. Uptime spelled out (no "2g 3h": the
 // voice would say the letters) -> same text on screen and in speech.
+// Portuguese (pt) is a catalog language for offline ANIMA (docs/anima-pt.md): the cascade answers with the
+// pt reply templates ("Bateria: {value}."), so the VALUE must be Portuguese too. ASCII (no TFT accent glyphs).
+// Returns true when it handled `arg`; anything else falls back to the English value.
+static bool fill_system_value_pt(const char *arg, char *out, size_t n, time_t now, const struct tm *tm)
+{
+    if (!strcmp(arg, "time")) {
+        if (tm && now > 1672531200) snprintf(out, n, "%s %d:%02d", tm->tm_hour == 1 ? "E" : "Sao", tm->tm_hour, tm->tm_min);
+        else                        snprintf(out, n, "Nao sei a hora: o relogio nao esta ajustado");
+    } else if (!strcmp(arg, "date") && tm) {
+        static const char *WD[] = {"domingo","segunda-feira","terca-feira","quarta-feira","quinta-feira","sexta-feira","sabado"};
+        static const char *MO[] = {"janeiro","fevereiro","marco","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"};
+        snprintf(out, n, "Hoje e %s, %d de %s de %d", WD[tm->tm_wday], tm->tm_mday, MO[tm->tm_mon], tm->tm_year + 1900);
+    } else if (!strcmp(arg, "season") && tm) {
+        static const char *SE[] = {"inverno","primavera","verao","outono"};   // same N-hemisphere rule as it/en
+        int mo = tm->tm_mon, dy = tm->tm_mday;
+        int s = ((mo == 2 && dy >= 20) || mo == 3 || mo == 4 || (mo == 5 && dy <= 20)) ? 1
+              : ((mo == 5 && dy >= 21) || mo == 6 || mo == 7 || (mo == 8 && dy <= 22)) ? 2
+              : ((mo == 8 && dy >= 23) || mo == 9 || mo == 10 || (mo == 11 && dy <= 20)) ? 3 : 0;
+        snprintf(out, n, "%s", SE[s]);
+    } else if (!strcmp(arg, "storage")) {
+        nucleo_storage_refresh();
+        const nucleo_storage_info_t *st = nucleo_storage_info();
+        snprintf(out, n, "%s", "indisponivel");
+        if (st->mounted) snprintf(out, n, "%.1f GB livres de %.1f GB", st->free_bytes / 1e9, st->total_bytes / 1e9);
+    } else if (!strcmp(arg, "uptime")) {
+        long s = (long)(esp_timer_get_time() / 1000000);
+        int dd = (int)(s / 86400), hh = (int)((s % 86400) / 3600), mm = (int)((s % 3600) / 60);
+        if (dd)      snprintf(out, n, "%d dias e %d horas", dd, hh);
+        else if (hh) snprintf(out, n, "%d horas e %d minutos", hh, mm);
+        else         snprintf(out, n, "%d minutos", mm);
+    } else if (!strcmp(arg, "ram")) {
+        snprintf(out, n, "%u KB de RAM livres", (unsigned)(heap_caps_get_free_size(MALLOC_CAP_DEFAULT) / 1024));
+    } else if (!strcmp(arg, "network")) {
+        const char *mode = nucleo_setup_mode(), *ssid = nucleo_setup_ssid(), *ip = nucleo_setup_ip();
+        if (mode && !strcmp(mode, "ap")) snprintf(out, n, "Sou um hotspot Wi-Fi \"%s\", IP %s", ssid, ip);
+        else if (ssid && ssid[0])        snprintf(out, n, "conectado a \"%s\", IP %s", ssid, ip);
+        else                             snprintf(out, n, "sem conexao");
+    } else if (!strcmp(arg, "capabilities")) {
+        snprintf(out, n, "Posso dizer hora/data/espaco/RAM/bateria e o estado do Wi-Fi, mudar volume e brilho, abrir os apps do aparelho, "
+                         "criar lembretes e timers e fazer contas. Em portugues entendo os comandos do aparelho; "
+                         "para perguntas gerais respondo melhor online");
+    } else return false;
+    return true;
+}
+
 static void fill_system_value(const char *arg, char *out, size_t n, bool en)
 {
     snprintf(out, n, en ? "not available" : "non disponibile");
     time_t now = time(NULL); struct tm *tm = localtime(&now);
+    const char *ui_lang = nucleo_i18n_lang();
+    const bool pt = ui_lang && !strcmp(ui_lang, "pt");
+    if (!strcmp(arg, "battery")) {                 // the composer's own reading (-1 = unknown -> "not available")
+        int bp = nucleo_power_battery_pct();
+        if (bp >= 0) snprintf(out, n, "%d%%", bp);
+        else if (pt) snprintf(out, n, "indisponivel");
+        return;
+    }
+    if (pt && fill_system_value_pt(arg, out, n, now, tm)) return;
     if (!strcmp(arg, "time")) {
         if (tm && now > 1672531200) nucleo_tts_speak_time(out, (int)n, tm->tm_hour, tm->tm_min, en ? "en" : "it");
         else                        snprintf(out, n, en ? "I don't know the time: the clock isn't set" : "Non conosco l'ora: l'orologio non e' impostato");
@@ -1499,7 +1553,9 @@ static void present_result(int ms)
         nucleo_app_persist_prefs();   // a spoken "set volume/brightness" is a deliberate pref -> survives reboot
         // Bilingual: it is spoken IN FULL (say_or below), so in EN it must come out in English or the
         // EN voice wouldn't cover it. mathspeak renders "%" -> "per cento"/"percent".
-        snprintf(reply, sizeof(reply), s_en ? (vol ? "Volume %d%%." : "Brightness %d%%.")
+        const char *ul = nucleo_i18n_lang();
+        if (ul && !strcmp(ul, "pt")) snprintf(reply, sizeof(reply), vol ? "Volume em %d%%." : "Brilho em %d%%.", want);
+        else snprintf(reply, sizeof(reply), s_en ? (vol ? "Volume %d%%." : "Brightness %d%%.")
                                             : (vol ? "Volume al %d%%." : "Luminosita al %d%%."), want);
         nucleo_anima_observe(s_ses->res.intent, true);
     } else if (s_ses->res.action == ANIMA_ACT_TOOL && !strcmp(s_ses->res.intent, "add_event")) {

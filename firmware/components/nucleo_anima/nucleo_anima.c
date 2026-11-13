@@ -2898,10 +2898,10 @@ static bool s_mem_only;   // nucleo_anima_init_memory(): only the personal-memor
 
 esp_err_t nucleo_anima_init(const char *lang)
 {
-    // Phase 0: only the embedded Italian command table. Future: load /sd/data/anima/
-    // commands.<lang>.json to override/extend, and the L1 pack for retrieval.
-    if (lang && strcmp(lang, "it") != 0)
-        ESP_LOGW(TAG, "lang '%s' not bundled yet; using 'it'", lang);
+    // The command tables are embedded (IT+EN triggers); pt reads them through the anima_pt.c bridge.
+    // Replies: Italian for "it", Portuguese catalog for "pt", English otherwise (see nucleo_anima_query).
+    if (lang && strcmp(lang, "it") && strcmp(lang, "en") && strcmp(lang, "pt"))
+        ESP_LOGW(TAG, "lang '%s' has no offline replies; answering in English", lang);
     s_ready = true;
     s_mem_only = false;
     ESP_LOGI(TAG, "L0 ready (%d intents)", (int)(sizeof(INTENTS) / sizeof(INTENTS[0])));
@@ -3985,6 +3985,17 @@ anima_result_t nucleo_anima_query(const char *input, const char *lang)
         return m;
     }
     nucleo_anima_online_set_reply_lang(lang);   // the real OS language for this turn's LLM reply directive
+    // Portuguese (pt) is a CATALOG language for this offline cascade (anima_pt.c, docs/anima-pt.md): a line with
+    // a device-command cue is bridged to the English the cascade reads (en is already true for pt), and the
+    // English reply is rewritten from the pt catalog in the done: epilogue. A line with no command cue keeps
+    // its Portuguese, so the online tier (already told to answer in pt) sees it as typed. The bridge buffer is
+    // heap, taken on pt turns only: it/en pay nothing, and this frame (the anima-solo stack's biggest) does
+    // not grow. Allocation failure = the raw line, never an error.
+    const bool pt = lang && (lang[0] | 0x20) == 'p' && (lang[1] | 0x20) == 't';
+    char *pt_line = NULL;
+    if (pt && input && (pt_line = (char *)malloc(A_PT_LINE)) != NULL) {
+        if (a_pt_bridge(input, pt_line, A_PT_LINE)) input = pt_line;
+    }
     // RAM policy: stand the offline L1/HDC brain down for this turn ONLY in ONLINE-ONLY mode, where the
     // cloud LLM is the sole brain and L1's index would be dead weight competing for the TLS handshake's
     // heap. In HYBRID, L1 SERVES (it's half of "L1 + intelligent wiki search") so we must NOT stand it
@@ -4802,6 +4813,8 @@ done: {
         session_save();                        // persist context if it changed
         diag_count(&r);                        // cumulative tier/abstain telemetry for /api/diag (cheap)
         nucleo_anima_online_turn_end();        // disarm: other callers (transcribe...) keep their own limits
+        if (pt && r.tier != ANIMA_TIER_REMOTE) a_pt_reply(r.intent, r.reply, sizeof r.reply);   // the LLM already wrote pt
+        free(pt_line);
         return r;
     }
 }

@@ -72,6 +72,14 @@ void a_norm_phrase(const char *raw, char *out, size_t cap);
 // Host-only A/B switch for the pre-hardening lax behaviour (always false on device).
 bool l0_legacy(void);
 
+// anima_pt.c — Brazilian Portuguese catalog language (docs/anima-pt.md).
+#define A_PT_LINE 256   // bridged line buffer (heap, pt turns only)
+// a_pt_bridge: fold + rewrite known pt words to the English the cascade reads; true if a command cue was seen.
+bool a_pt_bridge(const char *in, char *out, size_t cap);
+// a_pt_reply: rewrite an English reply in place from the pt catalog; false (unchanged) if unknown.
+bool a_pt_reply(const char *intent, char *reply, size_t cap);
+
 #ifdef __cplusplus
 }
 #endif
+

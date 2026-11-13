@@ -90,6 +90,7 @@
     "anima:gate": "node tools/anima-host/gate.mjs",
     "anima:dedup": "node tools/anima-host/stitch-dedup.mjs",
     "anima:decline": "node tools/anima-host/decline-check.mjs",
+    "anima:pt": "node tools/anima-host/pt-check.mjs",
     "anima:wmem": "node tools/anima-host/wmem-check.mjs",
     "anima:enc": "node tools/anima-host/enc-quality.mjs",
     "anima:corpustext": "node tools/anima/fix-corpus-text.mjs --check",

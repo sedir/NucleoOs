@@ -3,7 +3,7 @@
 //   anima.exe --en "what time is it"
 //   anima.exe                     interactive: one query per line, EOF to quit
 //   type queries.txt | anima.exe  batch
-// In-REPL commands: /en /it (switch language), /reset (forget conversation).
+// In-REPL commands: /en /it /pt (switch language), /reset (forget conversation).
 //
 // Windows specifics, so accented Italian survives and L1 data is always found:
 //   * argv is taken from the WIDE command line and converted to UTF-8 (the CRT's argv is
@@ -220,6 +220,7 @@ int main(int argc, char **argv) {
         if (!a) continue;
         if      (!strcmp(a, "--en")) lang = "en";
         else if (!strcmp(a, "--it")) lang = "it";
+        else if (!strcmp(a, "--pt")) lang = "pt";
         else if (!strcmp(a, "--verify")) do_verify = 1;
         else if (!strcmp(a, "--cos")) do_cos = 1;
         else if (!strcmp(a, "--memory-only")) mem_only = 1;
@@ -287,7 +288,7 @@ int main(int argc, char **argv) {
 #else
         "ANIMA host (lang=%s). Una query per riga, EOF (Ctrl+D) per uscire.\n"
 #endif
-        "Comandi: /en /it /reset\n\n", lang);
+        "Comandi: /en /it /pt /reset\n\n", lang);
 
     char buf[1024];
     while (fgets(buf, sizeof(buf), stdin)) {
@@ -298,6 +299,7 @@ int main(int argc, char **argv) {
         // --memory-only keeps that boot: on the device the language comes with each request, never a full init.
         if (!strcmp(line, "/en"))    { lang = "en"; if (!mem_only) nucleo_anima_init(lang); continue; }
         if (!strcmp(line, "/it"))    { lang = "it"; if (!mem_only) nucleo_anima_init(lang); continue; }
+        if (!strcmp(line, "/pt"))    { lang = "pt"; if (!mem_only) nucleo_anima_init(lang); continue; }
         if (!strcmp(line, "/reset")) { nucleo_anima_reset_session(); fprintf(stderr, "(sessione azzerata)\n"); continue; }
         if (!strncmp(line, "/learnvec ", 10)) { fprintf(stderr, "(learnvec %s: %d vectors)\n", line + 10, hm_learnvec(line + 10)); continue; }
         // "/memory <q>": the lean personal-memory path (nucleo_anima_query_memory) the web server falls back

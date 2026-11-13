@@ -196,6 +196,10 @@ const gates = [
     // hallucination gates are untouched), the refusal follows the session language, and it never
     // replaces a real answer or a pending clarifying question.
     ok: (code) => code === 0, summary: (o) => (o.match(/\[decline\][^\n]*/) || [lastLine(o)])[0].trim() },
+  { name: 'portuguese (pt commands)', cmd: 'node', args: ['tools/anima-host/pt-check.mjs'],
+    // pt-BR catalog language (anima_pt.c): Portuguese device commands route to the same actions and answer
+    // in Portuguese; a Portuguese knowledge question never becomes an action; it/en sessions are untouched.
+    ok: (code) => code === 0, summary: (o) => (o.match(/\[pt\][^\n]*/) || [lastLine(o)])[0].trim() },
   { name: 'working memory (follow-ups)', cmd: 'node', args: ['tools/anima-host/wmem-check.mjs'],
     // Entity slots + topic-frame carry-over ("chi era einstein" / "e newton?"), each paired with the
     // guard that stops it becoming a hallucination engine: cold session, stale frame, /reset, unknown
