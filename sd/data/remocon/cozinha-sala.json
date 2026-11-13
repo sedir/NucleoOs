@@ -1,0 +1,44 @@
+{
+  "name": "Cozinha e Sala",
+  "type": "light",
+  "color": "yellow",
+  "cols": 2,
+  "pages": [
+    {
+      "name": "CH1",
+      "buttons": [
+        { "label": "Acender", "icon": "sun",   "x": 0, "y": 0, "color": "yellow", "key": "l", "ir": "panasonic_hk9810_ch1.ir", "signal": "Acender" },
+        { "label": "Apagar",  "icon": "power", "x": 1, "y": 0, "color": "red",    "key": "d", "ir": "panasonic_hk9810_ch1.ir", "signal": "Apagar" },
+        { "label": "Normal",  "icon": "light", "x": 0, "y": 1, "ir": "panasonic_hk9810_ch1.ir", "signal": "Normal" },
+        { "label": "Noite",   "icon": "moon",  "x": 1, "y": 1, "key": "n", "ir": "panasonic_hk9810_ch1.ir", "signal": "Noite" },
+        { "type": "rocker", "label": "Brilho", "x": 0, "y": 2, "w": 2, "key_plus": "=", "key_minus": "-",
+          "plus":  { "ir": "panasonic_hk9810_ch1.ir", "signal": "Brilho_mais" },
+          "minus": { "ir": "panasonic_hk9810_ch1.ir", "signal": "Brilho_menos" } }
+      ]
+    },
+    {
+      "name": "CH2",
+      "buttons": [
+        { "label": "Acender", "icon": "sun",   "x": 0, "y": 0, "color": "yellow", "key": "l", "ir": "panasonic_hk9810_ch2.ir", "signal": "Acender" },
+        { "label": "Apagar",  "icon": "power", "x": 1, "y": 0, "color": "red",    "key": "d", "ir": "panasonic_hk9810_ch2.ir", "signal": "Apagar" },
+        { "label": "Normal",  "icon": "light", "x": 0, "y": 1, "ir": "panasonic_hk9810_ch2.ir", "signal": "Normal" },
+        { "label": "Noite",   "icon": "moon",  "x": 1, "y": 1, "key": "n", "ir": "panasonic_hk9810_ch2.ir", "signal": "Noite" },
+        { "type": "rocker", "label": "Brilho", "x": 0, "y": 2, "w": 2, "key_plus": "=", "key_minus": "-",
+          "plus":  { "ir": "panasonic_hk9810_ch2.ir", "signal": "Brilho_mais" },
+          "minus": { "ir": "panasonic_hk9810_ch2.ir", "signal": "Brilho_menos" } }
+      ]
+    },
+    {
+      "name": "CH3",
+      "buttons": [
+        { "label": "Acender", "icon": "sun",   "x": 0, "y": 0, "color": "yellow", "key": "l", "ir": "panasonic_hk9810_ch3.ir", "signal": "Acender" },
+        { "label": "Apagar",  "icon": "power", "x": 1, "y": 0, "color": "red",    "key": "d", "ir": "panasonic_hk9810_ch3.ir", "signal": "Apagar" },
+        { "label": "Normal",  "icon": "light", "x": 0, "y": 1, "ir": "panasonic_hk9810_ch3.ir", "signal": "Normal" },
+        { "label": "Noite",   "icon": "moon",  "x": 1, "y": 1, "key": "n", "ir": "panasonic_hk9810_ch3.ir", "signal": "Noite" },
+        { "type": "rocker", "label": "Brilho", "x": 0, "y": 2, "w": 2, "key_plus": "=", "key_minus": "-",
+          "plus":  { "ir": "panasonic_hk9810_ch3.ir", "signal": "Brilho_mais" },
+          "minus": { "ir": "panasonic_hk9810_ch3.ir", "signal": "Brilho_menos" } }
+      ]
+    }
+  ]
+}

@@ -503,6 +503,7 @@ extern "C" void nucleo_register_ssh(void);
 extern "C" void nucleo_register_wifi(void);
 extern "C" void nucleo_register_mail(void);   // SMTP mail client (Gmail/Outlook/Yahoo/iCloud)
 extern "C" void nucleo_register_ir(void);
+extern "C" void nucleo_register_remocon(void);   // app_remocon.cpp — Tools: JSON-defined IR remotes (devices + layouts on the SD)
 extern "C" void nucleo_register_link(void);   // "Vicino" — device-to-device file/command transfer
 extern "C" void nucleo_register_swarm(void);  // "Sciame" — ESP-NOW swarm presence + ping (nucleo_mesh)
 extern "C" void nucleo_register_micspec(void);
@@ -550,7 +551,7 @@ void nucleo_app_register_builtins(void)
     // Office (time + productivity): clock/chrono/pomodoro/alarm are the time cluster
     nucleo_register_clock(); nucleo_register_chrono(); nucleo_register_pomodoro(); nucleo_register_alarm(); nucleo_register_calc(); nucleo_register_calendar(); nucleo_register_notepad(); nucleo_register_files();
     // Tools (everyday gadgets)
-    nucleo_register_weather(); nucleo_register_torch(); nucleo_register_qr(); nucleo_register_ir(); nucleo_register_pixelfix(); nucleo_register_screensaver();
+    nucleo_register_weather(); nucleo_register_torch(); nucleo_register_qr(); nucleo_register_ir(); nucleo_register_remocon(); nucleo_register_pixelfix(); nucleo_register_screensaver();
     // Media
     nucleo_register_radio(); nucleo_register_player();
 #if !CONFIG_NUCLEO_STORE_GBEMU

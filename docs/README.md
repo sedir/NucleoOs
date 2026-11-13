@@ -83,6 +83,7 @@ ANIMA is NucleoOS's offline natural-language assistant (retrieval + reasoning in
 | [event-protocol.md](event-protocol.md) | The one event bus over every transport — event envelope, monotonic `seq`, delta sync. |
 | [notify-protocol.md](notify-protocol.md) | The single notification backbone (bus topic `notify.post`) feeding the web center + device. |
 | [native-ui-kit.md](native-ui-kit.md) | The style contract every native app must follow (theme roles, primitives) so the OS looks like one product. |
+| [remocon.md](remocon.md) | RemoCon: IR remotes defined as JSON files on the SD (grid layout, D-pad, rockers, macros, Flipper `.ir` refs, Hitachi AC panel) and the house remotes it ships. |
 | [native-emulation.md](native-emulation.md) | What the device can emulate itself in firmware C — Game Boy and Game Gear ship; the rest is analysis. |
 | [costellazioni.md](costellazioni.md) | Costellazioni — one shared campaign: a compact native space game on the Cardputer, an immersive 3D one in the web OS. *(design; parts built)* |
 | [game-mini-vs.md](game-mini-vs.md) | A worked native-game build plan (a horde survivor) and its hard RAM/perf contract. *(build plan)* |

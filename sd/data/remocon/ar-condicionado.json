@@ -1,0 +1,22 @@
+{
+  "name": "Ar-condicionado",
+  "type": "ac",
+  "color": "cyan",
+  "cols": 4,
+  "pages": [
+    {
+      "name": "Ar",
+      "buttons": [
+        { "type": "ac", "model": "hitachi_ac424", "x": 0, "y": 0, "w": 4, "h": 3 }
+      ]
+    },
+    {
+      "name": "Presets",
+      "buttons": [
+        { "label": "Frio 23",  "icon": "star",  "x": 0, "y": 0, "w": 2, "color": "cyan",   "ir": "hitachi_ras_aj22m_presets.ir", "signal": "Frio_23_Auto" },
+        { "label": "Calor 22", "icon": "sun",   "x": 2, "y": 0, "w": 2, "color": "orange", "ir": "hitachi_ras_aj22m_presets.ir", "signal": "Calor_22_Auto" },
+        { "label": "Desligar", "icon": "power", "x": 0, "y": 1, "w": 4, "color": "red",    "ir": "hitachi_ras_aj22m_presets.ir", "signal": "Desligar" }
+      ]
+    }
+  ]
+}

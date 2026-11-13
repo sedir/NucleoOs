@@ -61,19 +61,26 @@ static void ir_set_carrier(uint16_t hz) {
 static esp_err_t ir_blast(const uint16_t *dur, int n, uint16_t carrier, int repeats) {
     if (!s_ready || !dur || n <= 0) return ESP_ERR_INVALID_STATE;
     if (repeats <= 0) repeats = 1;
-    int nsym = (n + 1) / 2;
+    // A duration longer than one RMT half (15 bits) is split over several halves of the same level instead of
+    // being clamped: some AC protocols open with a wake gap past 32.7 ms (Hitachi AC424: 29784 µs mark, then a
+    // 49290 µs space), and a clamped gap is a different frame. An odd half count is padded with brief idle.
+    int halves = 0;
+    for (int i = 0; i < n; i++) halves += dur[i] ? (dur[i] + RMT_MAX_TICKS - 1) / RMT_MAX_TICKS : 0;
+    int nsym = (halves + 1) / 2;
+    if (nsym <= 0) return ESP_ERR_INVALID_ARG;
     rmt_symbol_word_t *sym = calloc(nsym, sizeof(rmt_symbol_word_t));
     if (!sym) return ESP_ERR_NO_MEM;
-    for (int i = 0, k = 0; i < n; i += 2, k++) {
-        uint16_t mark = dur[i] > RMT_MAX_TICKS ? RMT_MAX_TICKS : dur[i];
-        sym[k].level0 = 1; sym[k].duration0 = mark;
-        if (i + 1 < n) {
-            uint16_t space = dur[i + 1] > RMT_MAX_TICKS ? RMT_MAX_TICKS : dur[i + 1];
-            sym[k].level1 = 0; sym[k].duration1 = space;
-        } else {
-            sym[k].level1 = 0; sym[k].duration1 = 1000;   // pad a final lone mark with brief idle
+    int h = 0;
+    for (int i = 0; i < n; i++) {
+        const unsigned level = (i & 1) ? 0 : 1;          // even index = mark (carrier on)
+        for (unsigned left = dur[i]; left > 0; h++) {
+            const unsigned part = left > RMT_MAX_TICKS ? RMT_MAX_TICKS : left;
+            left -= part;
+            if (h & 1) { sym[h / 2].level1 = level; sym[h / 2].duration1 = part; }
+            else       { sym[h / 2].level0 = level; sym[h / 2].duration0 = part; }
         }
     }
+    if (h & 1) { sym[h / 2].level1 = 0; sym[h / 2].duration1 = 1000; }   // pad a final lone half with brief idle
 
     xSemaphoreTake(s_lock, portMAX_DELAY);
     // Enable the channel only for the transmit window. Left enabled 24/7 it holds an APB pm-lock that
