@@ -17,8 +17,10 @@ find_program(NUCLEO_HOST_CC NAMES gcc cc
 if(NUCLEO_HOST_CC)
     if(CMAKE_HOST_WIN32)
         set(_tts_exe_sfx ".exe")
+        set(_tts_static "-static")   # Windows: a standalone exe, no MinGW DLLs at run time
     else()
         set(_tts_exe_sfx "")
+        set(_tts_static "")          # macOS has no static libc (-static cannot link); Linux needs none
     endif()
     get_filename_component(_tts_ccdir "${NUCLEO_HOST_CC}" DIRECTORY)    # bin MinGW: serve sul PATH (vedi sotto)
     set(_tts_repo  "${CMAKE_CURRENT_SOURCE_DIR}/../../..")              # nucleo_tts -> components -> firmware -> repo
@@ -32,12 +34,12 @@ if(NUCLEO_HOST_CC)
     # Il PATH della build IDF non la contiene, quindi avvolgo l'invocazione con `cmake -E env PATH=...`.
     # Uso la SOLA cartella bin MinGW (le DLL di sistema sono trovate comunque): niente ';' nel valore,
     # cosi' CMake non lo spezza in lista (i ';' sono separatori-lista). Validato in shell pulita = 71 ok.
-    # -static: l'exe risultante gira poi standalone (nessun DLL a runtime). Stamp + DEPENDS = il gate
+    # -static (Windows only): l'exe risultante gira poi standalone (nessun DLL a runtime). Stamp + DEPENDS = il gate
     # ri-scatta SOLO quando cambiano il planner o il suo test (altri componenti -> costo zero a regime).
     add_custom_command(
         OUTPUT  "${_tts_stamp}"
         COMMAND "${CMAKE_COMMAND}" -E env "PATH=${_tts_ccdir}"
-                "${NUCLEO_HOST_CC}" -std=gnu11 -O0 -static
+                "${NUCLEO_HOST_CC}" -std=gnu11 -O0 ${_tts_static}
                 -I "${CMAKE_CURRENT_SOURCE_DIR}/include" "${_tts_plan}" "${_tts_ctest}" -o "${_tts_exe}"
         COMMAND "${_tts_exe}"
         COMMAND "${CMAKE_COMMAND}" -E touch "${_tts_stamp}"
