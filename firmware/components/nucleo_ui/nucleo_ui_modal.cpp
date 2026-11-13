@@ -59,6 +59,7 @@ static void hint(LovyanGFX *canvas, const char *h)
 // The UI language, when the i18n engine is linked in (nucleo_storage): a weak reference keeps this
 // component free of that dependency. NULL -> English.
 extern "C" const char *nucleo_i18n_lang(void) __attribute__((weak));
+extern "C" const char *nucleo_tr_en(const char *en) __attribute__((weak));   // catalog languages (pt)
 static const char *H5(const char *it, const char *en, const char *es, const char *fr, const char *de)
 {
     const char *l = nucleo_i18n_lang ? nucleo_i18n_lang() : nullptr;
@@ -67,7 +68,7 @@ static const char *H5(const char *it, const char *en, const char *es, const char
     if (l[0] == 'e' && l[1] == 's') return es;
     if (l[0] == 'f' && l[1] == 'r') return fr;
     if (l[0] == 'd' && l[1] == 'e') return de;
-    return en;
+    return nucleo_tr_en ? nucleo_tr_en(en) : en;   // a catalog language (pt), else English
 }
 
 // Draw the body text of a message/home screen with READABLE, self-fitting fonts. With a handful of

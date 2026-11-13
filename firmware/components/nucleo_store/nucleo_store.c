@@ -18,6 +18,7 @@
 #include <time.h>
 
 extern const char *nucleo_i18n_lang(void) __attribute__((weak));   // nucleo_storage (resolved at link)
+extern const char *nucleo_tr_en(const char *en) __attribute__((weak));   // catalog languages (pt)
 // nucleo_app/native_apps.cpp: the native ABI level this firmware runs (weak: a build without it has none).
 extern uint32_t nucleo_native_abi_level(void) __attribute__((weak));
 
@@ -60,7 +61,7 @@ static const char *L5(const char *it, const char *en, const char *es, const char
     if (l[0] == 'e' && l[1] == 's') return es;
     if (l[0] == 'f' && l[1] == 'r') return fr;
     if (l[0] == 'd' && l[1] == 'e') return de;
-    return en;
+    return nucleo_tr_en ? nucleo_tr_en(en) : en;   // a catalog language (pt), else English
 }
 
 static void localize(st_code_t c, int http)

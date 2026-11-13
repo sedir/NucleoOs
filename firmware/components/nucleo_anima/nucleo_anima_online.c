@@ -95,7 +95,7 @@ static char s_reply_lang[6] = "en";
 void nucleo_anima_online_set_reply_lang(const char *code) {
     if (code && code[0] && code[1]) {
         char a = (char)(code[0] | 0x20), b = (char)(code[1] | 0x20);
-        static const char *ok[] = { "it", "en", "es", "fr", "de" };
+        static const char *ok[] = { "it", "en", "es", "fr", "de", "pt" };
         for (size_t i = 0; i < sizeof(ok) / sizeof(ok[0]); i++)
             if (a == ok[i][0] && b == ok[i][1]) { s_reply_lang[0] = a; s_reply_lang[1] = b; s_reply_lang[2] = 0; return; }
     }
@@ -110,6 +110,7 @@ const char *nucleo_anima_lang_name(const char *code) {
     if (a == 'e' && b == 's') return "Spanish";
     if (a == 'f' && b == 'r') return "French";
     if (a == 'd' && b == 'e') return "German";
+    if (a == 'p' && b == 't') return "Brazilian Portuguese";
     return "English";
 }
 // Milliseconds this question may still spend on the network (INT32_MAX when no question is in flight).

@@ -177,65 +177,65 @@ static int node_child_count(const MenuNode *m)
 // name differs by language need a row; pure proper nouns (ANIMA, Mail, SSH, Pong, BLE, Snake, Yahtzee,
 // Tanks, Tank Duel, Payloads, IR Remote, Evil Portal, Deauth Flood, WiFi Sniffer, …) fall through to
 // the app's own name.
-// App display names in all five shipped languages (it/en/es/fr/de). ASCII only — the on-TFT font has
+// App display names in all six shipped languages (it/en/es/fr/de/pt-BR). ASCII only — the on-TFT font has
 // no accented glyphs, so French/German accents are dropped (Chronometre, Wuerfel) rather than rendered
 // as tofu. Game names and brand-ish words stay close across languages on purpose.
-static const struct { const char *id, *it, *en, *es, *fr, *de; } APP_NAME_TR[] = {
-    { "alarm",       "Allarme",             "Alarm",          "Alarma",         "Alarme",           "Wecker" },
-    { "brawler",     "Scorribanda",         "Brawl",          "Pelea",          "Bagarre",          "Keilerei" },
-    { "calc",        "Calcolatrice",        "Calculator",     "Calculadora",    "Calculatrice",     "Rechner" },
-    { "calendar",    "Calendario",          "Calendar",       "Calendario",     "Calendrier",       "Kalender" },
-    { "chrono",      "Cronometro",          "Stopwatch",      "Cronometro",     "Chronometre",      "Stoppuhr" },
-    { "clock",       "Orologio",            "Clock",          "Reloj",          "Horloge",          "Uhr" },
-    { "dice",        "Dadi",                "Dice",           "Dados",          "Des",              "Wuerfel" },
-    { "files",       "File",                "Files",          "Archivos",       "Fichiers",         "Dateien" },
-    { "giardino",    "Giardino",            "Sand Garden",    "Jardin",         "Jardin",           "Sandgarten" },
-    { "goniometer",  "Goniometro",          "Protractor",     "Transportador",  "Rapporteur",       "Winkelmesser" },
-    { "info",        "Connessione",         "Connection",     "Conexion",       "Connexion",        "Verbindung" },
-    { "ir",          "Telecomando IR",      "IR Remote",      "Mando IR",       "Telecommande IR",  "IR-Fernbedienung" },
-    { "level",       "Livella",             "Level",          "Nivel",          "Niveau",           "Wasserwaage" },
-    { "link",        "Vicino",              "Nearby",         "Cerca",          "Proche",           "Nahe" },
-    { "mail",        "Posta",               "Mail",           "Correo",         "Courrier",         "Mail" },
-    { "micspec",     "Spettro Mic",         "Mic Spectrum",   "Espectro Mic",   "Spectre Mic",      "Mik-Spektrum" },
-    { "music",       "Musica",              "Music",          "Musica",         "Musique",          "Musik" },
-    { "notepad",     "Note",                "Notes",          "Notas",          "Notes",            "Notizen" },
-    { "notify",      "Notifiche",           "Notifications",  "Notificaciones", "Notifications",    "Hinweise" },
-    { "orde",        "Orde",                "Hordes",         "Hordas",         "Hordes",           "Horden" },
-    { "pedometer",   "Contapassi",          "Pedometer",      "Podometro",      "Podometre",        "Schrittzaehler" },
-    { "photos",      "Foto",                "Photos",         "Fotos",          "Photos",           "Fotos" },
-    { "presence",    "Presenza",            "Presence",       "Presencia",      "Presence",         "Praesenz" },
-    { "pinball",     "Flipper",             "Pinball",        "Pinball",        "Flipper",          "Flipper" },
-    { "qr",          "Codice QR",           "QR Code",        "Codigo QR",      "Code QR",          "QR-Code" },
-    { "radio",       "Radio",               "Radio",          "Radio",          "Radio",            "Radio" },
-    { "reactor",     "Reattore",            "Reactor",        "Reactor",        "Reacteur",         "Reaktor" },
-    { "recorder",    "Memo vocali",         "Voice Recorder", "Grabadora",      "Dictaphone",       "Rekorder" },
-    { "remote",      "Controllo remoto",    "Remote Control", "Control remoto", "Controle distant", "Fernsteuerung" },
-    { "screensaver", "Salvaschermo",        "Screensaver",    "Salvapantallas", "Economiseur",      "Bildschirmschoner" },
-    { "slots",       "Slot",                "Slots",          "Tragaperras",    "Machines",         "Automat" },
-    { "snake",       "Serpente",            "Snake",          "Serpiente",      "Serpent",          "Schlange" },
-    { "stelle",      "Costellazioni",       "Constellations", "Constelaciones", "Constellations",   "Sternbilder" },
-    { "store",       "Store",               "Store",          "Tienda",         "Boutique",         "Store" },
-    { "swarm",       "Sciame",              "Swarm",          "Enjambre",       "Essaim",           "Schwarm" },
-    { "sysmon",      "Stato sistema",       "System Status",  "Estado sistema", "Etat systeme",     "Systemstatus" },
-    { "tankd",       "Duello Carri",        "Tank Duel",      "Duelo Tanques",  "Duel de Chars",    "Panzerduell" },
-    { "tanks",       "Carri",               "Tanks",          "Tanques",        "Chars",            "Panzer" },
-    { "theme",       "Tema",                "Theme",          "Tema",           "Theme",            "Design" },
-    { "torch",       "Torcia",              "Torch",          "Linterna",       "Lampe",            "Taschenlampe" },
-    { "usb",         "Unita USB",           "USB Drive",      "Disco USB",      "Disque USB",       "USB-Disk" },
-    { "usbweb",      "Web via USB",         "Web via USB",    "Web por USB",    "Web via USB",      "Web ueber USB" },
-    { "usbkbd",      "Tastiera USB",        "USB Keyboard",   "Teclado USB",    "Clavier USB",      "USB-Tastatur" },
-    { "voice",       "Trainer vocale",      "Voice Trainer",  "Entrenador voz", "Coach vocal",      "Sprachtrainer" },
-    { "voicelab",    "Laboratorio voce",    "Voice Lab",      "Lab de voz",     "Labo vocal",       "Sprachlabor" },
-    { "weather",     "Meteo",               "Weather",        "Tiempo",         "Meteo",            "Wetter" },
-    { "wifi",        "Impostazioni",        "Settings",       "Ajustes",        "Reglages",         "Einstellungen" },
+static const struct { const char *id, *it, *en, *es, *fr, *de, *pt; } APP_NAME_TR[] = {
+    { "alarm",       "Allarme",             "Alarm",          "Alarma",         "Alarme",           "Wecker", "Alarme" },
+    { "brawler",     "Scorribanda",         "Brawl",          "Pelea",          "Bagarre",          "Keilerei", "Briga" },
+    { "calc",        "Calcolatrice",        "Calculator",     "Calculadora",    "Calculatrice",     "Rechner", "Calculadora" },
+    { "calendar",    "Calendario",          "Calendar",       "Calendario",     "Calendrier",       "Kalender", "Calendario" },
+    { "chrono",      "Cronometro",          "Stopwatch",      "Cronometro",     "Chronometre",      "Stoppuhr", "Cronometro" },
+    { "clock",       "Orologio",            "Clock",          "Reloj",          "Horloge",          "Uhr", "Relogio" },
+    { "dice",        "Dadi",                "Dice",           "Dados",          "Des",              "Wuerfel", "Dados" },
+    { "files",       "File",                "Files",          "Archivos",       "Fichiers",         "Dateien", "Arquivos" },
+    { "giardino",    "Giardino",            "Sand Garden",    "Jardin",         "Jardin",           "Sandgarten", "Jardim de Areia" },
+    { "goniometer",  "Goniometro",          "Protractor",     "Transportador",  "Rapporteur",       "Winkelmesser", "Transferidor" },
+    { "info",        "Connessione",         "Connection",     "Conexion",       "Connexion",        "Verbindung", "Conexao" },
+    { "ir",          "Telecomando IR",      "IR Remote",      "Mando IR",       "Telecommande IR",  "IR-Fernbedienung", "Controle IR" },
+    { "level",       "Livella",             "Level",          "Nivel",          "Niveau",           "Wasserwaage", "Nivel" },
+    { "link",        "Vicino",              "Nearby",         "Cerca",          "Proche",           "Nahe", "Por perto" },
+    { "mail",        "Posta",               "Mail",           "Correo",         "Courrier",         "Mail", "Email" },
+    { "micspec",     "Spettro Mic",         "Mic Spectrum",   "Espectro Mic",   "Spectre Mic",      "Mik-Spektrum", "Espectro Mic" },
+    { "music",       "Musica",              "Music",          "Musica",         "Musique",          "Musik", "Musica" },
+    { "notepad",     "Note",                "Notes",          "Notas",          "Notes",            "Notizen", "Notas" },
+    { "notify",      "Notifiche",           "Notifications",  "Notificaciones", "Notifications",    "Hinweise", "Notificacoes" },
+    { "orde",        "Orde",                "Hordes",         "Hordas",         "Hordes",           "Horden", "Hordas" },
+    { "pedometer",   "Contapassi",          "Pedometer",      "Podometro",      "Podometre",        "Schrittzaehler", "Pedometro" },
+    { "photos",      "Foto",                "Photos",         "Fotos",          "Photos",           "Fotos", "Fotos" },
+    { "presence",    "Presenza",            "Presence",       "Presencia",      "Presence",         "Praesenz", "Presenca" },
+    { "pinball",     "Flipper",             "Pinball",        "Pinball",        "Flipper",          "Flipper", "Pinball" },
+    { "qr",          "Codice QR",           "QR Code",        "Codigo QR",      "Code QR",          "QR-Code", "Codigo QR" },
+    { "radio",       "Radio",               "Radio",          "Radio",          "Radio",            "Radio", "Radio" },
+    { "reactor",     "Reattore",            "Reactor",        "Reactor",        "Reacteur",         "Reaktor", "Reator" },
+    { "recorder",    "Memo vocali",         "Voice Recorder", "Grabadora",      "Dictaphone",       "Rekorder", "Gravador" },
+    { "remote",      "Controllo remoto",    "Remote Control", "Control remoto", "Controle distant", "Fernsteuerung", "Controle remoto" },
+    { "screensaver", "Salvaschermo",        "Screensaver",    "Salvapantallas", "Economiseur",      "Bildschirmschoner", "Protecao de tela" },
+    { "slots",       "Slot",                "Slots",          "Tragaperras",    "Machines",         "Automat", "Caca-niqueis" },
+    { "snake",       "Serpente",            "Snake",          "Serpiente",      "Serpent",          "Schlange", "Cobra" },
+    { "stelle",      "Costellazioni",       "Constellations", "Constelaciones", "Constellations",   "Sternbilder", "Constelacoes" },
+    { "store",       "Store",               "Store",          "Tienda",         "Boutique",         "Store", "Loja" },
+    { "swarm",       "Sciame",              "Swarm",          "Enjambre",       "Essaim",           "Schwarm", "Enxame" },
+    { "sysmon",      "Stato sistema",       "System Status",  "Estado sistema", "Etat systeme",     "Systemstatus", "Estado sistema" },
+    { "tankd",       "Duello Carri",        "Tank Duel",      "Duelo Tanques",  "Duel de Chars",    "Panzerduell", "Duelo Tanques" },
+    { "tanks",       "Carri",               "Tanks",          "Tanques",        "Chars",            "Panzer", "Tanques" },
+    { "theme",       "Tema",                "Theme",          "Tema",           "Theme",            "Design", "Tema" },
+    { "torch",       "Torcia",              "Torch",          "Linterna",       "Lampe",            "Taschenlampe", "Lanterna" },
+    { "usb",         "Unita USB",           "USB Drive",      "Disco USB",      "Disque USB",       "USB-Disk", "Disco USB" },
+    { "usbweb",      "Web via USB",         "Web via USB",    "Web por USB",    "Web via USB",      "Web ueber USB", "Web via USB" },
+    { "usbkbd",      "Tastiera USB",        "USB Keyboard",   "Teclado USB",    "Clavier USB",      "USB-Tastatur", "Teclado USB" },
+    { "voice",       "Trainer vocale",      "Voice Trainer",  "Entrenador voz", "Coach vocal",      "Sprachtrainer", "Treino de voz" },
+    { "voicelab",    "Laboratorio voce",    "Voice Lab",      "Lab de voz",     "Labo vocal",       "Sprachlabor", "Lab de voz" },
+    { "weather",     "Meteo",               "Weather",        "Tiempo",         "Meteo",            "Wetter", "Clima" },
+    { "wifi",        "Impostazioni",        "Settings",       "Ajustes",        "Reglages",         "Einstellungen", "Ajustes" },
 };
 
 // Localized launcher name for an app id in the ACTIVE language, or NULL when the app uses its own
 // (language-neutral) name. Shared with the menu filter so Spotlight search matches the name shown in
 // the current language too — not only the app's default-language spelling.
-// An app's title in one of the five shipped languages (0 it, 1 en, 2 es, 3 fr, 4 de), or NULL when the
-// app has no translated title (proper nouns). Spotlight (launcher_menu.cpp) scores a query against all
-// five, so an app is found by any name a user knows it by, whatever the OS language.
+// An app's title in one of the six shipped languages (0 it, 1 en, 2 es, 3 fr, 4 de, 5 pt), or NULL when
+// the app has no translated title (proper nouns). Spotlight (launcher_menu.cpp) scores a query against all
+// six, so an app is found by any name a user knows it by, whatever the OS language.
 extern "C" const char *launcher_app_title(const char *id, int lang)
 {
     for (unsigned i = 0; i < sizeof APP_NAME_TR / sizeof APP_NAME_TR[0]; i++) {
@@ -246,6 +246,7 @@ extern "C" const char *launcher_app_title(const char *id, int lang)
             case 2: return APP_NAME_TR[i].es;
             case 3: return APP_NAME_TR[i].fr;
             case 4: return APP_NAME_TR[i].de;
+            case 5: return APP_NAME_TR[i].pt;
             default: return nullptr;
         }
     }
@@ -255,8 +256,11 @@ extern "C" const char *launcher_app_title(const char *id, int lang)
 extern "C" const char *launcher_app_localized_name(const char *id)
 {
     for (unsigned i = 0; i < sizeof APP_NAME_TR / sizeof APP_NAME_TR[0]; i++)
-        if (!strcmp(id, APP_NAME_TR[i].id))
+        if (!strcmp(id, APP_NAME_TR[i].id)) {
+            const char *l = nucleo_i18n_lang();
+            if (l[0] == 'p' && l[1] == 't') return APP_NAME_TR[i].pt;   // pt has its own column, not the catalog
             return TR5(APP_NAME_TR[i].it, APP_NAME_TR[i].en, APP_NAME_TR[i].es, APP_NAME_TR[i].fr, APP_NAME_TR[i].de);
+        }
     return nullptr;
 }
 
@@ -737,22 +741,23 @@ static const char *offensive_alert(char *buf, int cap)
     return NULL;
 }
 
-// "mar 29 set": day + month in the system language (it/en/es/fr/de; ASCII 3-letter forms, English is the
+// "mar 29 set": day + month in the system language (it/en/es/fr/de/pt; ASCII 3-letter forms, English is the
 // floor). Empty while the clock was never set.
 static void day_month(char *dt, int cap, time_t now, const struct tm *tm)
 {
-    static const char *const WD[5][7] = {
+    static const char *const WD[6][7] = {
         { "dom","lun","mar","mer","gio","ven","sab" }, { "Sun","Mon","Tue","Wed","Thu","Fri","Sat" },
         { "dom","lun","mar","mie","jue","vie","sab" }, { "dim","lun","mar","mer","jeu","ven","sam" },
-        { "So","Mo","Di","Mi","Do","Fr","Sa" } };
-    static const char *const MO[5][12] = {
+        { "So","Mo","Di","Mi","Do","Fr","Sa" }, { "dom","seg","ter","qua","qui","sex","sab" } };
+    static const char *const MO[6][12] = {
         { "gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic" },
         { "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec" },
         { "ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic" },
         { "jan","fev","mar","avr","mai","jun","jul","aou","sep","oct","nov","dec" },
-        { "Jan","Feb","Mar","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez" } };
+        { "Jan","Feb","Mar","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez" },
+        { "jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez" } };
     const char *lc = nucleo_i18n_lang();
-    int li = !strcmp(lc, "it") ? 0 : !strcmp(lc, "es") ? 2 : !strcmp(lc, "fr") ? 3 : !strcmp(lc, "de") ? 4 : 1;
+    int li = !strcmp(lc, "it") ? 0 : !strcmp(lc, "es") ? 2 : !strcmp(lc, "fr") ? 3 : !strcmp(lc, "de") ? 4 : !strcmp(lc, "pt") ? 5 : 1;
     dt[0] = 0;
     if (tm && now > 1672531200) snprintf(dt, cap, "%s %d %s", WD[li][tm->tm_wday], tm->tm_mday, MO[li][tm->tm_mon]);
 }

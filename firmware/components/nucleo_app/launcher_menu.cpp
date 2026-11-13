@@ -248,7 +248,7 @@ void launcher_apply_return(void)
 }
 
 // ---- filtering + visible-row queries ---------------------------------------
-extern "C" const char *launcher_app_title(const char *id, int lang);   // launcher_render.cpp (5-language titles)
+extern "C" const char *launcher_app_title(const char *id, int lang);   // launcher_render.cpp (6-language titles)
 extern "C" int nucleo_settings_search_count(const char *q);             // app_wifi.cpp: settings a query finds
 
 // Spotlight also reaches INSIDE Settings: when the query matches settings rows, one extra result (after
@@ -284,7 +284,7 @@ static int match_score(const MenuNode *n, const char *filter)
     char q[16];
     int i = 0; for (; filter[i] && i < 15; i++) q[i] = (char)tolower((unsigned char)filter[i]); q[i] = 0;
     int best = text_score(n->label, q);
-    for (int l = 0; n->kind == N_APP && l < 5 && best != 1; l++) {
+    for (int l = 0; n->kind == N_APP && l < 6 && best != 1; l++) {
         const char *t = launcher_app_title(n->id, l);
         int sc = t ? text_score(t, q) : 0;
         if (sc && (!best || sc < best)) best = sc;

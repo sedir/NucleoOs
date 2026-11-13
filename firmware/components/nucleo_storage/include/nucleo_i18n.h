@@ -52,9 +52,14 @@ void nucleo_i18n_set_on_change(void (*cb)(const char *code));
 // Pick the right literal for the current language. Both args are flash literals -> zero RAM cost.
 const char *nucleo_tr(const char *it, const char *en);
 
+// Translate an ENGLISH literal into the active language when that language is a catalog language (pt, see
+// nucleo_i18n_catalog.h); returns `en` itself otherwise or when the catalog lacks it. For the local L5()
+// pickers and other places that already chose the English literal.
+const char *nucleo_tr_en(const char *en);
+
 // Full 5-language pick (it/en/es/fr/de), for user-facing NAMES that deserve every shipped language
 // rather than the IT/EN fallback nucleo_tr gives. Same zero-RAM contract (all args flash literals).
-// Unknown codes fall back to Italian. Strings must be ASCII — the on-TFT font has no accented glyphs.
+// Catalog languages (pt) translate the English argument. Strings must be ASCII — the on-TFT font has no accented glyphs.
 const char *nucleo_tr5(const char *it, const char *en, const char *es, const char *fr, const char *de);
 
 #ifdef __cplusplus

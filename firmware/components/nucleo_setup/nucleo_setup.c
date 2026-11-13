@@ -475,7 +475,7 @@ const char *nucleo_setup_device_name(void) { return s_name; }
 static void wifi_country_apply(void)
 {
     const char *l = nucleo_i18n_lang();
-    const char *cc = !strcmp(l, "it") ? "IT" : !strcmp(l, "es") ? "ES" : !strcmp(l, "fr") ? "FR" : !strcmp(l, "de") ? "DE" : "01";
+    const char *cc = !strcmp(l, "it") ? "IT" : !strcmp(l, "es") ? "ES" : !strcmp(l, "fr") ? "FR" : !strcmp(l, "de") ? "DE" : !strcmp(l, "pt") ? "BR" : "01";
     esp_err_t e = esp_wifi_set_country_code(cc, true);
     if (e != ESP_OK) ESP_LOGW(TAG, "set_country_code(%s) -> %s", cc, esp_err_to_name(e));
 }
@@ -1118,17 +1118,17 @@ static const char *W5(const char *it, const char *en, const char *es, const char
     if (l[0] == 'e' && l[1] == 's') return es;
     if (l[0] == 'f' && l[1] == 'r') return fr;
     if (l[0] == 'd' && l[1] == 'e') return de;
-    return en;
+    return nucleo_tr_en(en);   // a catalog language (pt), else English
 }
 
 // Step 1 — LANGUAGE, applied instantly. English is the default (also on back), as everywhere in the OS.
 static void wizard_language(void)
 {
-    static const char *const names[] = { "English", "Italiano", "Espanol", "Francais", "Deutsch" };
-    static const char *const codes[] = { "en", "it", "es", "fr", "de" };
+    static const char *const names[] = { "English", "Italiano", "Espanol", "Francais", "Deutsch", "Portugues (BR)" };
+    static const char *const codes[] = { "en", "it", "es", "fr", "de", "pt" };
     int m;
-    do m = nucleo_ui_menu("Language / Lingua", names, 5);   // on rails: Esc does not pick a language for you
-    while (m < 0 || m >= 5);
+    do m = nucleo_ui_menu("Language / Lingua", names, 6);   // on rails: Esc does not pick a language for you
+    while (m < 0 || m >= 6);
     nucleo_i18n_set_lang(codes[m]);
 }
 

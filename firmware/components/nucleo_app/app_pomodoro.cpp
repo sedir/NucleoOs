@@ -51,7 +51,7 @@ static const char *PT(const char *it, const char *en, const char *es, const char
         case 'e': return l[1] == 's' ? es : en;   // "es" vs "en"
         case 'f': return fr;
         case 'd': return de;
-        default:  return en;
+        default:  return nucleo_tr_en(en);        // a catalog language (pt), else English
     }
 }
 

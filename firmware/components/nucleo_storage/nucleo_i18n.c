@@ -1,4 +1,5 @@
 #include "nucleo_i18n.h"
+#include "nucleo_i18n_catalog.h"
 #include "nucleo_board.h"   // NUCLEO_SD_MOUNT
 #include "cJSON.h"
 #include "esp_log.h"
@@ -26,14 +27,14 @@ static char s_lang[6] = "en";              // active OS language code (default E
 static uint32_t s_gen = 0;                 // bumped on every real change; native UIs poll it to repaint live
 static void (*s_on_change)(const char *) = NULL;   // set by the HTTP layer to broadcast a change to web clients
 
-// Normalize any incoming code to a 2-letter lowercase tag from the supported set {it,en,es,fr,de}.
+// Normalize any incoming code to a 2-letter lowercase tag from the supported set {it,en,es,fr,de,pt}.
 // Anything empty, malformed, or outside that set collapses to the English default — never to a garbage
 // two-byte code that would slip past is_en()/is_it() and paint an unintended language.
 static void norm_lang(char *dst, size_t cap, const char *code)
 {
     if (code && code[0] && code[1]) {
         char a = (char)(code[0] | 0x20), b = (char)(code[1] | 0x20);
-        static const char *ok[] = { "it", "en", "es", "fr", "de" };
+        static const char *ok[] = { "it", "en", "es", "fr", "de", "pt" };
         for (size_t i = 0; i < sizeof(ok) / sizeof(ok[0]); i++) {
             if (a == ok[i][0] && b == ok[i][1]) { dst[0] = a; dst[1] = b; dst[2] = '\0'; return; }
         }
@@ -46,8 +47,38 @@ bool nucleo_i18n_is_it(void) { return s_lang[0] == 'i' && s_lang[1] == 't'; }
 const char *nucleo_i18n_lang(void) { return s_lang; }
 uint32_t nucleo_i18n_gen(void) { return s_gen; }
 void nucleo_i18n_set_on_change(void (*cb)(const char *code)) { s_on_change = cb; }
-// Two-literal strings: Italian ONLY for "it"; English is the floor for en/es/fr/de and any other code.
-const char *nucleo_tr(const char *it, const char *en) { return (s_lang[0] == 'i' && s_lang[1] == 't') ? it : en; }
+// ---- catalog languages ----------------------------------------------------------------------------------
+// A language the call sites do not carry (pt) translates the ENGLISH literal through a generated flash table
+// (nucleo_i18n_catalog.h): FNV-1a of the English bytes, binary search, then a full compare (a hash collision
+// can never return the wrong string). Missing -> the English literal itself, the OS-wide floor.
+static const nucleo_i18n_catalog_t *active_catalog(void)
+{
+    if (s_lang[0] == 'p' && s_lang[1] == 't') return &nucleo_i18n_catalog_pt;
+    return NULL;
+}
+static const char *catalog_lookup(const nucleo_i18n_catalog_t *c, const char *en)
+{
+    if (!c || !en) return en;
+    uint32_t h = 0x811c9dc5u;
+    for (const unsigned char *p = (const unsigned char *)en; *p; p++) { h ^= *p; h *= 0x01000193u; }
+    size_t lo = 0, hi = c->n;
+    while (lo < hi) {                                   // first row with hash >= h
+        size_t mid = lo + (hi - lo) / 2;
+        if (c->rows[mid].hash < h) lo = mid + 1; else hi = mid;
+    }
+    for (; lo < c->n && c->rows[lo].hash == h; lo++)
+        if (!strcmp(c->rows[lo].en, en)) return c->rows[lo].tr;
+    return en;
+}
+const char *nucleo_tr_en(const char *en) { return catalog_lookup(active_catalog(), en); }
+
+// Two-literal strings: Italian ONLY for "it"; a catalog language translates the English; English is the
+// floor for en/es/fr/de and any other code.
+const char *nucleo_tr(const char *it, const char *en)
+{
+    if (s_lang[0] == 'i' && s_lang[1] == 't') return it;
+    return catalog_lookup(active_catalog(), en);
+}
 
 // 5-language pick for names (mirrors L5() used inside apps). Reads the 2-letter code once; Italian only
 // for "it", English is the floor for any unknown code. ASCII-only literals (the on-TFT font has no
@@ -59,7 +90,7 @@ const char *nucleo_tr5(const char *it, const char *en, const char *es, const cha
     if (l[0] == 'e' && l[1] == 's') return es;
     if (l[0] == 'f' && l[1] == 'r') return fr;
     if (l[0] == 'd' && l[1] == 'e') return de;
-    return en;   // en + any unexpected code -> English (fallback floor)
+    return catalog_lookup(active_catalog(), en);   // a catalog language (pt), else English (fallback floor)
 }
 
 // Load settings.json into a fresh cJSON tree (caller owns it, or NULL). Mirrors the proven sizing in

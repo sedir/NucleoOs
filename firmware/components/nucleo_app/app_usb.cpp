@@ -45,6 +45,7 @@ static const char *L5(const char *it, const char *en, const char *es, const char
     if (l[0] == 'e' && l[1] == 's') return es;
     if (l[0] == 'f' && l[1] == 'r') return fr;
     if (l[0] == 'd' && l[1] == 'e') return de;
+    if (l[0] == 'p' && l[1] == 't') return nucleo_tr_en(en);   // catalog language: translate the English
     return it;
 }
 
