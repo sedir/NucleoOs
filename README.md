@@ -18,7 +18,7 @@ image generation.
 ![Framework: ESP-IDF](https://img.shields.io/badge/firmware-ESP--IDF-red)
 [![Discord](https://img.shields.io/badge/Discord-join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/84tyTPtWus)
 
-**[⬇️ Install](#-install--three-ways)** · **[📋 What's new in v0.8.0](#-new-in-v080)** · **[📖 User Guide](docs/user-guide.md)** · **[💬 Discord](https://discord.gg/84tyTPtWus)**
+**[🇧🇷 Português](README.pt-BR.md)** · **[⬇️ Install](#-install--three-ways)** · **[📋 What's new in v0.8.0](#-new-in-v080)** · **[📖 User Guide](docs/user-guide.md)** · **[💬 Discord](https://discord.gg/84tyTPtWus)**
 
 <sub>Free for noncommercial use · **commercial use requires a paid license** → niki070585@gmail.com</sub>
 
