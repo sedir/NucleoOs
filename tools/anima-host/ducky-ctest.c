@@ -37,6 +37,33 @@ int main(void)
     CHECK(nucleo_ducky_char('"', DUCKY_LAYOUT_IT, &m, &k) && m == DUCKY_MOD_SHIFT && k == 0x1F, "it dquote shift2");
     CHECK(nucleo_ducky_char('#', DUCKY_LAYOUT_IT, &m, &k) && m == DUCKY_MOD_ALTGR && k == 0x34, "it # altgr");
 
+    // 2b) BR (ABNT2): letters/digits identical, symbols moved, ~ ^ ` dead (+space), / ? on International1
+    CHECK(nucleo_ducky_char('a', DUCKY_LAYOUT_BR, &m, &k) && m == 0 && k == 0x04, "br a parity");
+    CHECK(nucleo_ducky_char('0', DUCKY_LAYOUT_BR, &m, &k) && m == 0 && k == 0x27, "br 0 parity");
+    CHECK(nucleo_ducky_char('@', DUCKY_LAYOUT_BR, &m, &k) && m == DUCKY_MOD_SHIFT && k == 0x1F, "br @ shift2");
+    CHECK(nucleo_ducky_char('/', DUCKY_LAYOUT_BR, &m, &k) && m == 0 && k == 0x87, "br / int1");
+    CHECK(nucleo_ducky_char('?', DUCKY_LAYOUT_BR, &m, &k) && m == DUCKY_MOD_SHIFT && k == 0x87, "br ? int1");
+    CHECK(nucleo_ducky_char(';', DUCKY_LAYOUT_BR, &m, &k) && m == 0 && k == 0x38, "br ;");
+    CHECK(nucleo_ducky_char(':', DUCKY_LAYOUT_BR, &m, &k) && m == DUCKY_MOD_SHIFT && k == 0x38, "br :");
+    CHECK(nucleo_ducky_char('\'', DUCKY_LAYOUT_BR, &m, &k) && m == 0 && k == 0x35, "br quote");
+    CHECK(nucleo_ducky_char('"', DUCKY_LAYOUT_BR, &m, &k) && m == DUCKY_MOD_SHIFT && k == 0x35, "br dquote");
+    CHECK(nucleo_ducky_char('\\', DUCKY_LAYOUT_BR, &m, &k) && m == 0 && k == 0x64, "br backslash iso");
+    CHECK(nucleo_ducky_char('[', DUCKY_LAYOUT_BR, &m, &k) && m == 0 && k == 0x30, "br [");
+    CHECK(nucleo_ducky_char(']', DUCKY_LAYOUT_BR, &m, &k) && m == 0 && k == 0x31, "br ]");
+    CHECK(nucleo_ducky_char('~', DUCKY_LAYOUT_BR, &m, &k) && m == 0 && k == 0x34 && nucleo_ducky_dead('~', DUCKY_LAYOUT_BR), "br ~ dead");
+    CHECK(nucleo_ducky_dead('^', DUCKY_LAYOUT_BR) && nucleo_ducky_dead('`', DUCKY_LAYOUT_BR), "br ^ ` dead");
+    CHECK(!nucleo_ducky_dead('~', DUCKY_LAYOUT_US) && !nucleo_ducky_dead('a', DUCKY_LAYOUT_BR), "dead only on br");
+    {   // every printable ASCII maps on BR, and no two chars share a (mod, key) pair
+        int pairs[512] = {0}; int ok = 1, all = 1;
+        for (int c = 32; c < 127; c++) {
+            if (!nucleo_ducky_char((char)c, DUCKY_LAYOUT_BR, &m, &k)) { all = 0; printf("  br unmapped: %c\n", c); continue; }
+            int idx = ((m & DUCKY_MOD_SHIFT) ? 256 : 0) + k;
+            if (pairs[idx]) { ok = 0; printf("  br clash: %c vs %c\n", c, pairs[idx]); } else pairs[idx] = c;
+        }
+        CHECK(all, "br covers printable ascii");
+        CHECK(ok, "br no two chars on one key");
+    }
+
     // 3) key names
     CHECK(nucleo_ducky_keyname("ENTER", DUCKY_LAYOUT_US, &m, &k) == 1 && k == 0x28, "name ENTER");
     CHECK(nucleo_ducky_keyname("escape", DUCKY_LAYOUT_US, &m, &k) == 1 && k == 0x29, "name escape ci");
@@ -78,6 +105,14 @@ int main(void)
         CHECK(cap_mod[1] == 0 && cap_key[1] == 0x04, "run a");
         CHECK(cap_mod[2] == 0 && cap_key[2] == 0x05, "run b");
         CHECK(cap_mod[3] == 0 && cap_key[3] == 0x28, "run ENTER");
+    }
+    {   // BR: a dead key is followed by a space so the host prints the bare symbol
+        const char *s = "STRING ~/\n";
+        nucleo_ducky_backend_t be = { b_ready, b_key, b_delay, b_abort, NULL, NULL };
+        reset_cap();
+        nucleo_ducky_run(s, strlen(s), DUCKY_LAYOUT_BR, &be);
+        CHECK(cap_n == 3, "br run dead + space + slash");
+        CHECK(cap_key[0] == 0x34 && cap_key[1] == 0x2C && cap_key[2] == 0x87, "br run sequence");
     }
 
     // 6) combos with multiple modifiers + REPEAT

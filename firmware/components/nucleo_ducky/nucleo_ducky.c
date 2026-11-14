@@ -69,9 +69,53 @@ static bool it_char(char c, uint8_t *m, uint8_t *k)
     *m = mod; *k = key; return true;
 }
 
+// BR = Brazilian ABNT2 (the layout of a Portuguese (Brazil) host). Letters/digits sit on the US keys; the
+// symbols move. ~ ^ and ` are DEAD keys there (they wait for a vowel), so nucleo_ducky_dead() tells the
+// caller to follow them with a space, which makes the host print the bare symbol. ] } use 0x31, which
+// Windows and Linux treat exactly like ABNT2's ISO key 0x32 and macOS reads natively; / ? live on the
+// extra ABNT2 key next to right Shift (International1, 0x87).
+static bool br_char(char c, uint8_t *m, uint8_t *k)
+{
+    uint8_t mod = 0, key = 0;
+    if (c >= 'a' && c <= 'z') key = 0x04 + (c - 'a');
+    else if (c >= 'A' && c <= 'Z') { mod = DUCKY_MOD_SHIFT; key = 0x04 + (c - 'A'); }
+    else if (c >= '1' && c <= '9') key = 0x1E + (c - '1');
+    else if (c == '0') key = 0x27;
+    else switch (c) {
+        case '\n': case '\r': key = 0x28; break; case '\t': key = 0x2B; break; case ' ': key = 0x2C; break;
+        // shifted number row: 1! 2@ 3# 4$ 5% (6 is the dead diaeresis) 7& 8* 9( 0)
+        case '!': mod = DUCKY_MOD_SHIFT; key = 0x1E; break;  case '@': mod = DUCKY_MOD_SHIFT; key = 0x1F; break;
+        case '#': mod = DUCKY_MOD_SHIFT; key = 0x20; break;  case '$': mod = DUCKY_MOD_SHIFT; key = 0x21; break;
+        case '%': mod = DUCKY_MOD_SHIFT; key = 0x22; break;  case '&': mod = DUCKY_MOD_SHIFT; key = 0x24; break;
+        case '*': mod = DUCKY_MOD_SHIFT; key = 0x25; break;  case '(': mod = DUCKY_MOD_SHIFT; key = 0x26; break;
+        case ')': mod = DUCKY_MOD_SHIFT; key = 0x27; break;
+        case '-': key = 0x2D; break;   case '_': mod = DUCKY_MOD_SHIFT; key = 0x2D; break;
+        case '=': key = 0x2E; break;   case '+': mod = DUCKY_MOD_SHIFT; key = 0x2E; break;
+        case '`': mod = DUCKY_MOD_SHIFT; key = 0x2F; break;                      // dead (shift of the acute key)
+        case '[': key = 0x30; break;   case '{': mod = DUCKY_MOD_SHIFT; key = 0x30; break;
+        case ']': key = 0x31; break;   case '}': mod = DUCKY_MOD_SHIFT; key = 0x31; break;
+        case '~': key = 0x34; break;   case '^': mod = DUCKY_MOD_SHIFT; key = 0x34; break;   // dead
+        case '\'': key = 0x35; break;  case '"': mod = DUCKY_MOD_SHIFT; key = 0x35; break;
+        case ',': key = 0x36; break;   case '<': mod = DUCKY_MOD_SHIFT; key = 0x36; break;
+        case '.': key = 0x37; break;   case '>': mod = DUCKY_MOD_SHIFT; key = 0x37; break;
+        case ';': key = 0x38; break;   case ':': mod = DUCKY_MOD_SHIFT; key = 0x38; break;
+        case '\\': key = 0x64; break; case '|': mod = DUCKY_MOD_SHIFT; key = 0x64; break;
+        case '/': key = 0x87; break;   case '?': mod = DUCKY_MOD_SHIFT; key = 0x87; break;
+        default: return false;
+    }
+    *m = mod; *k = key; return true;
+}
+
+bool nucleo_ducky_dead(char c, nucleo_ducky_layout_t layout)
+{
+    return layout == DUCKY_LAYOUT_BR && (c == '~' || c == '^' || c == '`');
+}
+
 bool nucleo_ducky_char(char c, nucleo_ducky_layout_t layout, uint8_t *mod, uint8_t *keycode)
 {
-    return layout == DUCKY_LAYOUT_IT ? it_char(c, mod, keycode) : us_char(c, mod, keycode);
+    if (layout == DUCKY_LAYOUT_IT) return it_char(c, mod, keycode);
+    if (layout == DUCKY_LAYOUT_BR) return br_char(c, mod, keycode);
+    return us_char(c, mod, keycode);
 }
 
 // ---- key name resolution -------------------------------------------------------------------------
@@ -131,6 +175,7 @@ static void type_string(const char *s, nucleo_ducky_layout_t layout, const nucle
         uint8_t m, k;
         if (!nucleo_ducky_char(*s, layout, &m, &k)) continue;   // unmappable char -> skipped, not mistyped
         emit_key(be, st, m, k);
+        if (nucleo_ducky_dead(*s, layout)) emit_key(be, st, 0, 0x2C);   // dead key + space = the bare symbol
         if (str_delay) { if (be) be->delay(be->ctx, str_delay); if (st) st->est_ms += str_delay; }
     }
 }

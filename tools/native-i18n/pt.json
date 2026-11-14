@@ -2592,5 +2592,20 @@
  "Rejected": "Recusado",
  "Discarded": "Descartado",
  "Command sent": "Comando enviado",
- "ESP-NOW failed": "Falha ESP-NOW"
+ "ESP-NOW failed": "Falha ESP-NOW",
+ "Bluetooth unavailable": "Bluetooth indisponivel",
+ "ENTER type  L layout  T send to": "ENTER digita  L layout  T envia",
+ "Fn+arrows  Fn+Del=fwd Del  Fn+`=Esc": "Fn+setas  Fn+Del=Supr  Fn+`=Esc",
+ "Host connected": "PC conectado",
+ "KEYBOARD": "TECLADO",
+ "Keyboard": "Teclado",
+ "No host connected.": "Nenhum PC conectado.",
+ "Send to:": "Enviar:",
+ "USB + Bluetooth": "USB + Bluetooth",
+ "USB HID not started": "USB HID nao iniciou",
+ "enter type  L layout  T send to": "enter digita  L layout  T envia",
+ "look for 'NucleoOS'": "procure 'NucleoOS'",
+ "paired, ready": "pareado, pronto",
+ "plug in the USB-C cable": "ligue o cabo USB-C",
+ "typing": "digitando"
 }

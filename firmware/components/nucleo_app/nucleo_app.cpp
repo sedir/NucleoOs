@@ -480,6 +480,7 @@ extern "C" void nucleo_register_notify(void);
 extern "C" void nucleo_register_radio(void);
 extern "C" void nucleo_register_anima(void);
 extern "C" void nucleo_register_usbkbd(void);
+extern "C" void nucleo_register_keyboard(void);
 extern "C" void nucleo_register_keydeck(void);
 extern "C" void nucleo_register_torch(void);
 extern "C" void nucleo_register_evilportal(void);
@@ -612,7 +613,7 @@ void nucleo_app_register_builtins(void)
     // Measure (ADV-only): BMI270 measuring instruments
     if (nucleo_ui_is_adv()) { nucleo_register_level(); nucleo_register_goniometer(); nucleo_register_pedometer(); }
     // Connect: the Cardputer as a peripheral or terminal of another machine (USB keyboard/disk, SSH)
-    nucleo_register_usbkbd(); nucleo_register_usb(); nucleo_register_keydeck(); nucleo_register_ssh();
+    nucleo_register_keyboard(); nucleo_register_usbkbd(); nucleo_register_usb(); nucleo_register_keydeck(); nucleo_register_ssh();
     // Messaging: device-to-device / mail
     nucleo_register_mail(); nucleo_register_link(); nucleo_register_swarm();
     // System (settings, device, voice control)

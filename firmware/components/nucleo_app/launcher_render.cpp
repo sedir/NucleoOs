@@ -223,6 +223,7 @@ static const struct { const char *id, *it, *en, *es, *fr, *de, *pt; } APP_NAME_T
     { "torch",       "Torcia",              "Torch",          "Linterna",       "Lampe",            "Taschenlampe", "Lanterna" },
     { "usb",         "Unita USB",           "USB Drive",      "Disco USB",      "Disque USB",       "USB-Disk", "Disco USB" },
     { "usbweb",      "Web via USB",         "Web via USB",    "Web por USB",    "Web via USB",      "Web ueber USB", "Web via USB" },
+    { "keyboard",    "Tastiera",            "Keyboard",       "Teclado",        "Clavier",          "Tastatur",     "Teclado" },
     { "usbkbd",      "Tastiera USB",        "USB Keyboard",   "Teclado USB",    "Clavier USB",      "USB-Tastatur", "Teclado USB" },
     { "voice",       "Trainer vocale",      "Voice Trainer",  "Entrenador voz", "Coach vocal",      "Sprachtrainer", "Treino de voz" },
     { "voicelab",    "Laboratorio voce",    "Voice Lab",      "Lab de voz",     "Labo vocal",       "Sprachlabor", "Lab de voz" },
@@ -573,6 +574,11 @@ static void ui_icon(lgfx::v1::LGFXBase *g, int cx, int cy, int r, const char *id
         IRR(cx - s * 0.8f, cy - s, s * 1.6f, 2 * s, s * 0.2f, col);
         for (int i = 0; i < 3; i++) IBX(cx - s * 0.5f, cy - s * 0.45f + i * s * 0.5f, s * (1.0f - i * 0.18f), Tk * 0.55f, bg);
 
+    } else if (!strcmp(id, "keyboard")) {
+        IRR(cx - s, cy - s * 0.35f, 2 * s, s * 1.05f, s * 0.2f, col);
+        for (int ry = 0; ry < 2; ry++) for (int cc = 0; cc < 4; cc++) IBX(cx - s * 0.72f + cc * s * 0.46f, cy - s * 0.12f + ry * s * 0.36f, Tk * 0.55f, Tk * 0.5f, bg);
+        IBX(cx - s * 0.4f, cy + s * 0.52f, s * 0.8f, Tk * 0.45f, bg);
+        for (int i = 0; i < 3; i++) IBX(cx - s * 0.5f + i * s * 0.5f - Tk * 0.25f, cy - s * 0.95f + (2 - i) * s * 0.12f, Tk * 0.5f, s * 0.12f + i * s * 0.12f, col);   // signal bars: wireless
     } else if (!strcmp(id, "usbkbd")) {
         IRR(cx - s, cy - s * 0.6f, 2 * s, s * 1.2f, s * 0.22f, col);
         for (int ry = 0; ry < 2; ry++) for (int cc = 0; cc < 4; cc++) IBX(cx - s * 0.72f + cc * s * 0.46f, cy - s * 0.32f + ry * s * 0.42f, Tk * 0.6f, Tk * 0.6f, bg);

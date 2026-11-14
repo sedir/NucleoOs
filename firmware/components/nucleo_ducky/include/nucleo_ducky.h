@@ -25,7 +25,7 @@ extern "C" {
 #define DUCKY_MOD_GUI   0x08
 #define DUCKY_MOD_ALTGR 0x40
 
-typedef enum { DUCKY_LAYOUT_US = 0, DUCKY_LAYOUT_IT = 1 } nucleo_ducky_layout_t;
+typedef enum { DUCKY_LAYOUT_US = 0, DUCKY_LAYOUT_IT = 1, DUCKY_LAYOUT_BR = 2 } nucleo_ducky_layout_t;   // BR = ABNT2
 
 // The injected output. The whole engine emits only key(mod,keycode) press+release events plus delays,
 // so a backend is tiny: wire key() to nucleo_usbhid_key or the BLE HID tap, and you're done.
@@ -53,6 +53,8 @@ typedef struct {
 int  nucleo_ducky_keyname(const char *name, nucleo_ducky_layout_t layout, uint8_t *mod, uint8_t *keycode);
 // Resolve a single printable char under a layout. false if not typeable.
 bool nucleo_ducky_char(char c, nucleo_ducky_layout_t layout, uint8_t *mod, uint8_t *keycode);
+// True when that char is a DEAD key on the layout (BR: ~ ^ `): send a space after it to print the symbol.
+bool nucleo_ducky_dead(char c, nucleo_ducky_layout_t layout);
 
 // Dry-run analysis. `out` filled with counts + estimate; never touches hardware.
 void nucleo_ducky_analyze(const char *script, size_t len, nucleo_ducky_layout_t layout, nucleo_ducky_stat_t *out);

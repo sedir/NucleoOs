@@ -88,10 +88,10 @@ const uint8_t BLE_HID_REPORT_MAP[] = {
     0x95, 0x06,        //   Report Count (6)            ; 6 keycodes (bytes 2..7)
     0x75, 0x08,        //   Report Size (8)
     0x15, 0x00,        //   Logical Minimum (0)
-    0x25, 0x65,        //   Logical Maximum (101)
+    0x26, 0xFF, 0x00,  //   Logical Maximum (255)      ; full range: ABNT2's / ? key is 0x87
     0x05, 0x07,        //   Usage Page (Keyboard/Keypad)
     0x19, 0x00,        //   Usage Minimum (0)
-    0x29, 0x65,        //   Usage Maximum (101)
+    0x29, 0xFF,        //   Usage Maximum (255)
     0x81, 0x00,        //   Input (Data,Array,Abs)
     0xC0,              // End Collection
     // ===== Consumer Control / media (Report ID 2) =====
