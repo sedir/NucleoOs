@@ -118,3 +118,11 @@ tools/costellazioni-assets/music/
 # Portuguese knowledge mirrors are generated from the canonical tools/sd-sim pack.
 /deploy/sd/data/anima/anima-pt-knowledge.bin*
 /deploy/sd-safe/data/anima/anima-pt-knowledge.bin*
+
+# macOS Finder/metadata files and editor caches (never part of the repo)
+.DS_Store
+._*
+# clangd index of the firmware (editor cache)
+firmware/.cache/
+# FreeDict sources of tools/anima/build_dict_multi.py (regenerable: --fetch downloads them again)
+tools/anima/.cache/freedict/freedict-*.src.tar.xz
