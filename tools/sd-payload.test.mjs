@@ -21,8 +21,10 @@ const PY = ['python', 'python3'].find((b) => spawnSync(b, ['--version']).status 
 // (9.1 MB of AVIF + Opus, apps/games/www/games/stelle/assets) and the 3D web game; ~73 MB with web OS 1.0:
 // libarchive for 7z/RAR/tar in every app (www/shell/vendor/libarchive, 1.5 MB with its twin) and the Help
 // manual with the Terminal pages in five languages (www/shell/help, 0.5 MB).
-const CORE_BUDGET = 76 * 1048576;
-const TOTAL_BUDGET = 150 * 1048576;
+// pt-BR fork: ~142 MB with the full AKB5 knowledge shards on the card, the Portuguese Vosk model (29 MB) and the
+// pt/ja translator dictionaries (~10 MB). The owner accepts the size (cards are 8 GB+), so the alarm sits above it.
+const CORE_BUDGET = 192 * 1048576;
+const TOTAL_BUDGET = 256 * 1048576;
 
 function py(code) {
   const r = spawnSync(PY, ['-c', `import sys; sys.path.insert(0, 'tools/nucleo-sd-deploy'); import sd_deploy as S\n${code}`],

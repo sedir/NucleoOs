@@ -25,7 +25,7 @@
   "upNotesTitle": "Novidades",
   "upPrefs": "Preferências",
   "upAuto": "Verificação automática",
-  "upAutoHint": "Este navegador pergunta ao GitHub uma vez por dia se um novo version existe. O dispositivo só contacta o site oficial de lançamento (indecenti.github.io): para verificar as versões e baixar as atualizações que você começa.",
+  "upAutoHint": "Este navegador pergunta ao GitHub uma vez por dia se um novo version existe. O dispositivo só contacta o site oficial de lançamento (sedir.github.io): para verificar as versões e baixar as atualizações que você começa.",
   "upUpToDate": "O NucleoOS está atualizado.",
   "upNewAvail": "Novo version {tag} disponível.",
   "upDevBuild": "Esta versão de desenvolvimento é mais recente que a última versão publicada.",

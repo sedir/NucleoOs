@@ -767,7 +767,7 @@
   "apps/settings/www/i18n.es.json": "3701d7c9b189c9a77b757a90deaef6747ff38a874e01e92bd046d2a3f427a4d3",
   "apps/settings/www/i18n.fr.json": "5ec6bfbaa633115196b572f48b28131704a107b424d36fdc5e5a6cae9c90dec1",
   "apps/settings/www/i18n.it.json": "7374421fb2ad10f5d39c551e89478d890d273f1bfd8fcfe950324c57e70f305b",
-  "apps/settings/www/i18n.pt.json": "dafc1d341e3946a429d9b1c4ec1d51d2dd43d07e07956ae9961d5c7fd4c3a396",
+  "apps/settings/www/i18n.pt.json": "5c71b16a025513b2ae634fa76bcf4c33b683a3feaeba610e7122c043ab89335b",
   "apps/settings/www/i18n.zh.json": "44a864aa6a4a063a0792d6da7f55eae0fec73a209520315cc5f1e00f330fb3fa",
   "apps/settings/www/icon.svg": "8cb6fe74b5997f429ea1b0c8c3f8368c80e2a8baa37a20ff3daa425dcbd1f0ac",
   "apps/settings/www/index.html": "2ec3207c1ca8c0e98e26c00bc05e54a4dab60fca010185423338ad9df544087d",
@@ -1021,7 +1021,7 @@
   "web/shell/sw.js": "48d1bf8e5af89b9c9226d4df73a7e3abd4c4c37e6d106f5c491aa7f5cdcd0040",
   "web/shell/system-ui.js": "52d67bdd8c547a375eb1ff3759473d4006a350ccd29315b435cfe6cfb44a6169",
   "web/shell/update-check.js": "7554fc65b513dfcc2befe0f7be2f86a2c9f5d9efce8e3403c359b0e45eee2051",
-  "web/shell/update-core.js": "6b8dcf9b6339b8f65a5d2646d2dcce842bdf436f827ffdbb61cb412636c7ebed",
+  "web/shell/update-core.js": "ca9374405bb34046a340b9ec23a5e6a15d205bed1e8be9567bc62fc137334d67",
   "web/shell/vendor/libarchive/libarchive.mjs": "5b0b4b48f92364192cb5807d09f8ac0c2326dc2e85b7f0211dba5d98576ee18b",
   "web/shell/vendor/libarchive/libarchive.wasm": "7631b388a3d70aa846d2c6c3410f1a6f7c8f2bedeca25a30a69f1e6a2ebd7a5e",
   "web/shell/vendor/libarchive/licenses/bzip2-1.0.8.txt": "c6dbbf828498be844a89eaa3b84adbab3199e342eb5cb2ed2f0d4ba7ec0f38a3",
@@ -1093,7 +1093,7 @@
  "profile": "cardputer",
  "profile_sha256": "f84fc128e9d0121dd7a732107ea112fac273696d36da3aa9fb35ff5d3c8948d8",
  "pt_overlay": {
-  "sha256": "8df57c18787fdcc5ede65f593f174ccd890501b843a6db27b3e61d2e027f47a2",
+  "sha256": "05c7583bee9b030821659fb4fb6a80247b12d377f8eb0b4be749d943517e6bd9",
   "version": 1
  },
  "shell_cache": "nucleo-shell-v166-3c95cd18aa51",

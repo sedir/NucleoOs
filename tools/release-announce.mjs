@@ -15,7 +15,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const REPO = 'indecenti/NucleoOs';
+const REPO = 'sedir/NucleoOs';
 const MAX_CHARS = 1900;            // under Discord's 2000, room for the "…and N more" line
 const MAX_LINE = 140;
 
@@ -51,7 +51,7 @@ export function post(changelog, tag) {
   const s = section(changelog, tag);
   if (!s) throw new Error(`CHANGELOG.md has no section for ${tag}`);
   const foot = `\nDownload and full notes: <https://github.com/${REPO}/releases/tag/${tag}>\n`
-    + `Web installer: <https://indecenti.github.io/NucleoOs>`;
+    + `Web installer: <https://sedir.github.io/NucleoOs>`;
   let text = `# NucleoOS ${tag} 🚀\n`;
   let dropped = 0;
   for (const [group, entries] of Object.entries(s)) {

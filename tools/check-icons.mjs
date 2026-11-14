@@ -18,6 +18,7 @@ const JS = join(root, 'web/device/icons.js');
 // firmware-only, and a few are security-app icons that are out of scope.)
 const ALLOW = new Set([
   'ble', 'payloads', 'sniffer',   // security-app glyphs: device-only, web port deferred (out of scope)
+  'keyboard',                     // the native Keyboard app (USB + Bluetooth HID): device-only, no web twin
 ]);
 
 function idsFromC(src) {

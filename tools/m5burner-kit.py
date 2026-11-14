@@ -19,7 +19,7 @@ import argparse, hashlib, json, re, struct, sys, urllib.request
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-GH_REPO = 'indecenti/NucleoOs'
+GH_REPO = 'sedir/NucleoOs'
 GH_URL = f'https://github.com/{GH_REPO}'
 SHOTS = REPO / 'build' / 'ui-host' / 'shots'
 # The cover's four screens (English, classic theme) — real renders of the shipped native UI.

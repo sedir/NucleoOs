@@ -39,7 +39,7 @@ static bool cli_persistent(esp_http_client_handle_t c)
 #endif
 }
 
-#define SDC_BASE_HOST   "https://indecenti.github.io/NucleoOs/"   // == UPD_BASE (OTA updater)
+#define SDC_BASE_HOST   "https://sedir.github.io/NucleoOs/"   // == UPD_BASE (OTA updater)
 #define SDC_NVS_NS      "sdc"
 #define SDC_NVS_ARM     "arm"
 #define SDC_NVS_DIAG    "diag"

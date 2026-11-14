@@ -1,0 +1,20 @@
+--- a/web/shell/update-core.js
++++ b/web/shell/update-core.js
+@@ -6,7 +6,7 @@
+ // Architecture rule this module encodes: the BROWSER talks to GitHub, the device never does
+ // (no TLS heap, no battery, no phone-home — the same browser-direct rule the LLM keys follow).
+ 
+-export const UPDATE_REPO = 'indecenti/NucleoOs';
++export const UPDATE_REPO = 'sedir/NucleoOs';   // pt-BR fork: its own signed releases (tools/webos-pt)
+ // The edition whose releases UPDATE_REPO publishes. Every other edition updates through its own channel
+ // (Handheld: system packages; P4: its OTA; the browser edition: its deployment): telling them about a
+ // Cardputer release would offer an update that is not theirs.
+@@ -15,7 +15,7 @@
+ // GitHub Release assets send NO CORS headers (a browser fetch of one is blocked — see the note in
+ // .github/workflows/pages.yml), so the updater downloads from the Pages site, which republishes the
+ // OTA image + checksums + a version marker on every release and serves them with CORS enabled.
+-export const UPDATE_PAGES_BASE = 'https://indecenti.github.io/NucleoOs/';
++export const UPDATE_PAGES_BASE = 'https://sedir.github.io/NucleoOs/';
+ export const UPDATE_OTA_BIN = 'nucleoos-latest-ota.bin';   // app-only image for POST /api/ota — NEVER the merged 0x0 image
+ export const UPDATE_SUMS = 'SHA256SUMS';
+ export const UPDATE_VERSION_JSON = 'version.json';

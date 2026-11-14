@@ -79,6 +79,12 @@
       "transform": "vosk_patch.py",
       "before": "11530c83271c57b68a8e274d46e085c8c9f7d0f3907c1d304604da773be2ee86",
       "after": "a61a853eee7080eae79862c6553e7dce02568b2ff7d5ff46fe74c32a7a437f8d"
+    },
+    {
+      "path": "web/shell/update-core.js",
+      "patch": "patches/web__shell__update-core.js.patch",
+      "before": "6b8dcf9b6339b8f65a5d2646d2dcce842bdf436f827ffdbb61cb412636c7ebed",
+      "after": "ca9374405bb34046a340b9ec23a5e6a15d205bed1e8be9567bc62fc137334d67"
     }
   ]
 }

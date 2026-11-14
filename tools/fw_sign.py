@@ -41,7 +41,7 @@ KEYS_C = os.path.join(COMP, "fwsig_keys.c")
 HOME = os.path.join(os.path.expanduser("~"), ".nucleo")
 PRIV = {"primary": os.environ.get("NUCLEO_FW_KEY") or os.path.join(HOME, "cardputer-ota-signing-key.pem"),
         "backup": os.path.join(HOME, "cardputer-ota-signing-backup-key.pem")}
-REPO = "indecenti/NucleoOs"
+REPO = "sedir/NucleoOs"
 
 BLOCK = 128
 MAGIC = b"nucleoos-sig-v1\n"

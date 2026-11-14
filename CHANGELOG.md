@@ -6,6 +6,27 @@ All notable user-facing changes to NucleoOS. Format loosely follows
 
 ## [Unreleased]
 
+## [0.8.8] — 2026-11-14
+
+Brazilian Portuguese fork (github.com/sedir/NucleoOs). Updates now come from this fork's own signed releases.
+
+### Added
+- **Brazilian Portuguese everywhere**: the native UI, the web shell and the web apps, chosen at first boot or in Settings.
+- **Offline ANIMA in Portuguese**: device commands, math, conversions ("quantos km sao 13 milhas"), calendar skills,
+  every prompt the app offers and everyday small talk ("tudo bem?"), plus ~1,500 reviewed knowledge answers read from
+  the SD card.
+- **A Portuguese offline voice** (~9,700 clips): numbers and the time composed in Portuguese, knowledge answers read
+  sentence by sentence. The pack is generated on the PC (`tools/nucleo-tts`, docs/tts.md) and is not in the release.
+- **Offline translation pt<->en, en<->ja and pt<->ja** (Japanese in romaji, pt<->ja through English and marked so).
+- **Portuguese dictation** with the local Vosk model in ANIMA and Dictation.
+- **RemoCon**: infrared remotes defined in JSON, drawn like the real remote, with a touch keypad on the second screen.
+- **Keyboard**: the Cardputer types on a computer over USB-C and Bluetooth at once, Brazilian ABNT2 layout.
+
+### Changed
+- **Updates come from this fork**: the browser updater, the native update check, the SD-content installer and the
+  rescue page use sedir/NucleoOs and its Pages site, and the firmware trusts this fork's release keys only. Install
+  this release once over USB (web flasher or esptool); later releases arrive over Wi-Fi.
+
 ## [0.8.7] — 2026-11-09
 
 ### Added

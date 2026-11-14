@@ -38,7 +38,7 @@ static const char *TAG = "nucupd";
 // Same host the web flasher/updater uses: GitHub Release assets send no CORS headers for the
 // browser, and for the DEVICE the win is different but real — version.json is ~30 bytes where
 // the GitHub API answer is tens of KB of JSON this chip would have to buffer and parse.
-#define UPD_BASE        "https://indecenti.github.io/NucleoOs/"
+#define UPD_BASE        "https://sedir.github.io/NucleoOs/"
 #define UPD_VERSION_URL UPD_BASE "version.json"
 #define UPD_SUMS_URL    UPD_BASE "SHA256SUMS"
 #define UPD_BIN_URL     UPD_BASE "nucleoos-latest-ota.bin"

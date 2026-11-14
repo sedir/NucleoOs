@@ -236,7 +236,7 @@ static void draw_confirm(void)
         } else {
             center(PT("Aggiorna via USB:", "Update over USB:", "Actualiza por USB:",
                       "Mettez a jour par USB :", "Update per USB:"), 54, 1, MUTED);
-            center("indecenti.github.io/NucleoOs", 68, 1, FG);
+            center("sedir.github.io/NucleoOs", 68, 1, FG);
         }
         center(PT("ENTER = OK", "ENTER = OK", "ENTER = OK", "ENTREE = OK", "ENTER = OK"), 100, 1, C_GREEN);
         return;
@@ -337,7 +337,7 @@ static void lg_how(int x, int y, int w, unsigned short cb)
             lg::wrap(PT(".bin della release sulla SD, poi SD > file > Install", "release .bin on the SD card, then SD > file > Install", ".bin de la release en la SD, luego SD > archivo > Install", ".bin de la release sur la SD, puis SD > fichier > Install", "Release-.bin auf die SD, dann SD > Datei > Install"), x, y + 26, w, 18, 3);
         } else {
             d.drawString(PT("Aggiorna via USB:", "Update over USB:", "Actualiza por USB:", "Mettez a jour par USB :", "Update per USB:"), x, y);
-            d.setTextColor(C_BLUE, cb); char u[40]; lg::fit(u, sizeof u, "indecenti.github.io/NucleoOs", w); d.drawString(u, x, y + 28);
+            d.setTextColor(C_BLUE, cb); char u[40]; lg::fit(u, sizeof u, "sedir.github.io/NucleoOs", w); d.drawString(u, x, y + 28);
         }
         return;
     }

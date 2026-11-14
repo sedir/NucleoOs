@@ -89,7 +89,7 @@ Pick **one** of the two methods.
 
 ### A) Web flasher (easiest — no software to install)
 1. Use **Chrome** or **Edge** on a desktop (Web Serial isn't supported on Firefox/Safari/mobile).
-2. Open the official 1-click installer: <https://indecenti.github.io/NucleoOs/>
+2. Open the official 1-click installer: <https://sedir.github.io/NucleoOs/>
 3. Plug the Cardputer into USB-C, click **Connect & install NucleoOS**, choose its serial port, and confirm.
    It flashes the latest \`${binName}\` (a full merged image — bootloader + partition table + app — at
    offset 0) for you. When it finishes, **press the Cardputer's reset button** to boot it.
@@ -222,7 +222,7 @@ native **Updates** app. No cable needed.
   \`sha256sum -c SHA256SUMS\` (or compare \`certutil -hashfile ${binName} SHA256\` on Windows).
 - **Build provenance:** the firmware images are signed with GitHub build attestations. Confirm a
   binary was built by the official release workflow from this commit:
-  \`gh attestation verify ${binName} --repo indecenti/NucleoOs\`.
+  \`gh attestation verify ${binName} --repo sedir/NucleoOs\`.
 
 ### What's included / not
 The download is intentionally lean (${sdSize}): the large ML models are **not** bundled (they install

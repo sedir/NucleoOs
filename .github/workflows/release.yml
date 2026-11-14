@@ -158,7 +158,7 @@ jobs:
         run: gh release edit "${{ github.ref_name }}" --notes-file dist/RELEASE_NOTES.md
 
       # Signed, verifiable provenance for the flashable images (sigstore via OIDC). Anyone can then
-      # run `gh attestation verify nucleoos-<ver>.bin --repo indecenti/NucleoOs` to prove the binary
+      # run `gh attestation verify nucleoos-<ver>.bin --repo sedir/NucleoOs` to prove the binary
       # was built by THIS workflow from THIS commit — supply-chain integrity beyond the SHA256SUMS.
       - name: Attest build provenance (firmware images)
         uses: actions/attest-build-provenance@v2
@@ -193,7 +193,7 @@ jobs:
 
       - name: Web-flasher (Pages) caught up to this tag
         run: |
-          site="https://indecenti.github.io/NucleoOs"
+          site="https://sedir.github.io/NucleoOs"
           for i in $(seq 1 18); do
             tag=$(curl -fsSL "$site/version.json" 2>/dev/null | sed -n 's/.*"tag"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
             if [ "$tag" = "${{ github.ref_name }}" ]; then
