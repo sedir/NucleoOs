@@ -103,6 +103,18 @@ const CASES = [
   ['pt', 'que dia cai o natal',                'date',           null,           /^25 de dezembro de \d{4} cai em [a-z-]+\.$/],
   ['pt', 'que dia é amanhã',                   'date',           null,           /^Amanha e [a-z-]+, \d{1,2} de [a-z]+ de \d{4}\.$/],
   ['pt', 'para o cronômetro',                  'close_app',      'chrono',       'Fechando o Cronometro.'],
+  // offline translation: pt<->en, en<->ja (romaji), pt<->ja through English (build_dict_multi.py)
+  ['pt', 'traduz cachorro para inglês',        'translate',      null,           '"cachorro" em ingles: dog.'],
+  ['pt', 'traduz cachorro para japonês',       'translate',      null,           '"cachorro" em japones: inu (via dog).'],
+  ['pt', 'como se diz obrigado em japonês?',   'translate',      null,           /^"obrigado" em japones: arigatou \(via thank you\)/],
+  ['pt', 'traduz inu para português',          'translate',      null,           /^"inu" em portugues: cachorro \(via dog\)/],
+  ['pt', 'traduz dog para português',          'translate',      null,           '"dog" em portugues: cachorro; cão.'],
+  ['pt', 'traduz o coração para japonês',      'translate',      null,           /^"coracao" em japones: .*kokoro/],
+  ['pt', 'traduz xyzw para japonês',           'translate',      null,           'Nao tenho "xyzw" nos dicionarios offline.'],
+  ['en', 'translate dog to japanese',          'translate',      null,           '"dog" in Japanese: inu.'],
+  ['en', 'translate cachorro to english',      'translate',      null,           '"cachorro" in English: dog.'],
+  ['it', 'traduci cane in giapponese',         'translate',      null,           '"cane" in lingua giapponese: inu (via dog).'],
+  ['it', 'traduci cane in inglese',            'translate',      null,           '"cane" in inglese: dog, hound, trigger.'],
   // the pt layer must leave the other languages alone
   ['en', 'open the calculator',                'open_app',       'calculator',   'Opening calculator.'],
   ['en', 'turn up the volume',                 'set_volume',     '+10',          'Raising the volume.'],

@@ -2724,6 +2724,7 @@ static int tool_profile(const char *raw, char tok[A_MAX_TOKENS][A_TOK_LEN], int 
 // Wi-Fi) a translation request goes to the teacher LLM (Grok) — full sentences, real quality. The offline
 // dictionary is the FLOOR, used only when offline, or if the teacher call fails (no key / heap / network).
 // "The base translator is offline-only." A non-translation query never enters here (is_request is 0-FP).
+static bool s_turn_pt;   // this turn is Portuguese (set by nucleo_anima_query): the translator prefers pt sources
 static int tool_translate(const char *raw, char tok[A_MAX_TOKENS][A_TOK_LEN], int ntok, bool en, anima_result_t *r)
 {
     (void)tok; (void)ntok;
@@ -2731,7 +2732,7 @@ static int tool_translate(const char *raw, char tok[A_MAX_TOKENS][A_TOK_LEN], in
         if (nucleo_anima_online_chat(raw, NULL, NULL, en, r)) return 1;   // Grok translated it
         // teacher unavailable/failed -> fall through to the grounded offline dictionary
     }
-    return nucleo_anima_translate(raw, en, r);   // offline dictionary
+    return nucleo_anima_translate_ex(raw, en, s_turn_pt, r);   // offline dictionary
 }
 
 // Image-generation request? Requires a GENERATION VERB *and* an IMAGE NOUN together, so it never steals the
@@ -3993,6 +3994,7 @@ anima_result_t nucleo_anima_query(const char *input, const char *lang)
     // not grow. Allocation failure = the raw line, never an error.
     const bool pt = lang && (lang[0] | 0x20) == 'p' && (lang[1] | 0x20) == 't';
     const char *pt_raw = input; // retrieval sees the original Portuguese, before command bridging
+    s_turn_pt = pt;
     char *pt_line = NULL;
     if (pt && input && (pt_line = (char *)malloc(A_PT_LINE)) != NULL) {
         bool cue = a_pt_bridge(input, pt_line, A_PT_LINE);

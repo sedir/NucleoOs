@@ -14,17 +14,22 @@
 
 #define DICT_IT_EN  NUCLEO_SD_MOUNT "/data/anima/dict-it-en.tsv"   // IT key -> EN translations
 #define DICT_EN_IT  NUCLEO_SD_MOUNT "/data/anima/dict-en-it.tsv"   // EN key -> IT translations
-
-// Fold an Italian accented vowel (the byte AFTER 0xC3) to bare ASCII; 0 if not one we fold.
-// EXACTLY the switch in a_tokenize() (NOT the wider learn.c map) — the keys were generated with this set.
+// Portuguese and Japanese (tools/anima/build_dict_multi.py). Japanese is ROMAJI on both sides (the native font
+// is ASCII-only); pt<->ja pivots through the primary English sense and the value says "(via <english>)".
+#define DICT_DIR    NUCLEO_SD_MOUNT "/data/anima/dict-"
+// Fold an accented letter (the byte AFTER 0xC3) to bare ASCII; 0 if not one we fold. The Italian vowels of
+// a_tokenize() plus Portuguese ã õ ç and the capitals (build_dict_multi.py norm_key() is the twin). The it/en
+// dictionary keys are pure ASCII, so the wider set changes none of their lookups.
 static char t_fold(unsigned char d)
 {
+    if (d >= 0x80 && d <= 0x9E && d != 0x97) d += 0x20;  // À..Þ -> à..þ (0x97 is ×)
     switch (d) {
-        case 0xA0: case 0xA1: case 0xA2: return 'a';   // à á â
-        case 0xA8: case 0xA9: case 0xAA: return 'e';   // è é ê
-        case 0xAC: case 0xAD: case 0xAE: return 'i';   // ì í î
-        case 0xB2: case 0xB3: case 0xB4: return 'o';   // ò ó ô
-        case 0xB9: case 0xBA: case 0xBB: return 'u';   // ù ú û
+        case 0xA0: case 0xA1: case 0xA2: case 0xA3: return 'a';   // à á â ã
+        case 0xA7: return 'c';                                     // ç
+        case 0xA8: case 0xA9: case 0xAA: return 'e';               // è é ê
+        case 0xAC: case 0xAD: case 0xAE: return 'i';               // ì í î
+        case 0xB2: case 0xB3: case 0xB4: case 0xB5: return 'o';    // ò ó ô õ
+        case 0xB9: case 0xBA: case 0xBB: return 'u';               // ù ú û
         default: return 0;
     }
 }
@@ -55,22 +60,35 @@ static bool t_starts(const char *s, const char *pre) { return strncmp(s, pre, st
 // An explicit translate verb ("traduci/traduce/traduco/tradurre/traducimi", "translate/translating").
 static bool t_is_verb(const char *w)
 {
+    // Portuguese verb forms are listed exactly: "traduz" is also the prefix of the Italian NOUN "traduzione"
+    static const char *const pt[] = { "traduz", "traduza", "traduzir", "traduzindo", "traduzo", "traduzam", "traduzi", NULL };
+    for (int i = 0; pt[i]; i++) if (t_eq(w, pt[i])) return true;
     return t_starts(w, "traduc") || t_starts(w, "tradur") || t_starts(w, "translat");
 }
 // The noun "traduzione/translation" — a weaker trigger, accepted only WITH an explicit target language.
 static bool t_is_noun(const char *w)
 {
-    return t_starts(w, "traduzion") || t_eq(w, "translation") || t_eq(w, "translations");
+    return t_starts(w, "traduzion") || t_eq(w, "translation") || t_eq(w, "translations") || t_eq(w, "traducao");
 }
-// A target-language word -> 'e' (translate INTO English) / 'i' (INTO Italian) / 0 (not a language).
+// A target-language word -> 'e' English / 'i' Italian / 'p' Portuguese / 'j' Japanese / 0 (not a language).
+// it/en/pt spellings: inglese/english/ingles, portoghese/portuguese/portugues, giapponese/japanese/japones.
 static char t_lang(const char *w)
 {
     if (t_starts(w, "ingles") || t_eq(w, "english")) return 'e';
     if (t_starts(w, "italian") || t_eq(w, "italiano")) return 'i';
+    if (t_starts(w, "portug") || t_starts(w, "portog")) return 'p';
+    if (t_starts(w, "japon") || t_starts(w, "japan") || t_starts(w, "giappon")) return 'j';
     return 0;
 }
 // Function words trimmed from the BORDERS of the target span (never from the middle, so "come stai"
 // survives). Deliberately excludes come/how/say/etc. — those are real content unless part of a trigger.
+static bool t_is_border_word_pt(const char *w)   // Portuguese ones, only for a pt user (en "no"/"do" are words)
+{
+    static const char *fw[] = { "o","os","as","do","da","dos","das","de","em","para","pra","no","na","um","uma",
+                                "palavra","expressao","frase", NULL };
+    for (int i = 0; fw[i]; i++) if (t_eq(w, fw[i])) return true;
+    return false;
+}
 static bool t_is_border_word(const char *w)
 {
     static const char *fw[] = { "di","del","dello","della","dell","la","il","lo","le","l","un","una","uno",
@@ -152,8 +170,13 @@ static const char *const T_FR_hdis[] = { "how", "do", "i", "say", NULL };
 static const char *const T_FR_hts[]  = { "how", "to", "say", NULL };
 static const char *const T_FR_hdyw[] = { "how", "do", "you", "spell", NULL };
 static const char *const T_FR_hdywr[]= { "how", "do", "you", "write", NULL };
+static const char *const T_FR_csdz[] = { "como", "se", "diz", NULL };       // pt: "como se diz X em japones"
+static const char *const T_FR_csfa[] = { "como", "se", "fala", NULL };
+static const char *const T_FR_csec[] = { "como", "se", "escreve", NULL };
+static const char *const T_FR_cedg[] = { "como", "eu", "digo", NULL };
 static const char *const *const T_FRAMES[] = { T_FR_csd, T_FR_csdn, T_FR_css, T_FR_cssn,
-                                               T_FR_hdys, T_FR_hdis, T_FR_hts, T_FR_hdyw, T_FR_hdywr, NULL };
+                                               T_FR_hdys, T_FR_hdis, T_FR_hts, T_FR_hdyw, T_FR_hdywr,
+                                               T_FR_csdz, T_FR_csfa, T_FR_csec, T_FR_cedg, NULL };
 
 // Mark each present frame's tokens in `excl` (when non-NULL) and return whether any frame matched.
 static bool t_mark_frames(char tok[T_MAX_TOKENS][T_TOK_LEN], int ntok, bool *excl)
@@ -183,7 +206,28 @@ bool nucleo_anima_translate_is_request(const char *raw)
     return verb || t_mark_frames(tok, ntok, NULL) || (noun && lang);
 }
 
+// Look `key` up in dict-<src>-<dst>.tsv (src/dst: two-letter codes).
+static int t_lookup_pair(const char *src, const char *dst, const char *key, char *out, size_t cap)
+{
+    char path[64];
+    snprintf(path, sizeof path, DICT_DIR "%s-%s.tsv", src, dst);
+    return t_lookup(path, key, out, cap);
+}
+static const char *t_code(char l) { return l == 'e' ? "en" : l == 'i' ? "it" : l == 'p' ? "pt" : "ja"; }
+// Language name in the reply: Italian for an Italian user, English otherwise (the pt reply catalog localizes it).
+static const char *t_name(char l, bool en)
+{
+    if (en) return l == 'e' ? "English" : l == 'i' ? "Italian" : l == 'p' ? "Portuguese" : "Japanese";
+    // "lingua giapponese": anima_text's cleanup excises " in giapponese ..." clauses (knowledge transliterations)
+    return l == 'e' ? "inglese" : l == 'i' ? "italiano" : l == 'p' ? "portoghese" : "lingua giapponese";
+}
+
 int nucleo_anima_translate(const char *raw, bool en, anima_result_t *r)
+{
+    return nucleo_anima_translate_ex(raw, en, false, r);
+}
+
+int nucleo_anima_translate_ex(const char *raw, bool en, bool pt, anima_result_t *r)
 {
     if (!raw || !raw[0]) return 0;
     char tok[T_MAX_TOKENS][T_TOK_LEN];
@@ -213,8 +257,8 @@ int nucleo_anima_translate(const char *raw, bool en, anima_result_t *r)
         else { if (cl > bl) { bl = cl; bs = cs; } cs = -1; cl = 0; }
     }
     int s = bs, e = bs + bl;                        // [s, e)
-    while (s < e && t_is_border_word(tok[s])) s++;  // trim leading function words
-    while (e > s && t_is_border_word(tok[e - 1])) e--; // trim trailing
+    while (s < e && (t_is_border_word(tok[s]) || (pt && t_is_border_word_pt(tok[s])))) s++;          // trim leading
+    while (e > s && (t_is_border_word(tok[e - 1]) || (pt && t_is_border_word_pt(tok[e - 1])))) e--; // and trailing
 
     // A NUMBER is not an IT<->EN word: "traduci 10 in binario" is a base conversion, "traduci 5" is nothing.
     // Decline so the math/base skill owns it — don't swallow the turn with a dictionary miss.
@@ -236,6 +280,7 @@ int nucleo_anima_translate(const char *raw, bool en, anima_result_t *r)
                     : "Cosa traduco? es. \"traduci cane in inglese\".");
         return 1;
     }
+    bool newlang = pt || lang == 'p' || lang == 'j';   // Portuguese/Japanese involved: the multi-pair search
 
     // Rebuild the normalized key from the span (single-spaced) — same shape gen_dicts.py wrote.
     char key[T_MAX_TOKENS * T_TOK_LEN];
@@ -250,8 +295,51 @@ int nucleo_anima_translate(const char *raw, bool en, anima_result_t *r)
     // return "and" (è = copula "is", NOT the conjunction "e"/and). Decline rather than assert a false hit.
     if (ko <= 1) return 0;
 
-    // --- lookup, honoring the requested direction (or auto-detecting it) ---------------------------
+    // --- Portuguese / Japanese: try the source languages that have a dictionary INTO the target, the user's
+    // own language first. No target ("traduz cachorro"): Portuguese -> English, else into Portuguese. ----------
     char val[512], itv[512], env[512];
+    if (newlang) {
+        char cand[4][2]; int nc = 0;                   // (source, target) pairs to try
+        #define TRY(sr, tg) do { if (nc < 4) { cand[nc][0] = (sr); cand[nc][1] = (tg); nc++; } } while (0)
+        if (lang == 'e')      { if (pt) TRY('p','e'); TRY('i','e'); if (!pt) TRY('p','e'); TRY('j','e'); }
+        else if (lang == 'p') { TRY('e','p'); TRY('j','p'); }
+        else if (lang == 'j') { if (pt) TRY('p','j'); TRY('e','j'); if (!pt) TRY('p','j'); }
+        else if (lang == 'i') { TRY('e','i'); }
+        else                  { TRY('p','e'); TRY('e','p'); TRY('j','p'); TRY('i','e'); }
+        #undef TRY
+        // An Italian user into Portuguese/Japanese: no it-pt/it-ja dictionary, so pivot through the PRIMARY
+        // English sense of the Italian word ("cane" -> "dog" -> "inu"), marked "(via dog)" like the built pairs.
+        if (!en && !pt && (lang == 'p' || lang == 'j') && t_lookup(DICT_IT_EN, key, itv, sizeof itv)) {
+            char ek[64]; int k = 0;
+            for (const char *q = itv; *q && *q != ',' && *q != ';' && k < (int)sizeof ek - 1; q++) ek[k++] = *q;
+            while (k > 0 && ek[k - 1] == ' ') k--;
+            ek[k] = 0;
+            if (ek[0] && t_lookup_pair("en", t_code(lang), ek, env, sizeof env)) {
+                char one[96]; k = 0;                   // first target word only: the pivot is one sense
+                for (const char *q = env; *q && *q != ';' && k < (int)sizeof one - 1; q++) one[k++] = *q;
+                one[k] = 0;
+                r->confidence = 90;
+                snprintf(r->reply, sizeof r->reply, "\"%s\" in %s: %s (via %s).", key, t_name(lang, en), one, ek);
+                snprintf(r->trace, sizeof r->trace, "dizionario · it->en->%s", t_code(lang));
+                return 1;
+            }
+        }
+        for (int c = 0; c < nc; c++) {
+            if (!t_lookup_pair(t_code(cand[c][0]), t_code(cand[c][1]), key, val, sizeof val)) continue;
+            r->confidence = 95;
+            snprintf(r->reply, sizeof r->reply, "\"%s\" in %s: %s.", key, t_name(cand[c][1], en), val);
+            snprintf(r->trace, sizeof r->trace, en ? "dict lookup · %s->%s" : "dizionario · %s->%s",
+                     t_code(cand[c][0]), t_code(cand[c][1]));
+            return 1;
+        }
+        r->confidence = 55;
+        snprintf(r->reply, sizeof r->reply, en ? "I don't have \"%s\" in the offline dictionaries."
+                                               : "Non ho \"%s\" nei dizionari offline.", key);
+        snprintf(r->trace, sizeof r->trace, en ? "dict miss" : "dizionario: assente");
+        return 1;
+    }
+
+    // --- lookup, honoring the requested direction (or auto-detecting it) ---------------------------
     bool to_en = false, hit = false;
     bool in_it = t_lookup(DICT_IT_EN, key, itv, sizeof itv);   // key is an Italian headword
     bool in_en = t_lookup(DICT_EN_IT, key, env, sizeof env);   // key is an English headword
@@ -291,6 +379,17 @@ int nucleo_anima_translate(const char *raw, bool en, anima_result_t *r)
         return 1;
     }
 
+    // An English/Italian user may still type a Portuguese or Japanese (romaji) word: into English only.
+    if (lang == 'e' || lang == 0) {
+        static const char SRC[2] = { 'p', 'j' };
+        for (int c = 0; c < 2; c++) {
+            if (!t_lookup_pair(t_code(SRC[c]), "en", key, val, sizeof val)) continue;
+            r->confidence = 95;
+            snprintf(r->reply, sizeof r->reply, "\"%s\" in %s: %s.", key, t_name('e', en), val);
+            snprintf(r->trace, sizeof r->trace, en ? "dict lookup · %s->en" : "dizionario · %s->en", t_code(SRC[c]));
+            return 1;
+        }
+    }
     // Miss on an explicit translation request: decline honestly and STOP (no later tier fabricates one).
     r->confidence = 55;
     snprintf(r->reply, sizeof r->reply,

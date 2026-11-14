@@ -108,7 +108,8 @@ if (wantHost) {
   }
   // The offline IT<->EN dictionary the translate skill reads (tracked, identical in sd-sim and deploy/sd).
   // A fresh clone had none: translate-check scored 21/67 and dict-stress recalled 0/0.
-  for (const f of ['dict-it-en.tsv', 'dict-en-it.tsv']) {
+  for (const f of ['dict-it-en.tsv', 'dict-en-it.tsv', 'dict-pt-en.tsv', 'dict-en-pt.tsv', 'dict-en-ja.tsv',
+                   'dict-ja-en.tsv', 'dict-pt-ja.tsv', 'dict-ja-pt.tsv']) {
     const src = R('tools', 'sd-sim', 'data', 'anima', f);
     if (existsSync(src)) copyFileSync(src, join(hostAnima, f));
   }

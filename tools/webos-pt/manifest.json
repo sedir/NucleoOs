@@ -36,7 +36,7 @@
       "path": "apps/anima/www/local/engine.js",
       "patch": "patches/apps__anima__www__local__engine.js.patch",
       "before": "104809d7cd78a14abf4991e6190f84e6f181d802a4bbfbdab5a122642290cfcd",
-      "after": "e00d5ae82fbf5611815807049cb9b926f7e1c76a91ea9dc7733c791c73c3ed3f"
+      "after": "0a36e3486bf86c4fe228ff3d756c8cefb2238759f4a6b4642462881825adbf58"
     },
     {
       "path": "apps/anima/www/contextkit.js",

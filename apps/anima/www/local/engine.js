@@ -22,6 +22,13 @@ const PACK = [
   { p: 'data/anima/commands.it.json',         req: true  },
   { p: 'data/anima/dict-it-en.tsv',           req: false },
   { p: 'data/anima/dict-en-it.tsv',           req: false },
+  // pt/ja pairs (tools/anima/build_dict_multi.py); Japanese is romaji, pt<->ja pivots through English
+  { p: 'data/anima/dict-pt-en.tsv',           req: false },
+  { p: 'data/anima/dict-en-pt.tsv',           req: false },
+  { p: 'data/anima/dict-en-ja.tsv',           req: false },
+  { p: 'data/anima/dict-ja-en.tsv',           req: false },
+  { p: 'data/anima/dict-pt-ja.tsv',           req: false },
+  { p: 'data/anima/dict-ja-pt.tsv',           req: false },
   // WHICH-PERSON table (shared surnames -> "which one do you mean?"), read by fseek from /sd like the device
   // does (anima_person.c). Absent -> no clarify, the cascade answers as before.
   { p: 'data/anima/anima-person-ambig.bin',   req: false },

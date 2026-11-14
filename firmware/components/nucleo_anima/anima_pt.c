@@ -105,13 +105,15 @@ static const a_pt_word_t PT_WORDS[] = {
     { "tempo em",             "weather in", PT_CUE },
     { "previsao do tempo em", "weather in", PT_CUE },
     { "previsao para amanha em", "weather tomorrow in", PT_CUE },
-    { "traduz",               "translate", PT_CUE },
-    { "traduza",              "translate", PT_CUE },
-    { "traduzir",             "translate", PT_CUE },
-    { "para ingles",          "to english", 0 },
-    { "em ingles",            "to english", 0 },
-    { "para italiano",        "to italian", 0 },
-    { "em italiano",          "to italian", 0 },
+    // the word to translate is the user's text: copied as typed (the translator reads pt words and languages)
+    { "traduz",               "translate", PT_CUE | PT_TEXT },
+    { "traduza",              "translate", PT_CUE | PT_TEXT },
+    { "traduzir",             "translate", PT_CUE | PT_TEXT },
+    { "traducao de",          "translate", PT_CUE | PT_TEXT },
+    { "como se diz",          "how do you say", PT_CUE | PT_TEXT },   // "como se diz obrigado em japones":
+    { "como se fala",         "how do you say", PT_CUE | PT_TEXT },   // "obrigado" stays the word, not "thanks"
+    { "como se escreve",      "how do you say", PT_CUE | PT_TEXT },
+    { "como eu digo",         "how do you say", PT_CUE | PT_TEXT },
     // city names the world clock / weather know in English
     { "toquio",               "tokyo", 0 },
     { "londres",              "london", 0 },
@@ -864,6 +866,10 @@ static const a_pt_reply_t PT_REPLIES[] = {
                    "Nao tenho \"%1\" no dicionario offline italiano-ingles." },
     { "translate", "\"%s\" in English: %s.",       "\"%1\" em ingles: %2." },
     { "translate", "\"%s\" in Italian: %s.",       "\"%1\" em italiano: %2." },
+    { "translate", "\"%s\" in Portuguese: %s.",    "\"%1\" em portugues: %2." },
+    { "translate", "\"%s\" in Japanese: %s.",      "\"%1\" em japones: %2." },
+    { "translate", "I don't have \"%s\" in the offline dictionaries.",
+                   "Nao tenho \"%1\" nos dicionarios offline." },
 };
 
 // Capture -> Portuguese: app ids (article included: "Abrindo a Calculadora"), weekdays, months.

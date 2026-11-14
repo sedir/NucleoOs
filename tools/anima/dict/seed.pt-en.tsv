@@ -1,0 +1,87 @@
+# Curated Brazilian Portuguese <-> English (build_dict_multi.py). FreeDict por-eng is small and European:
+# these everyday Brazilian words lead both directions. Format: pt<TAB>en; en (primary sense first).
+cachorro	dog
+cão	dog
+gato	cat
+ônibus	bus
+trem	train
+carro	car
+celular	cell phone; mobile phone
+geladeira	fridge; refrigerator
+banheiro	bathroom
+cozinha	kitchen
+quarto	bedroom; room
+sala	living room; room
+café da manhã	breakfast
+almoço	lunch
+jantar	dinner
+água	water
+comida	food
+pão	bread
+leite	milk
+arroz	rice
+feijão	beans
+carne	meat
+frango	chicken
+peixe	fish
+fruta	fruit
+maçã	apple
+banana	banana
+laranja	orange
+suco	juice
+cerveja	beer
+obrigado	thank you; thanks
+obrigada	thank you; thanks
+por favor	please
+bom dia	good morning
+boa tarde	good afternoon
+boa noite	good night; good evening
+oi	hi; hello
+olá	hello
+tchau	bye
+desculpa	sorry
+sim	yes
+não	no
+amigo	friend
+família	family
+mãe	mother; mom
+pai	father; dad
+filho	son
+filha	daughter
+irmão	brother
+irmã	sister
+criança	child
+homem	man
+mulher	woman
+escola	school
+trabalho	work; job
+dinheiro	money
+casa	house; home
+cidade	city
+rua	street
+praia	beach
+mar	sea
+chuva	rain
+sol	sun
+lua	moon
+amor	love
+coração	heart
+feliz	happy
+triste	sad
+grande	big
+pequeno	small
+bonito	beautiful; pretty
+novo	new
+velho	old
+quente	hot
+frio	cold
+hoje	today
+amanhã	tomorrow
+ontem	yesterday
+agora	now
+livro	book
+computador	computer
+teclado	keyboard
+tela	screen
+música	music
+filme	movie; film

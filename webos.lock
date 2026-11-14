@@ -127,11 +127,11 @@
   "apps/anima/www/index.html": "bc2be5996993d5440b69e1418d190e705e1265b3fc6a148d163afc27e5619b0b",
   "apps/anima/www/local-llm.js": "cf1c9739cd9779d804638c819a9acdfe118002e74fc88c0bc8a79c820a1163de",
   "apps/anima/www/local/anima-local.mjs": "ff157db0060bd64f9a25221607d22e5756aa5af28ef053ed956c4e5efb25ede3",
-  "apps/anima/www/local/anima-local.wasm": "0db85a3c28bc82f6c50f9e60123d1b1ec1198d0169b8902402b4e7fbe42c2ee2",
+  "apps/anima/www/local/anima-local.wasm": "d0c2c072d7e2869249927f14f06a090051afe2ef8c6047264f6d2331e7dd003d",
   "apps/anima/www/local/cascade.js": "7f8d2bf3802176c5d180839f0fdf8a06dac725285b294cf8a248110e9f732661",
   "apps/anima/www/local/console-i18n.js": "9962b239ab1db47cf1f552681f9933ee85a2da19dbfcf7fd07038f7d6d4d4e8c",
   "apps/anima/www/local/console-skills.js": "efecc1489f53081511de06633c99a70972fcb4b4e8f335e2e3970aee35232877",
-  "apps/anima/www/local/engine.js": "e00d5ae82fbf5611815807049cb9b926f7e1c76a91ea9dc7733c791c73c3ed3f",
+  "apps/anima/www/local/engine.js": "0a36e3486bf86c4fe228ff3d756c8cefb2238759f4a6b4642462881825adbf58",
   "apps/anima/www/local/game-kb.js": "8e6029202c7aef4d0206d0eaa9d3fe93dd324deee415f8391afca8276623f1fe",
   "apps/anima/www/local/love-forge.js": "a4b0c0eafcff97deadd3d0b9698342e36d36439668890d478b304d26239bdf86",
   "apps/anima/www/local/nlmath.js": "4deb97e8336e844506946f4903368c92734103067a90fbb77cabe611a1baa29e",
@@ -1093,7 +1093,7 @@
  "profile": "cardputer",
  "profile_sha256": "f84fc128e9d0121dd7a732107ea112fac273696d36da3aa9fb35ff5d3c8948d8",
  "pt_overlay": {
-  "sha256": "5a73afb54c32f902a679bb68ae4026c90ddd6de4af2249e8d09588f098a050ca",
+  "sha256": "8df57c18787fdcc5ede65f593f174ccd890501b843a6db27b3e61d2e027f47a2",
   "version": 1
  },
  "shell_cache": "nucleo-shell-v166-3c95cd18aa51",

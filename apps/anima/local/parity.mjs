@@ -106,6 +106,10 @@ const Q = [
     ['pt', 'qual é a capital de Portugal'],
     ['pt', 'o que não é um ponteiro em C'],
     ['pt', 'quem foi Albert Floonk'],
+    ['pt', 'traduz cachorro para japonês'],   // pt->ja through English (dict-pt-ja.tsv)
+    ['pt', 'como se diz obrigado em inglês'], // the frame keeps the word as typed
+    ['en', 'translate inu to english'],       // romaji -> English (dict-ja-en.tsv)
+    ['it', 'traduci cane in giapponese'],     // Italian pivots it->en->ja at run time
     ['it', 'apri la fotocamera'],            // L0 launch
     ['it', 'apri le impostazioni'],          // L0 launch
     ['it', 'apri la calcolatrice'],          // L0 launch via command-pack (commands.it.json)

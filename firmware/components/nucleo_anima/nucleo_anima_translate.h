@@ -26,6 +26,9 @@ extern "C" {
 // decline on a miss (still 1, to stop the cascade so no later tier fabricates one). Returns 0 only when
 // the input is not a translation request, so the cascade continues. `en` selects the reply language.
 int nucleo_anima_translate(const char *raw, bool en, anima_result_t *r);
+// Same, for a Portuguese user (pt=true): Portuguese function words are trimmed and Portuguese is the preferred
+// source. Pairs: it<->en, pt<->en, en<->ja, pt<->ja (via English); Japanese is romaji (SD dict-<src>-<dst>.tsv).
+int nucleo_anima_translate_ex(const char *raw, bool en, bool pt, anima_result_t *r);
 
 // Detect-ONLY: true if `raw` is a translation request (no dictionary lookup). The orchestrator uses this
 // to route translation to the online teacher (Grok) in hybrid/online mode, with the dictionary as the

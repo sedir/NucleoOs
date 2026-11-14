@@ -147,6 +147,31 @@ Web Speech or Groq. Explicitly selecting Groq remains an online action. ASR runs
 consume the Cardputer microphone over the LAN without internet. It does not run on the MCU. The model's
 accuracy is limited; synthetic-fixture success is not a real-microphone quality certification.
 
+## Offline translation: pt, en, ja (2026-11-14)
+
+The dictionary translator (`nucleo_anima_translate.c`) gained Portuguese and Japanese next to IT<->EN.
+`tools/anima/build_dict_multi.py` builds six more strcmp-sorted TSVs from FreeDict (por-eng, eng-por,
+eng-jpn from Wiktionary, jpn-eng = JMdict) plus a curated Brazilian seed (`tools/anima/dict/seed.pt-en.tsv`):
+
+| file | keys | size |
+| --- | --- | --- |
+| `dict-pt-en.tsv` / `dict-en-pt.tsv` | 17,134 / 15,773 | 0.43 / 0.43 MB |
+| `dict-en-ja.tsv` / `dict-ja-en.tsv` | 37,476 / 213,643 | 0.84 / 7.0 MB |
+| `dict-pt-ja.tsv` / `dict-ja-pt.tsv` | 10,942 / 34,033 | 0.46 / 1.6 MB |
+
+- **Japanese is romaji** on both sides (the native font is ASCII-only, the keyboard types Latin). Kanji become
+  romaji through the JMdict reading of the entry whose English glosses match the headword (本 "book" -> hon,
+  not moto). Keys also accept the plain spelling ("tokyo" for "toukyou") unless that spelling is a real word.
+- **pt<->ja pivots through the primary English sense**, generated offline, and the value says so:
+  "cachorro" em japones: inu (via dog). An Italian user's it->ja / it->pt pivots at run time the same way.
+- The tokenizer folds ã õ ç and capitals; the it/en keys are pure ASCII, so their lookups are unchanged
+  (a 670-query it/en A/B is byte-identical; `translate-check` 67/67, `dict-stress` green).
+- pt phrasing: "traduz X para japonês", "como se diz X em inglês", "tradução de X". The bridge copies the
+  word as typed (PT_TEXT), so "obrigado" is translated, not rewritten to "thanks" first.
+- Same lookup cost as IT<->EN (binary search on SD, one 1 KB line buffer, no heap). The browser engine mounts
+  the six files (`tools/webos-pt/patches/apps__anima__www__local__engine.js.patch`).
+- Not spoken: romaji is not in the pt voice pack, so a Japanese answer falls to "Leia na tela".
+
 ## Remaining limits
 
 The Portuguese corpus is finite and lexical. Unknown synonyms, entities and unsupported relations can

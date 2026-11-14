@@ -1,6 +1,6 @@
 --- a/apps/anima/www/local/engine.js
 +++ b/apps/anima/www/local/engine.js
-@@ -16,6 +16,7 @@
+@@ -16,11 +16,19 @@
  // Flat-index brain: full-corpus recall, RAM-resident. `req` files must be present (L1 core); the
  // rest (learned facts, dictionaries) are best-effort — the cascade abstains gracefully if absent.
  const PACK = [
@@ -8,7 +8,19 @@
    { p: 'data/anima/anima-it-encoder.bin',     req: true  },
    { p: 'data/anima/anima-it-index.bin',       req: true  },
    { p: 'data/anima/commands.it.json',         req: true  },
-@@ -277,7 +278,7 @@
+   { p: 'data/anima/dict-it-en.tsv',           req: false },
+   { p: 'data/anima/dict-en-it.tsv',           req: false },
++  // pt/ja pairs (tools/anima/build_dict_multi.py); Japanese is romaji, pt<->ja pivots through English
++  { p: 'data/anima/dict-pt-en.tsv',           req: false },
++  { p: 'data/anima/dict-en-pt.tsv',           req: false },
++  { p: 'data/anima/dict-en-ja.tsv',           req: false },
++  { p: 'data/anima/dict-ja-en.tsv',           req: false },
++  { p: 'data/anima/dict-pt-ja.tsv',           req: false },
++  { p: 'data/anima/dict-ja-pt.tsv',           req: false },
+   // WHICH-PERSON table (shared surnames -> "which one do you mean?"), read by fseek from /sd like the device
+   // does (anima_person.c). Absent -> no clarify, the cascade answers as before.
+   { p: 'data/anima/anima-person-ambig.bin',   req: false },
+@@ -277,7 +285,7 @@
  export async function fillToolTemplate(out, lang, deps = {}) {
    if (!out || typeof out.reply !== 'string' || !out.reply.includes('{value}')) return out;
    const f = deps.fetch;
@@ -17,7 +29,7 @@
    const arg = out.arg || out.intent || '';
    let value = '';
  
-@@ -498,7 +499,7 @@
+@@ -498,7 +506,7 @@
      // Run the offline cascade. Returns the /api/anima-shaped result object.
      query(text, lang) {
        if (!loaded) throw Object.assign(new Error('ANIMA Local: engine not loaded'), { code: 'ENGINE_NOT_LOADED' });
