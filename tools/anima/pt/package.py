@@ -27,15 +27,23 @@ def main():
                     'apps/dictation/www/asr.js','apps/dictation/www/index.html','apps/dictation/www/i18n.pt.json','web/shell/sw.js']:
         for suffix in ['', '.gz']:
             src=ROOT/(srcname+suffix)
-            dest=(srcname+suffix).replace('/www/','/').replace('web/shell/','www/shell/')
+            dest=(srcname+suffix).replace('web/shell/','www/shell/',1)
             files[dest]=src.read_bytes()
     model=ROOT/'apps/anima/www/vosk/models'
     for src in sorted(model.glob('vosk-model-small-pt-0.3.*')):
-        files['apps/anima/vosk/models/'+src.name]=src.read_bytes()
+        files['apps/anima/www/vosk/models/'+src.name]=src.read_bytes()
     for src in sorted(model.glob('LICENSE-pt.txt*')):
-        files['apps/anima/vosk/models/'+src.name]=src.read_bytes()
+        files['apps/anima/www/vosk/models/'+src.name]=src.read_bytes()
     for suffix in ['', '.prov']:
         files['data/anima/anima-pt-knowledge.bin'+suffix]=(ROOT/('tools/sd-sim/data/anima/anima-pt-knowledge.bin'+suffix)).read_bytes()
+    # These are filesystem paths, not HTTP routes: webfs maps /apps/<id>/x
+    # to /sd/apps/<id>/www/x. Keep www in the SD payload.
+    for required in ['apps/anima/www/voice.js', 'apps/anima/www/vosk/pt-model.js',
+                     'apps/dictation/www/asr.js', 'apps/dictation/www/index.html',
+                     'www/shell/sw.js', 'data/anima/anima-pt-knowledge.bin']:
+        if required not in files: raise RuntimeError('Missing SD path: ' + required)
+    if any(n.startswith('apps/') and '/www/' not in n for n in files):
+        raise RuntimeError('App payload lost its www directory')
     manifest=dict(schema=1,base_webos=json.loads((ROOT/'webos.lock').read_text())['commit'],
                   files={n:dict(bytes=len(b),sha256=hashlib.sha256(b).hexdigest()) for n,b in sorted(files.items())})
     files['pt-offline-manifest.json']=(json.dumps(manifest,indent=2)+'\n').encode()
