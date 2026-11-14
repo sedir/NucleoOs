@@ -26,6 +26,8 @@ Brazilian Portuguese fork (github.com/sedir/NucleoOs). Updates now come from thi
 - **Updates come from this fork**: the browser updater, the native update check, the SD-content installer and the
   rescue page use sedir/NucleoOs and its Pages site, and the firmware trusts this fork's release keys only. Install
   this release once over USB (web flasher or esptool); later releases arrive over Wi-Fi.
+- **Stand-alone installs only**: the image (3.3 MB) no longer fits the M5Launcher app slot (3.06 MB), so this fork is
+  not an M5Launcher guest. `tools/image-size-check.mjs` now fails only past NucleoOS's own slot (3.5 MB).
 
 ## [0.8.7] — 2026-11-09
 

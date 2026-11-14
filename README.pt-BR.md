@@ -71,6 +71,9 @@ O fork tem **releases e instalador próprios**, assinados com as chaves do fork:
 - **Atualizações:** depois de instalado, o aparelho busca novas versões **neste fork** (Configurações ▸ Atualizações),
   nunca no original.
 
+**Sem M5Launcher:** o firmware do fork (3,3 MB) não cabe no espaço de app que o M5Launcher reserva (3,06 MB), então ele
+só se instala sozinho no Cardputer, pelo instalador web ou pelo esptool.
+
 Vindo do NucleoOS original, a primeira instalação precisa ser pelo **cabo USB** (instalador web ou esptool): o
 firmware original só aceita releases assinadas pelo autor original. Daí em diante, as atualizações chegam pelo Wi‑Fi.
 

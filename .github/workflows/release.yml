@@ -89,7 +89,7 @@ jobs:
           target: esp32s3
           path: firmware
 
-      - name: Image fits the M5Launcher app slot
+      - name: Image fits the app slot (own table; M5Launcher slot only warns in this fork)
         run: node tools/image-size-check.mjs firmware/build/nucleoos.bin
 
       - name: Package SD payload + install docs

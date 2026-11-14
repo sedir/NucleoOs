@@ -11,11 +11,16 @@
 //
 //   node tools/image-size-check.mjs [path/to/nucleoos.bin]     (default firmware/build/nucleoos.bin)
 // Exit 1 when over the slot; a warning when under WARN_HEADROOM.
+//
+// pt-BR fork (sedir/NucleoOs): the Portuguese UI catalog, ANIMA pt, RemoCon and Keyboard put the image ~104 KB past the
+// Launcher slot. The fork installs stand-alone only (web flasher / esptool, OWN_SLOT), so the binding budget is the
+// own slot and the Launcher slot is a warning (README.pt-BR.md says the fork is not an M5Launcher guest).
 import { statSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const LAUNCHER_SLOT = 0x310000;            // nucle1/nucle2 on the ADV (M5Launcher 2.9.x)
+const OWN_SLOT = 0x380000;                 // ota_0/ota_1 of NucleoOS's own partition table
 const WARN_HEADROOM = 8 * 1024;
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const bin = process.argv[2] || join(ROOT, 'firmware', 'build', 'nucleoos.bin');
@@ -24,9 +29,14 @@ if (!existsSync(bin)) { console.error(`image-size: ${bin} not found — build th
 const size = statSync(bin).size;
 const free = LAUNCHER_SLOT - size;
 const kb = (n) => (n / 1024).toFixed(1) + ' KB';
-if (free < 0) {
-  console.error(`FAIL  image ${size} B is ${kb(-free)} OVER the M5Launcher app slot (${LAUNCHER_SLOT} B): `
-    + 'it cannot be updated in place on devices installed by M5Launcher. Recover flash (docs/memory-budget.md).');
+const own = OWN_SLOT - size;
+if (own < 0) {
+  console.error(`FAIL  image ${size} B is ${kb(-own)} OVER the NucleoOS app slot (${OWN_SLOT} B). Recover flash (docs/memory-budget.md).`);
   process.exit(1);
+}
+if (free < 0) {
+  console.log(`WARN  image ${size} B is ${kb(-free)} over the M5Launcher app slot (${LAUNCHER_SLOT} B): this fork installs `
+    + `stand-alone only; ${kb(own)} free in its own slot (${OWN_SLOT} B)`);
+  process.exit(0);
 }
 console.log(`${free < WARN_HEADROOM ? 'WARN' : 'OK  '}  image ${size} B, ${kb(free)} free in the M5Launcher slot (${LAUNCHER_SLOT} B)`);
