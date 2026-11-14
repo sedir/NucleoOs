@@ -67,12 +67,19 @@ static void normalize_ascii(const char *in, char *out, int cap)
 
 // Like normalize_ascii but PRESERVES the case of ASCII letters (à->a, À->A): used to recognize
 // all-caps acronyms (USB/GPS) for spelling out. The slug is then always lowercase (the lexer does tolower).
-static void normalize_keepcase(const char *in, char *out, int cap)
+// pt: the verb "é" (is) and the conjunction "e" (and) fold to the same "e" but sound different (/E/ vs /i/):
+// a STANDALONE "é"/"É" becomes the word "eh", voiced "é" by the mandatory pt pack.
+static bool word_byte(unsigned char c) { return isalnum(c) || c >= 0x80; }
+static void normalize_keepcase(const char *in, char *out, int cap, bool pt)
 {
     int o = 0;
     for (int i = 0; in[i] && o < cap - 1; ) {
         unsigned char c = (unsigned char)in[i];
-        if (c == 0xC3 && in[i + 1]) {               // Latin-1 accents: 0x80-0x9F uppercase, 0xA0-0xBF lowercase
+        if (pt && c == 0xC3 && ((unsigned char)in[i + 1] == 0xA9 || (unsigned char)in[i + 1] == 0x89) &&
+            (i == 0 || !word_byte((unsigned char)in[i - 1])) && !word_byte((unsigned char)in[i + 2])) {
+            if (o < cap - 2) { out[o++] = 'e'; out[o++] = 'h'; }
+            i += 2;
+        } else if (c == 0xC3 && in[i + 1]) {               // Latin-1 accents: 0x80-0x9F uppercase, 0xA0-0xBF lowercase
             unsigned char b = (unsigned char)in[i + 1];
             char f = 0; int up = 0;
             if      (b >= 0x80 && b <= 0x85) { f = 'a'; up = 1; } else if (b >= 0xA0 && b <= 0xA5) f = 'a';
@@ -630,7 +637,7 @@ int nucleo_tts_plan(const char *text, const char *lang,
     tts_lang_t lg = tts_lang(lang);   // "en" -> English, "pt" -> Portuguese, otherwise Italian
 
     char norm[1024];
-    normalize_keepcase(text, norm, sizeof(norm));   // case preserved: the lexer flags acronyms (allcaps)
+    normalize_keepcase(text, norm, sizeof(norm), lg == TL_PT);   // case preserved: the lexer flags acronyms (allcaps)
 
     unit_t u[MAX_UNITS];
     int nu = lex_units(norm, u, MAX_UNITS);

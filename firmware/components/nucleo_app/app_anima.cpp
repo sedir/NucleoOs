@@ -1232,8 +1232,8 @@ static bool fill_system_value_pt(const char *arg, char *out, size_t n, time_t no
         else                             snprintf(out, n, "sem conexao");
     } else if (!strcmp(arg, "capabilities")) {
         snprintf(out, n, "Posso dizer hora/data/espaco/RAM/bateria e o estado do Wi-Fi, mudar volume e brilho, abrir os apps do aparelho, "
-                         "criar lembretes e timers e fazer contas. Em portugues entendo os comandos do aparelho; "
-                         "para perguntas gerais respondo melhor online");
+                         "criar lembretes e timers e fazer contas. Offline tambem respondo perguntas de conhecimento "
+                         "(capitais, ciencia, tecnologia, pessoas conhecidas); o que eu nao souber, respondo melhor online");
     } else return false;
     return true;
 }

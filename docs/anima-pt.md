@@ -15,7 +15,7 @@ what ships today.
 | Reply text | ~280 `en ? "..." : "..."` sites in `nucleo_anima/*.c`; ~170 `s_en` sites in `nucleo_app/app_anima.cpp` (UI chrome + `{value}` fill) | flash | a third string at ~450 sites |
 | L1 knowledge (encoder + index) | `models/anima-it-encoder.bin` 3.1 MB (16384x192), `models/anima-it-index.bin` 8.5 MB (AKB2), AKB5 shards 79 MB; whole `models/` 117 MB | SD | a new encoder + index (~11.6 MB SD) trained on a pt corpus that does not exist |
 | Learned cards | `/sd/data/anima/learned/<lang>.jsonl` + `.vec` | per user | grows on its own |
-| Voice (TTS clip packs) | `/sd/data/tts/<lang>/index.bin` + `clips.pcm`, `it` and `en` only (`docs/tts.md`) | not measured here (`deploy/` is not in this clone) | a pt clip pack (numbers 0-99 + phrases), rendered once on the PC |
+| Voice (TTS clip packs) | `/sd/data/tts/<lang>/index.bin` + `clips.pcm`, `it` and `en` only (`docs/tts.md`) | not measured here (`deploy/` is not in this clone) | pt clip pack: 9,664 clips, 298.6 MB on SD, rendered once on the PC (`docs/tts.md`) |
 | Device runtime RAM | heap ~18 KB on the full OS; the `anima-solo` task stack is 26 KB with ~5.6 KB measured headroom (`docs/memory-budget.md`) | | any pt design must add ~0 static RAM |
 
 ## The path chosen: a catalog language (the same idea as `nucleo_tr()` in the UI)
@@ -108,9 +108,11 @@ Host: `npm run anima -- --pt "abre a calculadora"`, the REPL's `/pt`.
 - The web translation from the earlier SD work is recovered in `tools/webos-pt/catalogs/`: 52 current
   namespaces, 4,922 base keys, strict key/placeholder parity. `tools/webos-pt/README.md` describes this
   reproducible edition layer over the pinned upstream, including ANIMA's inline UI and language routing.
-- The pt voice pack is staged locally as a matched `index.bin`/`clips.pcm` pair. It includes the new
-  greetings and seed answers. SD provisioning, deploy staging, write policy and filesystem protection
-  recognize the Portuguese pack. Copying to a device remains a separate explicit deployment action.
+- The pt voice pack is staged locally as a matched `index.bin`/`clips.pcm` pair (9,664 clips, 298.6 MB):
+  reply catalog, greetings, seed answers and a word layer built from the knowledge answers
+  (`tools/nucleo-tts/build_freq_pt.py`), so 1,183 of the 1,194 short knowledge answers are spoken.
+  SD provisioning, deploy staging, write policy and filesystem protection recognize the Portuguese pack.
+  Copying to a device remains a separate explicit deployment action.
 
 Verification commands:
 
@@ -149,8 +151,8 @@ accuracy is limited; synthetic-fixture success is not a real-microphone quality 
 
 The Portuguese corpus is finite and lexical. Unknown synonyms, entities and unsupported relations can
 decline even when a human would infer the intended topic. Existing IT/EN neural retrieval is unchanged.
-The Portuguese voice has no general dictionary/frequency layer, so arbitrary spoken answers can fall back
-to "Leia na tela." Native PTT recognition still uses the device's trained voice templates.
+The Portuguese voice covers the device replies and the knowledge answers up to 220 characters; longer
+answers and words outside the corpus/frequency layer fall back to "Leia na tela." Native PTT recognition still uses the device's trained voice templates.
 
 Known bridge limits: "tempo" means the Weather app, not the clock; command parsing reads the first
 32 words (a literal note/file tail is copied directly, within the output buffer); a command-cued turn

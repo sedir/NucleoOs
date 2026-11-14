@@ -207,28 +207,36 @@ sd	ésse dê
 nucleoos	Núcleo O S
 anima	Ânima
 
-Ola!
+Olá!
 Bom dia!
 Boa tarde!
 Boa noite!
 De nada!
 A raiz quadrada de
-e
-A capital do Brasil e Brasilia.
-A capital da Franca e Paris.
-A capital do Japao e Toquio.
-Santos Dumont foi um pioneiro brasileiro da aviacao.
+A capital do Brasil é Brasília.
+A capital da França é Paris.
+A capital do Japão é Tóquio.
+Santos Dumont foi um pioneiro brasileiro da aviação.
 NucleoOS funciona offline no M5Stack Cardputer.
-A RAM guarda dados e programas em uso; seu conteudo se perde quando a energia e desligada.
-PSRAM e uma memoria RAM externa que gerencia sua propria atualizacao.
-O Cardputer nao tem PSRAM.
-Flash e uma memoria que preserva os dados sem energia.
-Um microcontrolador reune processador, memoria e perifericos em um chip.
-O DNS associa nomes de dominio a enderecos de rede.
-HTTP e um protocolo de troca de recursos entre clientes e servidores.
-HTML descreve a estrutura das paginas da web.
-CSS define a apresentacao visual das paginas da web.
-JSON e um formato de texto para trocar dados estruturados.
-Um LED e um diodo semicondutor que emite luz.
-A fotossintese usa energia da luz para produzir compostos organicos a partir de dioxido de carbono e agua.
-O DNA armazena informacoes geneticas nos seres vivos.
+A RAM guarda dados e programas em uso; seu conteúdo se perde quando a energia é desligada.
+PSRAM é uma memória RAM externa que gerencia sua própria atualização.
+O Cardputer não tem PSRAM.
+Flash é uma memória que preserva os dados sem energia.
+Um microcontrolador reúne processador, memória e periféricos em um chip.
+O DNS associa nomes de domínio a endereços de rede.
+HTTP é um protocolo de troca de recursos entre clientes e servidores.
+HTML descreve a estrutura das páginas da web.
+CSS define a apresentação visual das páginas da web.
+JSON é um formato de texto para trocar dados estruturados.
+Um LED é um diodo semicondutor que emite luz.
+A fotossíntese usa energia da luz para produzir compostos orgânicos a partir de dióxido de carbono e água.
+O DNA armazena informações genéticas nos seres vivos.
+
+# ===== Hardware names in the knowledge answers =====
+m5stack	ême cinco stéque
+m5stamps3	ême cinco stâmp ésse três
+esp32s3	ésse pê trinta e dois ésse três
+esp32	ésse pê trinta e dois
+s3	ésse três
+s2	ésse dois
+o2	ó dois

@@ -63,20 +63,32 @@ Toggle: native Settings ("Voce" / Voice row) + web Settings (AI tab) via `/api/t
   (*"E uma e 30"*, *"Sao duas horas"*, *"Sao vinte e uma e 7"*); `"E uma"`/`"E uma hora"` are lexicon phrases
   voiced from "É uma", so the planner never reads that "E" as the conjunction. ASCII, like the pt reply catalog.
 - **Mathspeak**: `= % ^ +` → *igual a* / *por cento* / *elevado a* / *mais*.
+- **"é" vs "e"**: both fold to `e`, but the verb is /ɛ/ and the conjunction /i/. With `lang` pt,
+  `normalize_keepcase` rewrites a STANDALONE "é"/"É" to the word `eh` (voiced "é"), so knowledge answers
+  ("Um ponteiro é…") say the verb; the clip `e` is voiced from "i". The ASCII device replies ("Hoje e") keep
+  using whole phrases voiced with the accent (`hoje_e` ← "Hoje é"). Other folded homographs (está/esta,
+  nós/nos) still share one clip, voiced from the more frequent spelling.
 - **Call sites**: `app_anima.cpp` `voice_lang()` returns `"pt"` when `nucleo_i18n_lang()` is pt (`speak_result`,
   the TOOL confirmation `say_or`); `fill_system_value_pt` uses the pt time text (screen = voice). The PTT path
-  (`nucleo_voice.c` `VOICE_LANG`) is still it/en.
-- **Pack** (`build_voice.py` `mandatory("pt")` + `lexicon.pt.txt`, no dictionary/freq layer): numbers 0..99,
-  `cem`/`cento`/…/`novecentos`, `mil`, `e`, `virgula`, `menos`, letter names, `read_it` = *"Leia na tela."*; the
-  lexicon is built from `anima_pt.c` (PT_REPLIES fixed parts, PT_TERMS) and the pt `{value}` words. Voice
-  `pt-BR-FranciscaNeural` (`gen_edge.py --voice-pt` to change). 328 clips → `index.bin` 18 KB + `clips.pcm`
-  11.7 MB (24 kHz). Generate into a staging folder, never straight onto the SD tree:
-  `python gen_edge.py --langs pt --no-dict --out <wav dir>` then
+  (`nucleo_voice.c` `VOICE_LANG`) picks pt too.
+- **Pack**, three layers (no dictionary):
+  1. `build_voice.py` `mandatory("pt")`: numbers 0..99, `cem`/`cento`/…/`novecentos`, `mil`, `e` (from "i"),
+     `eh` (from "é"), `virgula`, `menos`, letter names (`lett_x`, plus lone initials `b`..`z`), `read_it` =
+     *"Leia na tela."*;
+  2. `lexicon.pt.txt`: the pt reply catalog (`anima_pt.c` PT_REPLIES fixed parts, PT_TERMS), the pt `{value}`
+     words, small talk and the seed FAQ as whole clips (written WITH accents: the text is what Edge reads);
+  3. `freq.pt.txt` (`build_freq_pt.py`, needs `wordfreq`): every word of the offline pt knowledge answers
+     that fit the 220-char guard (`tools/anima/pt/corpus.jsonl` + `overrides.jsonl`) plus the ~4k most
+     frequent pt forms; per slug the most frequent accented spelling is voiced.
+  Voice `pt-BR-FranciscaNeural` (`gen_edge.py --voice-pt` to change). 9,664 clips → `index.bin` 0.5 MB + `clips.pcm` 298.6 MB (24 kHz).
+  Generate into a staging folder, never straight onto the SD tree:
+  `python build_freq_pt.py`, `python gen_edge.py --langs pt --no-dict --skip-existing --out <wav dir>`, then
   `python build_index.py --in <wav dir>/pt --out build/tts-staging/pt`.
   Check it: `NUCLEO_TTS_DIR=build/tts-staging npm run anima:tts-time` (0/1440) and `… anima:tts-replies`
-  (`tools/anima-host/test-replies.pt.txt`, 57 replies, 0 uncovered).
-- **To verify by ear:** the lone `e` clip (296 ms) — Edge may voice it as the letter "é" instead of the
-  conjunction /i/; it is used between hundreds and the rest and in "9 e 30".
+  (`tools/anima-host/test-replies.pt.txt`, 0 uncovered).
+- **Knowledge answers**: speak_result reads them sentence by sentence (cap 340 chars). With the freq layer, 1,183 of the
+  1,194 knowledge answers under the 220-char guard compose from clips (11 still miss a rare name); the
+  278 longer ones fall to "Leia na tela".
 
 ## File format (on SD: `/sd/data/tts/<lang>/`)
 - `index.bin`: `"NTI1"` | u32 rate | u32 count | count SORTED records `{ char slug[48]; u32 off; u32 len }`.
@@ -151,9 +163,9 @@ sound smoother at the joins (no "tick"). Reversible (just stop calling the decli
 
 ## pt-BR completion validation (2026-11-14)
 
-The locally staged Portuguese voice has 352 clips (about 14.9 MB PCM), including greetings and the
-reviewed Portuguese FAQ. `test-replies.pt.txt` now covers 81 replies. The pack passes every minute of
-the day and all 81 replies without uncovered words. The index builder trims a trailing underscore
+The locally staged Portuguese voice now has 9,664 clips (298.6 MB PCM): mandatory pack, lexicon (reply
+catalog, greetings, reviewed FAQ) and the freq layer. `test-replies.pt.txt` covers 81 replies. The pack
+passes every minute of the day and all 81 replies without uncovered words. The index builder trims a trailing underscore
 after slug truncation, matching the device's `nucleo_tts_full_slug`; otherwise a long phrase whose
 47th byte was a separator could be packed but never found.
 

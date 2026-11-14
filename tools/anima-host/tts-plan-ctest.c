@@ -15,7 +15,7 @@ static const char *MANIFEST[] = {
     "il", "di", "fa", "per_cento", "uguale_a", "elevato", "piu",   // mathspeak IT
     "of", "percent", "equals", "plus",                             // mathspeak EN
     "sao", "horas", "hora", "graus", "de", "e_uma", "e_uma_hora", "meio_dia", "meia_noite",   // Portuguese
-    "duas", "vinte", "uma", "por_cento", "igual_a", "elevado_a", "mais", "o", "resultado",    // pt time + mathspeak
+    "duas", "vinte", "uma", "eh", "um", "ponteiro", "util", "rapido", "por_cento", "igual_a", "elevado_a", "mais", "o", "resultado",    // pt time + mathspeak
     "casa", "via", "sud", "porta",                                 // real words >=3 chars for the decompose boundaries
     // letter clips for acronym spelling (NB: q and z deliberately OMITTED -> "missing letter" test)
     "lett_u", "lett_s", "lett_b", "lett_g", "lett_p", "lett_m", "lett_h", "lett_t", "lett_l",
@@ -132,6 +132,9 @@ int main(void) {
     check("pt negativo",   "pt", "-5 graus",         "C:menos C:n5 C:graus");
     check("pt hora",       "pt", "Sao 9 e 30.",      "C:sao C:n9 C:e C:n30 P:320");
     check("pt uma hora",   "pt", "E uma hora",       "C:e_uma_hora");     // greedy phrase: "É uma hora", not "e" (and)
+    check("pt verbo e",    "pt", "Um ponteiro \xC3\xA9 util e r\xC3\xA1pido", "C:um C:ponteiro C:eh C:util C:e C:rapido");
+    check("pt Caf\xC3\xA9 intacto", "pt", "caf\xC3\xA9", "U");                  // "é" inside a word stays a fold
+    check("it e intatto",  "it", "\xC3\xA9 casa",     "C:e C:casa");               // only pt rewrites the standalone verb
     check("pt meio-dia",   "pt", "Meio-dia e 15",    "C:meio_dia C:e C:n15");
     {   // speak_time pt: exact to the minute, feminine hours as words, never HH:MM
         static const struct { int h, m; const char *want; } T[] = {

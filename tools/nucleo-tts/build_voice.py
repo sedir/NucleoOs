@@ -95,8 +95,13 @@ def mandatory(lang):
     elif lang == "pt":
         for n in range(100): m["n%d" % n] = cardinal_pt(n)
         m.update(PT_HUND)
-        m["mil"]="mil"; m["e"]="e"; m["virgula"]="vírgula"; m["menos"]="menos"
-        for c, name in PT_LETT.items(): m["lett_%s" % c] = name   # acronym spelling
+        m["mil"]="mil"; m["virgula"]="vírgula"; m["menos"]="menos"
+        # "e" (and) is an unstressed /i/ in Brazil: voiced from "i" so Edge never reads it as the letter "é".
+        # "eh" is the verb "é" (is): the planner rewrites a standalone "é" to it (normalize_keepcase).
+        m["e"]="i"; m["eh"]="é"
+        for c, name in PT_LETT.items():
+            m["lett_%s" % c] = name                               # acronym spelling
+            if c not in "aeo": m[c] = name                        # a lone initial ("J. R. R. Tolkien", "vitamina C")
         m["read_it"] = "Leia na tela."
     else:
         for n in range(100): m["n%d" % n] = cardinal_it(n)
