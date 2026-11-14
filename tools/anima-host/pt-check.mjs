@@ -92,6 +92,13 @@ const CASES = [
   ['pt', 'quanto é 15 por cento de 200',       'percent',        null,           '15% de 200 = 30.'],
   ['pt', 'converte 10 quilômetros para milhas','convert',        null,           '10 km = 6.21371 milhas.'],
   ['pt', 'converte 70 quilos para libras',     'convert',        null,           '70 kg = 154.324 libras.'],
+  // a number + two units is a conversion even without "converte" (device bug: "quantos km sao 13 milhas" -> "Nao sei")
+  ['pt', 'quantos km sao 13 milhas',           'convert',        null,           '13 milhas = 20.9215 km.'],
+  ['pt', 'quantos km são 13 milhas?',          'convert',        null,           '13 milhas = 20.9215 km.'],
+  ['pt', '13 milhas em km',                    'convert',        null,           '13 milhas = 20.9215 km.'],
+  ['pt', 'quantas milhas sao 10 km',           'convert',        null,           '10 km = 6.21371 milhas.'],
+  ['pt', 'quanto é 5 libras em kg',            'convert',        null,           '5 libras = 2.26796 kg.'],
+  ['pt', '20 cm em polegadas',                 'convert',        null,           '20 cm = 7.87402 polegadas.'],
   ['pt', 'quantos dias faltam para o natal',   'date',           null,           /^(Faltam \d+ dias para|Falta 1 dia para) 25 de dezembro de \d{4}\.|^25 de dezembro de \d{4} e hoje\.$/],
   ['pt', 'que dia cai o natal',                'date',           null,           /^25 de dezembro de \d{4} cai em [a-z-]+\.$/],
   ['pt', 'que dia é amanhã',                   'date',           null,           /^Amanha e [a-z-]+, \d{1,2} de [a-z]+ de \d{4}\.$/],
@@ -109,6 +116,7 @@ const NOT_ACTIONS = [
   'o que é fotossíntese',
   'qual a capital da França',
   'eu gosto de música brasileira',
+  'eu corri 5 km hoje',                         // one unit: a statement, not a conversion
 ];
 
 function run(lang, queries) {

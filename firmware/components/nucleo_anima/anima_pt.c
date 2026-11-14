@@ -26,11 +26,14 @@
 // flags: PT_CUE   the entry names a device command/state (verb, setting, reading, app, tool) -> bridge the line;
 //        PT_TEXT  after this entry the line is the USER'S TEXT (a reminder, a note, a file name): words are copied
 //                 as typed, accents included, so "me lembra de ligar para a mae" keeps "ligar para a mae";
-//        PT_KEEP  translated even inside the user's text (time words the tool must still parse: "amanha").
+//        PT_KEEP  translated even inside the user's text (time words the tool must still parse: "amanha");
+//        PT_UNIT  a measurement unit: a line with a number and TWO units is a conversion ("quantos km sao
+//                 13 milhas", "13 milhas em km") even with no conversion verb.
 // Longest match wins, so phrases ("que horas sao") must simply be listed; order does not matter.
 #define PT_CUE  1
 #define PT_TEXT 2
 #define PT_KEEP 4
+#define PT_UNIT 8
 typedef struct { const char *pt; const char *en; unsigned char flags; } a_pt_word_t;
 
 static const a_pt_word_t PT_WORDS[] = {
@@ -267,27 +270,38 @@ static const a_pt_word_t PT_WORDS[] = {
     { "converte",             "convert", PT_CUE },
     { "converta",             "convert", PT_CUE },
     { "converter",            "convert", PT_CUE },
+    { "quilometros",          "km", PT_UNIT },
+    { "quilometro",           "km", PT_UNIT },
+    { "metros",               "meters", PT_UNIT },
+    { "metro",                "meter", PT_UNIT },
+    { "centimetros",          "centimeters", PT_UNIT },
+    { "milhas",               "miles", PT_UNIT },
+    { "milha",                "mile", PT_UNIT },
+    { "pes",                  "feet", PT_UNIT },
+    { "polegadas",            "inches", PT_UNIT },
+    { "quilos",               "kg", PT_UNIT },
+    { "quilo",                "kg", PT_UNIT },
+    { "gramas",               "grams", PT_UNIT },
+    { "libras",               "pounds", PT_UNIT },
+    { "litros",               "liters", PT_UNIT },
+    { "litro",                "liter", PT_UNIT },
+    { "galoes",               "gallons", PT_UNIT },
+    { "graus celsius",        "celsius", PT_UNIT },
+    { "graus fahrenheit",     "fahrenheit", PT_UNIT },
+    { "celsius",              "celsius", PT_UNIT },
+    { "fahrenheit",           "fahrenheit", PT_UNIT },
+    { "km",                   "km", PT_UNIT },   // abbreviations: same word in English, flagged as units
+    { "kg",                   "kg", PT_UNIT },
+    { "cm",                   "cm", PT_UNIT },
+    { "mm",                   "mm", PT_UNIT },
+    { "mi",                   "miles", PT_UNIT },
+    { "lb",                   "pounds", PT_UNIT },
+    { "lbs",                  "pounds", PT_UNIT },
+    { "oz",                   "ounces", PT_UNIT },
+    { "onca",                 "ounce", PT_UNIT },
+    { "oncas",                "ounces", PT_UNIT },
+    { "ml",                   "ml", PT_UNIT },
     { "quantos quilometros sao","how many km is", PT_CUE },
-    { "quilometros",          "km", 0 },
-    { "quilometro",           "km", 0 },
-    { "metros",               "meters", 0 },
-    { "metro",                "meter", 0 },
-    { "centimetros",          "centimeters", 0 },
-    { "milhas",               "miles", 0 },
-    { "milha",                "mile", 0 },
-    { "pes",                  "feet", 0 },
-    { "polegadas",            "inches", 0 },
-    { "quilos",               "kg", 0 },
-    { "quilo",                "kg", 0 },
-    { "gramas",               "grams", 0 },
-    { "libras",               "pounds", 0 },
-    { "litros",               "liters", 0 },
-    { "litro",                "liter", 0 },
-    { "galoes",               "gallons", 0 },
-    { "graus celsius",        "celsius", 0 },
-    { "graus fahrenheit",     "fahrenheit", 0 },
-    { "celsius",              "celsius", 0 },
-    { "fahrenheit",           "fahrenheit", 0 },
     // --- calendar questions --------------------------------------------------------------------------
     { "quantos dias faltam para", "how many days until", PT_CUE },
     { "quantos dias faltam pro",  "how many days until", PT_CUE },
@@ -316,6 +330,7 @@ static const a_pt_word_t PT_WORDS[] = {
     { "na",                   "to", 0 },
     { "e",                    "is", 0 },
     { "esta",                 "is", 0 },
+    { "sao",                  "is", 0 },
     { "tem",                  "", 0 },
     { "resta",                "", 0 },
     { "sobrou",               "", 0 },
@@ -323,6 +338,7 @@ static const a_pt_word_t PT_WORDS[] = {
     { "quanto",               "how much", 0 },
     { "quanta",               "how much", 0 },
     { "quantos",              "how many", 0 },
+    { "quantas",              "how many", 0 },
     { "agora",                "now", 0 },
     { "um pouco",             "", 0 },
     { "mais",                 "more", 0 },
@@ -488,7 +504,7 @@ bool a_pt_bridge(const char *in, char *out, size_t cap)
     char num[12];
     if (!in || !out || cap < 2) return false;
     int nw = pt_split(in, w);
-    size_t n = 0; bool cue = false, text = false, literal_text = false;
+    size_t n = 0; bool cue = false, text = false, literal_text = false, has_num = false; int units = 0;
     for (int i = 0; i < nw; ) {
         // A note/file body is user data, including numbers, punctuation and
         // spacing. Only reminder frames continue parsing a date/time suffix.
@@ -513,6 +529,7 @@ bool a_pt_bridge(const char *in, char *out, size_t cap)
             if (best) {
                 e = best->en; el = strlen(e); used = bu;
                 if (best->flags & PT_CUE) cue = true;
+                if ((best->flags & PT_UNIT) && !text) units++;
                 if (best->flags & PT_TEXT) {
                     text = true;
                     literal_text = strncmp(best->en, "remind me", 9) != 0;
@@ -520,6 +537,7 @@ bool a_pt_bridge(const char *in, char *out, size_t cap)
             } else if (text) { e = w[i].raw; el = w[i].rawlen; }        // as typed, accents kept
             else             { e = w[i].f;   el = strlen(w[i].f); }
         }
+        for (int k = i; k < i + used && k < nw; k++) if (pt_isnum(&w[k])) has_num = true;
         i += used;
         if (el == 0) continue;                                           // deleted glue ("por favor")
         if (n && n + 1 < cap) out[n++] = ' ';
@@ -527,7 +545,7 @@ bool a_pt_bridge(const char *in, char *out, size_t cap)
         memcpy(out + n, e, el); n += el;
     }
     out[n] = 0;
-    return cue;
+    return cue || (has_num && units >= 2);                               // "13 milhas em km": a conversion
 }
 
 // Small, reviewed Portuguese seed corpus. Exact complete questions only: an
