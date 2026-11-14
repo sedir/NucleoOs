@@ -9,7 +9,7 @@
 //
 //   node tools/anima-host/pt-check.mjs [--show]
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, copyFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -17,6 +17,15 @@ const here = dirname(fileURLToPath(import.meta.url));
 const exe  = join(here, 'build', 'anima.exe');
 if (!existsSync(exe)) { console.error('anima.exe missing — run `npm run anima:build`.'); process.exit(2); }
 const show = process.argv.includes('--show');
+
+// The translation cases read the offline dictionaries from the harness's SD tree, an untracked fixture (a fresh
+// clone or CI has none). Place the tracked copies from tools/sd-sim, as knowledge.test.mjs does for its pack.
+{
+  const src = join(here, '..', 'sd-sim', 'data', 'anima'), dst = join(here, 'sd', 'data', 'anima');
+  mkdirSync(dst, { recursive: true });
+  for (const p of ['it-en', 'en-it', 'pt-en', 'en-pt', 'en-ja', 'ja-en', 'pt-ja', 'ja-pt'])
+    if (existsSync(join(src, `dict-${p}.tsv`))) copyFileSync(join(src, `dict-${p}.tsv`), join(dst, `dict-${p}.tsv`));
+}
 
 // [lang, query, intent, arg, reply, content?]  (null = not checked; reply/content may be a RegExp).
 // content = the tool payload the device writes (calendar entry, note body): the user's own words must survive.
