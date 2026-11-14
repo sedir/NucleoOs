@@ -12,7 +12,8 @@
 # The build stamps a fingerprint of its inputs into the module (engine-src.mjs); parity.mjs — an entry
 # of `npm run anima:gate` — fails while the stamped id differs from the sources on disk.
 #
-# Output: apps/anima/www/local/anima-local.{mjs,wasm} + their .gz twins (the device serves .gz first,
+# Output: build/anima-local/anima-local.{mjs,wasm}; run npm run webos:pt to materialize the web artifacts.
+# Staged artifacts + their .gz twins (the device serves .gz first,
 # so a stale twin would ship the old brain). The .mjs loads via import() in the browser AND in Node.
 #
 # -DANIMA_HOST, exactly like the host harness: with no env vars set it uses the SAME default gates as the
@@ -23,7 +24,7 @@
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
 $repo = (Resolve-Path (Join-Path $here '..\..\..')).Path
-$out  = Join-Path $repo 'apps\anima\www\local'
+$out  = Join-Path $repo 'build\anima-local'
 $fw   = Join-Path $repo 'firmware\components\nucleo_anima'
 $host_ = Join-Path $repo 'tools\anima-host'
 New-Item -ItemType Directory -Force -Path $out | Out-Null

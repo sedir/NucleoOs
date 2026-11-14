@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "source": "Portuguese catalogs recovered from the 2026-11-10 translation; native/device integration maintained here.",
+  "patches": [
+    {
+      "path": "web/shell/nucleo-langs.js",
+      "patch": "patches/web__shell__nucleo-langs.js.patch",
+      "before": "bba1409d57f2fad87181cdfaa1baed11c3b1c43600f60a08670d4cb3222f05f8",
+      "after": "2fc0c025e50405eaeb8cf2fb23d7184b555e81ab47f58537011e67312f57d6ba"
+    },
+    {
+      "path": "web/shell/i18n/coverage.json",
+      "patch": "patches/web__shell__i18n__coverage.json.patch",
+      "before": "5f8063879f40d9db4bc66b8492292f0bab9fe5be1c0f658ef29d059a0aaab900",
+      "after": "6ef7c3bc95b989bb5b9f5920cc78c737275520a9bffc5378dd14e0e93524725f"
+    },
+    {
+      "path": "web/shell/nucleo-app.js",
+      "patch": "patches/web__shell__nucleo-app.js.patch",
+      "before": "176abda49e2b1026db2c43e9b42ad0522c4a9a4c6fa5e48216db9a5b6372c088",
+      "after": "cdfcfa3519ca930507ea0453a8fda946322dde4ba4217111fa9a4ad7ae3ded0d"
+    },
+    {
+      "path": "web/shell/sw.js",
+      "patch": "patches/web__shell__sw.js.patch",
+      "before": "6b90180e840bc2e5244060d506a01aa0a3292fcea939adf509bba4a4848e35f2",
+      "after": "018fbfedbdb4c772efe3fe4e65dffcd55d64720ebab0ca03c7c9c443f2fe0a34"
+    },
+    {
+      "path": "apps/anima/www/voice.js",
+      "patch": "patches/apps__anima__www__voice.js.patch",
+      "before": "fe508f436a4c7ac773392a1cfa185989fb21a6d46c70fabeab62a6e54af6db20",
+      "after": "a02cc060afeace26545bb3c690537a2d94a89fb37fb2dc953a73186af7b152b8"
+    },
+    {
+      "path": "apps/anima/www/local/engine.js",
+      "patch": "patches/apps__anima__www__local__engine.js.patch",
+      "before": "104809d7cd78a14abf4991e6190f84e6f181d802a4bbfbdab5a122642290cfcd",
+      "after": "30d594c8818c7657d4aae1b7e4083b7e32d9d64c790a4fd62980c0eb7507a635"
+    },
+    {
+      "path": "apps/anima/www/contextkit.js",
+      "patch": "patches/apps__anima__www__contextkit.js.patch",
+      "before": "cd23d6878aa3916714c9f6b43cd3ec4e2c3eb5e62d6c945bd047aada89ee9169",
+      "after": "e92f24b303e76976bc8085be822af5ff461fd7a250862e8d42774c788b5f3848"
+    },
+    {
+      "path": "apps/anima/www/local/cascade.js",
+      "patch": "patches/apps__anima__www__local__cascade.js.patch",
+      "before": "c58a6474ca4c62c91089c44e380797767a3cb4e11db8df62df451eb1a47ac640",
+      "after": "7f8d2bf3802176c5d180839f0fdf8a06dac725285b294cf8a248110e9f732661"
+    },
+    {
+      "path": "apps/anima/www/local/weather.js",
+      "patch": "patches/apps__anima__www__local__weather.js.patch",
+      "before": "4bb1de953d6c9ba8be55402c278e5e8ec114e437d090417e0c65f5f7923a927b",
+      "after": "467844e5317cdd0ba0f34da6da60bad5b99698ae582cd93df90130ec845f1908"
+    },
+    {
+      "path": "apps/anima/www/index.html",
+      "patch": "patches/apps__anima__www__index.html.patch",
+      "before": "b445d421497c1b88ed38e5466ff69d433d53e1316adfe75a973cd551f6a508f3",
+      "after": "bc2be5996993d5440b69e1418d190e705e1265b3fc6a148d163afc27e5619b0b"
+    }
+  ]
+}

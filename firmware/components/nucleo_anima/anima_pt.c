@@ -33,6 +33,21 @@
 typedef struct { const char *pt; const char *en; unsigned char flags; } a_pt_word_t;
 
 static const a_pt_word_t PT_WORDS[] = {
+    { "obrigado", "thanks", PT_CUE },
+    { "obrigada", "thanks", PT_CUE },
+    { "muito obrigado", "thank you", PT_CUE },
+    { "muito obrigada", "thank you", PT_CUE },
+    { "quanto de memoria ram esta livre", "how much free ram", PT_CUE },
+    { "qual a memoria livre", "how much free ram", PT_CUE },
+    { "quanto de ram livre", "how much free ram", PT_CUE },
+    { "quanta ram livre tenho", "how much free ram", PT_CUE },
+    { "memoria livre", "free ram", PT_CUE },
+    { "livre", "free", 0 },
+    { "ha quanto tempo ligado", "what is your uptime", PT_CUE },
+    { "ha quanto tempo esta ligado", "what is your uptime", PT_CUE },
+    { "qual a minha rede", "what network am i on", PT_CUE },
+    { "qual meu ip", "what is my ip", PT_CUE },
+    { "o que voce faz", "what can you do", PT_CUE },
     // --- time / date / readings ---------------------------------------------------------------------
     { "que horas sao",        "what time is it", 1 },
     { "que hora e",           "what time is it", 1 },
@@ -381,18 +396,36 @@ static int pt_match_words(const pt_tok_t *w, int n, int i, const char *pt)
     return used;
 }
 
-// Small Portuguese number words -> value (0 = not one).
+// Portuguese cardinal atoms; -1 means this is not a number.
 static int pt_numword(const char *f)
 {
     static const struct { const char *w; int v; } N[] = {
         {"um",1},{"uma",1},{"dois",2},{"duas",2},{"tres",3},{"quatro",4},{"cinco",5},{"seis",6},{"sete",7},
         {"oito",8},{"nove",9},{"dez",10},{"onze",11},{"doze",12},{"treze",13},{"quatorze",14},{"catorze",14},
         {"quinze",15},{"dezesseis",16},{"dezessete",17},{"dezoito",18},{"dezenove",19},{"vinte",20},{"trinta",30},
-        {"quarenta",40},{"quarenta e cinco",45},{"cinquenta",50},{"sessenta",60},{"noventa",90},{"cem",100} };
+        {"quarenta",40},{"cinquenta",50},{"sessenta",60},{"setenta",70},{"oitenta",80},{"noventa",90},
+        {"zero",0},{"cem",100},{"cento",100},{"duzentos",200},{"trezentos",300},{"quatrocentos",400},
+        {"quinhentos",500},{"seiscentos",600},{"setecentos",700},{"oitocentos",800},{"novecentos",900} };
     for (size_t i = 0; i < sizeof N / sizeof N[0]; i++) if (!strcmp(N[i].w, f)) return N[i].v;
-    return 0;
+    return -1;
 }
-static bool pt_isnum(const pt_tok_t *t) { return isdigit((unsigned char)t->f[0]) || pt_numword(t->f); }
+static bool pt_isnum(const pt_tok_t *t) { return isdigit((unsigned char)t->f[0]) || pt_numword(t->f) >= 0; }
+
+// Consume a whole cardinal before interpreting its unit. Treating only the last word of
+// "vinte e cinco minutos" as a number silently scheduled FIVE minutes instead of 25.
+static int pt_number(const pt_tok_t *w, int n, int i, int *used)
+{
+    *used = 1;
+    int value = pt_numword(w[i].f);
+    if (value < 0) return -1;
+    int last = value;
+    while (i + *used + 1 < n && !strcmp(w[i + *used].f, "e")) {
+        int next = pt_numword(w[i + *used + 1].f);
+        if (next <= 0 || !((last >= 100 && next < 100) || (last >= 20 && last < 100 && next < 10))) break;
+        value += next; last = next; *used += 2;
+    }
+    return value;
+}
 
 // A time unit after a number -> its English word ("5 horas" -> "5 hours"); NULL if not a unit.
 static const char *pt_unit(const char *f)
@@ -424,16 +457,20 @@ static const char *pt_context(const pt_tok_t *w, int n, int i, int *used, char *
     if ((!strcmp(f, "para") || !strcmp(f, "ate")) && i + 2 < n && !strcmp(w[i + 1].f, "as") && pt_isnum(&w[i + 2])) { *used = 2; return "at"; }
     if ((!strcmp(f, "as") || !strcmp(f, "a")) && next_num && !(i + 2 < n && pt_unit(w[i + 2].f))) return "at";
     // "daqui a 5 minutos" / "em 5 minutos" -> "in 5 minutes"; "de/por/durante 5 minutos" -> "for 5 minutes"
-    bool num_unit = next_num && i + 2 < n && pt_unit(w[i + 2].f);
+    int next_used = 1;
+    if (next_num) pt_number(w, n, i + 1, &next_used);
+    bool num_unit = next_num && i + 1 + next_used < n && pt_unit(w[i + 1 + next_used].f);
     if (!strcmp(f, "daqui") && i + 1 < n && !strcmp(w[i + 1].f, "a")) { *used = 2; return "in"; }
     if (!strcmp(f, "dentro") && i + 1 < n && !strcmp(w[i + 1].f, "de")) { *used = 2; return "in"; }
     if (num_unit && !strcmp(f, "em")) return "in";
     if (num_unit && (!strcmp(f, "de") || !strcmp(f, "por") || !strcmp(f, "durante"))) return "for";
     // a number word before a unit or next to an operator -> digits ("cinco minutos" -> "5 minutes")
-    int v = pt_numword(f);
-    if (v && ((i + 1 < n && (pt_unit(w[i + 1].f) || !strcmp(w[i + 1].f, "vezes") || !strcmp(w[i + 1].f, "mais") ||
-                              !strcmp(w[i + 1].f, "menos"))) || (i > 0 && !strcmp(w[i - 1].f, "as")))) {
-        snprintf(num, numcap, "%d", v); return num;
+    int number_used = 1;
+    int v = pt_number(w, n, i, &number_used);
+    int after = i + number_used;
+    if (v >= 0 && ((after < n && (pt_unit(w[after].f) || !strcmp(w[after].f, "vezes") || !strcmp(w[after].f, "mais") ||
+                              !strcmp(w[after].f, "menos"))) || (i > 0 && !strcmp(w[i - 1].f, "as")))) {
+        *used = number_used; snprintf(num, numcap, "%d", v); return num;
     }
     if (prev_num) { const char *u = pt_unit(f); if (u) return u; }
     // arithmetic between two numbers: "12 mais 3", "10 menos 4", "6 x 7"
@@ -450,8 +487,18 @@ bool a_pt_bridge(const char *in, char *out, size_t cap)
     char num[12];
     if (!in || !out || cap < 2) return false;
     int nw = pt_split(in, w);
-    size_t n = 0; bool cue = false, text = false;
+    size_t n = 0; bool cue = false, text = false, literal_text = false;
     for (int i = 0; i < nw; ) {
+        // A note/file body is user data, including numbers, punctuation and
+        // spacing. Only reminder frames continue parsing a date/time suffix.
+        if (literal_text) {
+            const char *tail = w[i].raw;
+            size_t len = strlen(tail);
+            if (n && n + 1 < cap) out[n++] = ' ';
+            if (len >= cap - n) len = cap - n - 1;
+            memcpy(out + n, tail, len); n += len;
+            break;
+        }
         const char *e = NULL; size_t el = 0; int used = 1;
         const char *c = pt_context(w, nw, i, &used, num, sizeof num);
         if (c) { e = c; el = strlen(c); }
@@ -465,7 +512,10 @@ bool a_pt_bridge(const char *in, char *out, size_t cap)
             if (best) {
                 e = best->en; el = strlen(e); used = bu;
                 if (best->flags & PT_CUE) cue = true;
-                if (best->flags & PT_TEXT) text = true;
+                if (best->flags & PT_TEXT) {
+                    text = true;
+                    literal_text = strncmp(best->en, "remind me", 9) != 0;
+                }
             } else if (text) { e = w[i].raw; el = w[i].rawlen; }        // as typed, accents kept
             else             { e = w[i].f;   el = strlen(w[i].f); }
         }
@@ -479,6 +529,60 @@ bool a_pt_bridge(const char *in, char *out, size_t cap)
     return cue;
 }
 
+// Small, reviewed Portuguese seed corpus. Exact complete questions only: an
+// unknown subject must never borrow a nearby fact. The larger semantic corpus
+// remains IT/EN; these seeds need no encoder, SD reads, heap or static RAM.
+static const struct { const char *q, *en, *pt; } PT_KNOWLEDGE[] = {
+    { "qual a capital do brasil", "Brazil's capital is Brasilia.", "A capital do Brasil e Brasilia." },
+    { "qual e a capital do brasil", "Brazil's capital is Brasilia.", "A capital do Brasil e Brasilia." },
+    { "qual a capital da franca", "France's capital is Paris.", "A capital da Franca e Paris." },
+    { "qual a capital do japao", "Japan's capital is Tokyo.", "A capital do Japao e Toquio." },
+    { "quem foi santos dumont", "Santos Dumont was a Brazilian aviation pioneer.", "Santos Dumont foi um pioneiro brasileiro da aviacao." },
+    { "o que e nucleoos", "NucleoOS runs offline on the M5Stack Cardputer.", "NucleoOS funciona offline no M5Stack Cardputer." },
+    { "o que e ram", "RAM holds data and programs while a device runs; its contents are lost when power is removed.", "A RAM guarda dados e programas em uso; seu conteudo se perde quando a energia e desligada." },
+    { "o que e psram", "PSRAM is external RAM that manages its own refresh.", "PSRAM e uma memoria RAM externa que gerencia sua propria atualizacao." },
+    { "o cardputer tem psram", "The Cardputer has no PSRAM.", "O Cardputer nao tem PSRAM." },
+    { "o que e flash", "Flash is memory that keeps its contents without power.", "Flash e uma memoria que preserva os dados sem energia." },
+    { "o que e um microcontrolador", "A microcontroller combines a processor, memory and peripherals on one chip.", "Um microcontrolador reune processador, memoria e perifericos em um chip." },
+    { "o que e dns", "DNS maps domain names to network addresses.", "O DNS associa nomes de dominio a enderecos de rede." },
+    { "o que e http", "HTTP is a protocol for exchanging resources between clients and servers.", "HTTP e um protocolo de troca de recursos entre clientes e servidores." },
+    { "o que e html", "HTML describes the structure of web pages.", "HTML descreve a estrutura das paginas da web." },
+    { "o que e css", "CSS describes how web pages are presented.", "CSS define a apresentacao visual das paginas da web." },
+    { "o que e json", "JSON is a text format for exchanging structured data.", "JSON e um formato de texto para trocar dados estruturados." },
+    { "o que e um led", "An LED is a semiconductor diode that emits light.", "Um LED e um diodo semicondutor que emite luz." },
+    { "o que e fotossintese", "Photosynthesis uses light energy to produce organic compounds from carbon dioxide and water.", "A fotossintese usa energia da luz para produzir compostos organicos a partir de dioxido de carbono e agua." },
+    { "o que e dna", "DNA stores genetic information in living organisms.", "O DNA armazena informacoes geneticas nos seres vivos." },
+};
+
+bool a_pt_smalltalk(const char *in, anima_result_t *out)
+{
+    pt_tok_t w[PT_MAXW];
+    int n = pt_split(in, w);
+    static const struct { const char *q, *reply; } rows[] = {
+        { "oi", "Hello!" }, { "ola", "Hello!" }, { "bom dia", "Good morning!" },
+        { "boa tarde", "Good afternoon!" }, { "boa noite", "Good evening!" },
+    };
+    for (size_t i = 0; i < sizeof rows / sizeof rows[0]; i++) {
+        if (n < 1 || pt_match_words(w, n, 0, rows[i].q) != n) continue;
+        memset(out, 0, sizeof *out);
+        out->tier = ANIMA_TIER_COMMAND; out->action = ANIMA_ACT_ANSWER; out->confidence = 100;
+        snprintf(out->intent, sizeof out->intent, "greeting");
+        snprintf(out->state, sizeof out->state, "idle");
+        snprintf(out->reply, sizeof out->reply, "%s", rows[i].reply);
+        return true;
+    }
+    for (size_t i = 0; i < sizeof PT_KNOWLEDGE / sizeof PT_KNOWLEDGE[0]; i++) {
+        if (n < 1 || pt_match_words(w, n, 0, PT_KNOWLEDGE[i].q) != n) continue;
+        memset(out, 0, sizeof *out);
+        out->tier = ANIMA_TIER_FACT; out->action = ANIMA_ACT_ANSWER; out->confidence = 100;
+        snprintf(out->intent, sizeof out->intent, "knowledge");
+        snprintf(out->state, sizeof out->state, "idle");
+        snprintf(out->reply, sizeof out->reply, "%s", PT_KNOWLEDGE[i].en);
+        return true;
+    }
+    return false;
+}
+
 // ---------------------------------------------------------------------------------------------------------
 // 2. Reply catalog
 // ---------------------------------------------------------------------------------------------------------
@@ -488,6 +592,12 @@ bool a_pt_bridge(const char *in, char *out, size_t cap)
 typedef struct { const char *intent; const char *en; const char *pt; } a_pt_reply_t;
 
 static const a_pt_reply_t PT_REPLIES[] = {
+    { NULL, "Hello!", "Ola!" },
+    { NULL, "Good morning!", "Bom dia!" },
+    { NULL, "Good afternoon!", "Boa tarde!" },
+    { NULL, "Good evening!", "Boa noite!" },
+    { NULL, "You're welcome!", "De nada!" },
+    { "calc", "sqrt(%s) = %s.", "A raiz quadrada de %1 e %2." },
     { NULL,       "Opening %s.",                     "Abrindo %1." },
     { NULL,       "Closing %s.",                     "Fechando %1." },
     { NULL,       "Which one — %s or %s?",           "Qual delas: %1 ou %2?" },
@@ -623,6 +733,14 @@ bool a_pt_reply(const char *intent, char *reply, size_t cap)
         g_anima_pt_miss = false;
 #endif
         snprintf(reply, cap, "%s", out);
+        return true;
+    }
+    for (size_t i = 0; i < sizeof PT_KNOWLEDGE / sizeof PT_KNOWLEDGE[0]; i++) {
+        if (strcmp(reply, PT_KNOWLEDGE[i].en)) continue;
+        snprintf(reply, cap, "%s", PT_KNOWLEDGE[i].pt);
+#ifdef ANIMA_HOST
+        g_anima_pt_miss = false;
+#endif
         return true;
     }
     return false;

@@ -95,6 +95,7 @@ bool sdc_path_writable(const char *path)
     // release that ships them must land where the user's own data/tts/ runtime cache (.cfg/.wav) does not.
     if (under(path, "data/tts/it/")) return true;
     if (under(path, "data/tts/en/")) return true;
+    if (under(path, "data/tts/pt/")) return true;
 
     // Wallpapers and the evil-portal page templates.
     if (under(path, "wallpapers/")) return true;

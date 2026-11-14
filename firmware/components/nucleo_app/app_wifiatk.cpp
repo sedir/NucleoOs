@@ -198,17 +198,17 @@ static void draw_consent(int top, int h)
         "permesso scritto (CTF, audit).",
     };
     const char *lines_en[] = {
-        "Floods deauth/disassoc",
-        "frames at the chosen nets:",
-        "knocks clients off the AP.",
-        "",
-        "Your own networks or with",
-        "written permission (CTF, audit).",
+        I18N_EN("Floods deauth/disassoc", "Inonda di frame deauth/"),
+        I18N_EN("frames at the chosen nets:", "disassoc le reti scelte:"),
+        I18N_EN("knocks clients off the AP.", "scollega i client dall'AP."),
+        I18N_EN("", ""),
+        I18N_EN("Your own networks or with", "Solo su reti tue o con"),
+        I18N_EN("written permission (CTF, audit).", "permesso scritto (CTF, audit)."),
     };
     const char *const *lines = nucleo_i18n_is_it() ? lines_it : lines_en;
     unsigned short cols[] = { FG, FG, FG, BG, MUTED, MUTED };
     d.setTextSize(1);
-    for (int i = 0; i < 6; i++) { d.setTextColor(cols[i], BG); d.setCursor(10, 52 + i * 11); d.print(lines[i]); }
+    for (int i = 0; i < 6; i++) { d.setTextColor(cols[i], BG); d.setCursor(10, 52 + i * 11); d.print(nucleo_tr_en(lines[i])); }
 }
 
 static void draw_busy(const char *title, const char *msg, int h)
@@ -338,7 +338,7 @@ static const char *GUIDE_HEAD_IT[GUIDE_PAGES] = {
     "Come funziona", "Leggere i dati", "Usarla meglio", "Limiti reali", "Comandi"
 };
 static const char *GUIDE_HEAD_EN[GUIDE_PAGES] = {
-    "How it works", "Reading the data", "Using it better", "Real limits", "Keys"
+    I18N_EN("How it works", "Come funziona"), I18N_EN("Reading the data", "Leggere i dati"), I18N_EN("Using it better", "Usarla meglio"), I18N_EN("Real limits", "Limiti reali"), I18N_EN("Keys", "Comandi")
 };
 #define GUIDE_HEAD (nucleo_i18n_is_it() ? GUIDE_HEAD_IT : GUIDE_HEAD_EN)
 static const char *GUIDE_BODY_IT[GUIDE_PAGES][6] = {
@@ -374,36 +374,36 @@ static const char *GUIDE_BODY_IT[GUIDE_PAGES][6] = {
       "scritto: CTF / audit." },
 };
 static const char *GUIDE_BODY_EN[GUIDE_PAGES][6] = {
-    { "Knocks clients off an AP",
-      "with 802.11 deauth frames.",
-      "Sniffs the real clients and",
-      "hits them ONE BY ONE (unicast)",
-      "+ broadcast: more effective",
-      "than broadcast alone." },
-    { "FRAME sent  KICK kicked",
-      "att on air  rec reconnected",
-      "rec rising = the deauth landed",
-      "inj% TX health (low = the",
-      "chip drops: short range / KO)",
-      "Good: KICK/rec up, att -> 0" },
-    { "Pick 1 AP with clients:",
-      "more targeted than ALL.",
-      "Blue dot = WPA3/OWE immune,",
-      "ALL skips them on its own.",
-      "Stay close. Give it time: the",
-      "clients surface as you sniff." },
-    { "2.4GHz open/WPA2: disconnects",
-      "and forces reconnects (see rec).",
-      "WPA3/PMF: deauth ignored, uses",
-      "CSA channel-switch (beacons not",
-      "protected) - effect varies.",
-      "Frames at 1Mbps for max range." },
-    { "up/dn  pick target",
-      "R       rescan",
-      "enter   start / stop",
-      "esc     leave on (bg)",
-      "Your own networks or with written",
-      "permission: CTF / audit." },
+    { I18N_EN("Knocks clients off an AP", "Sgancia i client da un AP"),
+      I18N_EN("with 802.11 deauth frames.", "con frame 802.11 deauth."),
+      I18N_EN("Sniffs the real clients and", "Sniffa i client reali e li"),
+      I18N_EN("hits them ONE BY ONE (unicast)", "colpisce UNO PER UNO (unicast)"),
+      I18N_EN("+ broadcast: more effective", "+ broadcast: piu efficace"),
+      I18N_EN("than broadcast alone.", "del solo broadcast.") },
+    { I18N_EN("FRAME sent  KICK kicked", "FRAME inviati  KICK cacciati"),
+      I18N_EN("att on air  rec reconnected", "att in onda  rec riconnessi"),
+      I18N_EN("rec rising = the deauth landed", "rec sale = il deauth ha colpito"),
+      I18N_EN("inj% TX health (low = the", "inj% salute TX (basso = il"),
+      I18N_EN("chip drops: short range / KO)", "chip scarta: poco raggio / KO)"),
+      I18N_EN("Good: KICK/rec up, att -> 0", "Bene: KICK/rec su, att -> 0") },
+    { I18N_EN("Pick 1 AP with clients:", "Scegli 1 AP con client:"),
+      I18N_EN("more targeted than ALL.", "piu mirato che TUTTE."),
+      I18N_EN("Blue dot = WPA3/OWE immune,", "Dot blu = WPA3/OWE immune,"),
+      I18N_EN("ALL skips them on its own.", "TUTTE li salta da solo."),
+      I18N_EN("Stay close. Give it time: the", "Stai vicino. Dai tempo: i"),
+      I18N_EN("clients surface as you sniff.", "client emergono sniffando.") },
+    { I18N_EN("2.4GHz open/WPA2: disconnects", "2.4GHz aperte/WPA2: scollega"),
+      I18N_EN("and forces reconnects (see rec).", "e forza riconnessioni (vedi rec)."),
+      I18N_EN("WPA3/PMF: deauth ignored, uses", "WPA3/PMF: deauth ignorato, uso"),
+      I18N_EN("CSA channel-switch (beacons not", "CSA channel-switch (beacon non"),
+      I18N_EN("protected) - effect varies.", "protetti) - effetto variabile."),
+      I18N_EN("Frames at 1Mbps for max range.", "Frame a 1Mbps per max raggio.") },
+    { I18N_EN("up/dn  pick target", "su/giu  scegli bersaglio"),
+      I18N_EN("R       rescan", "R       riscansiona"),
+      I18N_EN("enter   start / stop", "invio   avvia / ferma"),
+      I18N_EN("esc     leave on (bg)", "esc     lascia attivo (bg)"),
+      I18N_EN("Your own networks or with written", "Solo reti tue o con permesso"),
+      I18N_EN("permission: CTF / audit.", "scritto: CTF / audit.") },
 };
 #define GUIDE_BODY (nucleo_i18n_is_it() ? GUIDE_BODY_IT : GUIDE_BODY_EN)
 
@@ -411,10 +411,10 @@ static void draw_guide(void)
 {
     char rt[12]; snprintf(rt, sizeof rt, "%d/%d", s_page + 1, GUIDE_PAGES);
     app_ui_title(TR("Guida","Guide"), ATK, rt);
-    d.setTextSize(2); d.setTextColor(YEL, BG); d.setCursor(10, 26); d.print(GUIDE_HEAD[s_page]);
+    d.setTextSize(2); d.setTextColor(YEL, BG); d.setCursor(10, 26); d.print(nucleo_tr_en(GUIDE_HEAD[s_page]));
     d.setTextSize(1);
     for (int i = 0; i < 6; i++) {
-        const char *l = GUIDE_BODY[s_page][i];
+        const char *l = nucleo_tr_en(GUIDE_BODY[s_page][i]);
         if (!l[0]) continue;
         bool legal = (s_page == GUIDE_PAGES - 1 && i >= 4);   // authorization note stands out
         d.setTextColor(legal ? YEL : FG, BG);
@@ -456,10 +456,10 @@ static void draw_large(void) {
         d.fillRect(0, y, Wp, Hp - y, BG);
         lg::panel(12, y + 6, Wp - 24, Hp - y - 58);
         const unsigned short cb = lg::card();
-        lg::font(2); d.setTextColor(YEL, cb); d.drawString(GUIDE_HEAD[s_page], 24, y + 16);
+        lg::font(2); d.setTextColor(YEL, cb); d.drawString(nucleo_tr_en(GUIDE_HEAD[s_page]), 24, y + 16);
         lg::font(0); d.setTextColor(FG, cb);
         int ty = y + 46;
-        for (int i = 0; i < 6; i++) { const char *l = GUIDE_BODY[s_page][i]; if (!l[0]) { ty += 8; continue; }
+        for (int i = 0; i < 6; i++) { const char *l = nucleo_tr_en(GUIDE_BODY[s_page][i]); if (!l[0]) { ty += 8; continue; }
             d.setTextColor(s_page == GUIDE_PAGES - 1 && i >= 4 ? YEL : FG, cb); d.drawString(l, 24, ty); ty += 20; }
         const int bw = (Wp - 36) / 2;
         lg::button(12, Hp - 44, bw, 34, TR("< Prec", "< Prev"), lg::card(), FG, NK_UP, 0);
@@ -565,7 +565,7 @@ static void draw_companion(void) {
     d.fillRect(0, top, 240, h, BG);
     int y = lg::comp_head("DEAUTH", ATK);
     if (s_panel) {
-        d.setFont(&fonts::FreeSansBold9pt7b); d.setTextColor(YEL, BG); d.drawString(GUIDE_HEAD[s_page], 8, y + 6);
+        d.setFont(&fonts::FreeSansBold9pt7b); d.setTextColor(YEL, BG); d.drawString(nucleo_tr_en(GUIDE_HEAD[s_page]), 8, y + 6);
         d.setFont(&fonts::Font0); d.setTextColor(MUTED, BG); char p[16]; snprintf(p, sizeof p, "%d/%d", s_page + 1, GUIDE_PAGES); d.drawString(p, 8, y + 30);
         lg::comp_keys(TR(";/. pagina  INVIO chiudi", ";/. page  ENTER close")); return;
     }

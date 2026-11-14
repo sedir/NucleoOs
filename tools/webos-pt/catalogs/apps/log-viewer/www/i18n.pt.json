@@ -1,0 +1,33 @@
+{
+  "_lang": "pt",
+  "app_title": "Visualizador de Logs",
+  "filter_ph": "Filtrar type/data",
+  "btn_pause": "Pausar",
+  "btn_resume": "Retomar",
+  "btn_history": "Histórico",
+  "btn_clear": "Limpar",
+  "btn_diag": "🩺 Diagnóstico",
+  "btn_health": "Saúde",
+  "follow": "Seguir",
+  "history_hint": "Leia o diário de eventos do cartão SD (a pedido — manter o dispositivo inativo caso contrário)",
+  "diag_hint": "Construir um digest de saúde compacto (dispositivo + ANIMA) colar a uma IA",
+  "health_hint": "Sonda adaptativa: sintetiza eventos de saúde ao vivo (somente enquanto visível, nunca durante o trabalho pesado)",
+  "diag_title": "Diagnóstico em saúde",
+  "diag_sub": "Copie este bloco e cole-o em uma IA para um diagnóstico.",
+  "gathering": "Recolha de diagnósticos…",
+  "diag_err": "Diagnósticos indisponível",
+  "btn_copy": "📋 Copiar",
+  "btn_regen": "↻ Regenerar",
+  "btn_close": "Fechar",
+  "copied": "Copiado para a área de transferência ✓",
+  "empty_state": "Ouvir eventos ao vivo…<br><span style=\"font-size:11px\">Pressione <b>🩺 Diagnose</b> para uma leitura de saúde, ou <b>Histórico</b> para o diário SD.</span>",
+  "events": {
+    "one": "{count} evento",
+    "other": "{count} eventos"
+  },
+  "events_of": " (de {total})",
+  "status_paused": " · pausado",
+  "src_journal": "diário: {lines} linhas no SD",
+  "src_none": "nenhum diário sobre SD ainda",
+  "src_error": "diário não disponível"
+}

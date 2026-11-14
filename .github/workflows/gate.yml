@@ -22,8 +22,11 @@ jobs:
       - name: Registry + manifest validation
         run: node tools/validate.mjs
 
-      - name: i18n catalog parity (5 languages)
+      - name: Web i18n parity (including pt-BR)
         run: node tools/i18n-check.mjs
+
+      - name: Native pt-BR catalog, including static tables
+        run: node tools/native-i18n/native-i18n.mjs gen pt --check
 
       - name: No new hardcoded UI text (ratchet over baseline)
         run: node tools/i18n-hardcoded-check.mjs

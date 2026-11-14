@@ -19,6 +19,7 @@ const char *nucleo_anima_lang_name(const char *code) {           // mirror of th
         if (a == 'e' && b == 's') return "Spanish";
         if (a == 'f' && b == 'r') return "French";
         if (a == 'd' && b == 'e') return "German";
+        if (a == 'p' && b == 't') return "Brazilian Portuguese";
     }
     return "English";
 }

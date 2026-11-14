@@ -1,0 +1,170 @@
+--- a/apps/anima/www/local/cascade.js
++++ b/apps/anima/www/local/cascade.js
+@@ -137,15 +137,15 @@
+ // ROUTING vocabulary. The deterministic engine answers in Italian and English; these lists only decide that an
+ // utterance is a device command / live question, so they also carry Spanish, French and German — otherwise
+ // "sube el volumen" or "öffne den Rechner" reached a tool-less chat model that could claim it was done.
+-const SETTING_NOUN = /\b(volume|audio|suono|luminosita|brightness|schermo|screen|display|retroilluminazione|backlight|volumen|brillo|pantalla|sonido|luminosite|ecran|lautstarke|helligkeit|bildschirm)\b/;
+-const SETTING_VERB = /\b(alza|abbassa|aumenta|diminuisci|riduci|imposta|metti|porta|regola|cambia|setta|modifica|muta|silenzia|azzera|raise|lower|increase|decrease|set|turn|mute|unmute|dim|brighten|change|adjust|fai|rendi|make|sube|baja|reduce|pon|ajusta|silencia|monte|baisse|augmente|diminue|regle|mets|coupe|erhohe|verringere|stelle|mach|dreh|schalte|reduziere)\b/;
+-const SETTING_AMOUNT = /\b(piu|meno|more|less|max|massimo|massima|minimo|minima|meta|half|zero|muto|alto|alta|basso|bassa|up|down|mas|menos|plus|moins|mehr|weniger|maximo|lauter|leiser|heller|dunkler)\b|\d/;
++const SETTING_NOUN = /\b(brilho|tela|som|volume|audio|suono|luminosita|brightness|schermo|screen|display|retroilluminazione|backlight|volumen|brillo|pantalla|sonido|luminosite|ecran|lautstarke|helligkeit|bildschirm)\b/;
++const SETTING_VERB = /\b(coloca|coloque|diminui|diminua|abaixa|abaixe|aumente|deixa|deixe|alza|abbassa|aumenta|diminuisci|riduci|imposta|metti|porta|regola|cambia|setta|modifica|muta|silenzia|azzera|raise|lower|increase|decrease|set|turn|mute|unmute|dim|brighten|change|adjust|fai|rendi|make|sube|baja|reduce|pon|ajusta|silencia|monte|baisse|augmente|diminue|regle|mets|coupe|erhohe|verringere|stelle|mach|dreh|schalte|reduziere)\b/;
++const SETTING_AMOUNT = /\b(metade|mudo|claro|escuro|piu|meno|more|less|max|massimo|massima|minimo|minima|meta|half|zero|muto|alto|alta|basso|bassa|up|down|mas|menos|plus|moins|mehr|weniger|maximo|lauter|leiser|heller|dunkler)\b|\d/;
+ const GEOMETRY = /\b(cubo|sfera|cilindro|cono|piramide|prisma|lato|raggio|altezza|diametro|densita|massa|litri|cube|sphere|cylinder|cone|pyramid|prism|side|radius|height|diameter|density|mass|liters|litres|vendite|sales)\b/;
+-const REMIND = /\b(ricordami|ricordamelo|ricordatemi|promemoria|remind me|reminder|recuerdame|recordatorio|rappelle-moi|rappelle moi|rappel|erinnere mich|erinnerung)\b/;
+-const EVENT_VERB = /\b(aggiungi|crea|segna|metti|fissa|programma|pianifica|prenota|inserisci|add|create|schedule|book|put|new|nuovo|nuova|anade|agrega|apunta|ajoute|cree|planifie|fuge|erstelle|trage|plane)\b/;
++const REMIND = /\b(me lembra|me lembre|lembrete|ricordami|ricordamelo|ricordatemi|promemoria|remind me|reminder|recuerdame|recordatorio|rappelle-moi|rappelle moi|rappel|erinnere mich|erinnerung)\b/;
++const EVENT_VERB = /\b(cria|crie|adiciona|adicione|marca|marque|aggiungi|crea|segna|metti|fissa|programma|pianifica|prenota|inserisci|add|create|schedule|book|put|new|nuovo|nuova|anade|agrega|apunta|ajoute|cree|planifie|fuge|erstelle|trage|plane)\b/;
+ const EVENT_NOUN = /\b(evento|eventi|appuntamento|appuntamenti|impegno|riunione|incontro|event|appointment|meeting|cita|reunion|evenement|rendez-vous|termin|besprechung|treffen)\b|\b(in|nel|al|to|on|en|a|dans|au|im|in den) (my |mio |il |nel |mi |el |mon |le |meinen |den )?(calendario|calendar|agenda|calendrier|kalender)\b/;
+-const TIMER = /\b(timer|sveglia|alarm|temporizador|alarma|minuteur|reveil|wecker)\b/;
+-const TIMER_CUE = /\b(metti|imposta|avvia|punta|fai partire|set|start|pon|programa|mets|lance|stelle|starte)\b|\b\d+\s*(s|sec|secondi|seconds|min|minuti|minutes|h|ore|hours|segundos|minutos|horas|secondes|heures|sekunden|minuten|stunden)\b|\b(alle|at|a las|a|um)\s+\d/;
++const TIMER = /\b(alarme|cronometro|timer|sveglia|alarm|temporizador|alarma|minuteur|reveil|wecker)\b/;
++const TIMER_CUE = /\b(coloca|coloque|liga|ligue|inicia|inicie|acorda|acorde|metti|imposta|avvia|punta|fai partire|set|start|pon|programa|mets|lance|stelle|starte)\b|\b\d+\s*(s|sec|secondi|seconds|min|minuti|minutes|h|ore|hours|segundos|minutos|horas|secondes|heures|sekunden|minuten|stunden)\b|\b(alle|at|a las|a|um)\s+\d/;
+ // Live state is matched as the WHOLE utterance (plus polite fillers), never as a fragment: "che versione di
+ // python devo usare" or "che giorno è natale" are questions for a brain, not for the RTC, and must not be
+ // answered by the device ahead of the cloud.
+@@ -178,12 +178,13 @@
+ ].map((re, i) => new RegExp('^' + LEAD + '(?:' + re + (LIVE_XL[i] ? '|' + LIVE_XL[i] : '') + ')' + TAIL + '$'));
+ // "how do I raise the volume on my PC?" is a how-to, not an order: interrogative openers never trigger 'act'.
+ const HOWTO = /^(come|perche|quando|dove|chi|cosa|che cosa|quale|how|why|when|where|who|what|which|can i|posso|como|por que|cuando|donde|quien|puedo|comment|pourquoi|quand|ou|qui|est-ce que|puis-je|wie|warum|wann|wo|wer|kann ich)\b/;
+-const LAUNCH = /^(apri|avvia|lancia|open|launch|abre|abrir|inicia|ouvre|ouvrir|lance|lancer|offne|offnen|starte)\s+(?!source\b)\S/;
++const LAUNCH = /^(apri|avvia|lancia|open|launch|abre|abra|abrir|inicia|ouvre|ouvrir|lance|lancer|offne|offnen|starte)\s+(?!source\b)\S/;
+ 
+ // The language a short question is written in (it/en/es/fr/de), or null when it does not show — for the
+ // answers composed HERE without a model (liveFromStatus): a German question on an Italian desktop gets German.
+ // Cheap and deliberately conservative: distinctive function words + a few letters only one language uses.
+ const LANG_CUES = {
++  pt: /\b(voce|voces|nao|sao|obrigado|obrigada|hoje|amanha|brilho|tela|configuracoes|lembrete|coloca|coloque|diminui|abaixa|arquivo|meu|minha|quanta|quantas|quantos|qual|quais|memoria|bloco|notas|deixa|mudo)\b/g,
+   // "Imposta la luminosità dello schermo…" scored Spanish on "la" alone and the reply came back as "Brillo al 50 %".
+   it: /\b(che|quanto|quanta|quanti|sono|ho|hai|della|dello|delle|degli|sulla|nel|nella|il|lo|gli|oggi|adesso|mi|dimmi|batteria|spazio|ore|imposta|alza|abbassa|metti|schermo|luminosita)\b/g,
+   en: /\b(what|how|much|many|is|the|my|do|have|left|time|today|battery|space|which|am)\b/g,
+@@ -194,6 +195,7 @@
+ };
+ export function guessLang(q) {
+   const raw = String(q || '').toLowerCase();
++  if (/[ãõ]|ções|ção/.test(raw)) return 'pt';
+   if (/[¿¡ñ]/.test(raw)) return 'es';
+   if (/[äöüß]/.test(raw)) return 'de';
+   const t = fold(q).replace(/[?!.,;:¿¡]+/g, ' ');
+@@ -205,6 +207,21 @@
+   return bestN > 0 && bestN > second ? best : null;       // a tie is "unclear": the caller keeps the OS language
+ }
+ 
++// Portuguese live readings are whole-utterance matches, like the other languages.
++const LIVE_PT = [
++ ['time', /^(?:que horas sao|que hora e|me diz as horas)$/],
++ ['date', /^(?:que dia e hoje|qual (?:e )?a data de hoje)$/],
++ ['year', /^(?:em que ano estamos|que ano e)$/],
++ ['season', /^(?:em que estacao estamos|qual (?:e )?a estacao)$/],
++ ['battery', /^(?:quanta bateria(?: (?:tem|resta))?|nivel (?:da|de) bateria)$/],
++ ['space', /^(?:quanto espaco (?:livre )?(?:tem|tenho)(?: (?:no|na) (?:cartao )?sd)?|espaco livre(?: no sd)?)$/],
++ ['ram', /^(?:quanta (?:memoria )?ram(?: livre)?(?: tenho)?|qual a memoria livre|quanto de (?:memoria )?ram (?:esta )?livre)$/],
++ ['uptime', /^ha quanto tempo (?:esta )?ligado$/],
++ ['version', /^qual (?:e )?a versao(?: do nucle(o)?os)?$/],
++ ['network', /^(?:qual (?:e )?(?:a minha rede|meu ip)|a que rede estou conectado)$/],
++ ['agenda', /^quais (?:sao )?(?:os )?meus eventos hoje$/],
++];
++
+ // Which live value a 'live' question asks for — same order as LIVE above.
+ const LIVE_KINDS = ['time', 'date', 'year', 'battery', 'space', 'ram', 'uptime', 'version', 'network', 'agenda'];
+ // "quanta RAM libera ha il Cardputer", "how much memory does the Cardputer have": the device named as the subject
+@@ -212,6 +229,7 @@
+ const DEVICE_SUBJ = /\s*\b(?:(?:il|del|sul|nel|al|dal|the|on the|of the|el|del|la|le|du|sur le|der|des|vom|am|auf dem|mein|mon|mi|my|il mio|questo|this) )?(?:cardputer(?: adv)?|dispositivo|device)\b/g;
+ export function liveKind(q) {
+   const t = fold(q).replace(/[?!.,;:¿¡]+/g, ' ').replace(DEVICE_SUBJ, ' ').replace(/\s+/g, ' ').replace(/\bdoes have\b/, 'does it have').trim();
++  for (const [kind, re] of LIVE_PT) if (re.test(t.replace(/ por favor$/, ''))) return kind;
+   for (let i = 0; i < LIVE.length; i++) if (LIVE[i].test(t)) return LIVE_KINDS[i] === 'year' && /stagion|season|estacion|saison|jahreszeit/.test(t) ? 'season' : LIVE_KINDS[i];
+   return null;
+ }
+@@ -220,13 +238,14 @@
+ // so these values never go through one. null = not answerable from the status (agenda, season): the caller
+ // hands it on. GB are decimal (1e9), like the desktop's own "SD … GB free".
+ const LIVE_T = {
++  pt: { space: 'Seu SD tem {free} GB livres de {total} GB.', nosd: 'O cartão SD não está montado.', battery: 'Bateria em {pct}% ({v} V).', nobat: 'Este aparelho não informa o nível da bateria.', ram: 'RAM livre: {kb} KB (maior bloco {blk} KB).', uptime: 'O aparelho está ligado há {d}.', version: 'NucleoOS {v}.', net: 'Conectado à rede Wi-Fi “{ssid}”, endereço {ip}.', ap: 'O aparelho está em modo ponto de acesso ({ip}).', nonet: 'O aparelho não está conectado a uma rede.', time: 'São {t}.', date: 'Hoje é {d}.', year: 'Estamos em {y}.', h: 'h', m: 'min' },
+   it: { space: 'Sulla SD hai {free} GB liberi su {total} GB.', nosd: 'La scheda SD non è montata.', battery: 'Batteria al {pct}% ({v} V).', nobat: 'Questo dispositivo non riporta il livello della batteria.', ram: 'RAM libera: {kb} KB (il blocco più grande è {blk} KB).', uptime: 'Il dispositivo è acceso da {d}.', version: 'NucleoOS {v}.', net: 'Connesso alla rete Wi-Fi «{ssid}», indirizzo {ip}.', ap: 'Il dispositivo è in modalità access point ({ip}).', nonet: 'Il dispositivo non è connesso a nessuna rete.', time: 'Sono le {t}.', date: 'Oggi è {d}.', year: 'Siamo nel {y}.', h: 'h', m: 'min' },
+   en: { space: 'Your SD card has {free} GB free of {total} GB.', nosd: 'The SD card is not mounted.', battery: 'Battery at {pct}% ({v} V).', nobat: 'This device does not report its battery level.', ram: 'Free RAM: {kb} KB (largest block {blk} KB).', uptime: 'The device has been on for {d}.', version: 'NucleoOS {v}.', net: 'Connected to the Wi-Fi network “{ssid}”, address {ip}.', ap: 'The device is in access-point mode ({ip}).', nonet: 'The device is not connected to any network.', time: 'It is {t}.', date: 'Today is {d}.', year: 'It is {y}.', h: 'h', m: 'min' },
+   es: { space: 'Tu SD tiene {free} GB libres de {total} GB.', nosd: 'La tarjeta SD no está montada.', battery: 'Batería al {pct}% ({v} V).', nobat: 'Este dispositivo no informa del nivel de batería.', ram: 'RAM libre: {kb} KB (bloque mayor {blk} KB).', uptime: 'El dispositivo lleva encendido {d}.', version: 'NucleoOS {v}.', net: 'Conectado a la red Wi-Fi «{ssid}», dirección {ip}.', ap: 'El dispositivo está en modo punto de acceso ({ip}).', nonet: 'El dispositivo no está conectado a ninguna red.', time: 'Son las {t}.', date: 'Hoy es {d}.', year: 'Estamos en {y}.', h: 'h', m: 'min' },
+   fr: { space: 'Votre carte SD a {free} Go libres sur {total} Go.', nosd: 'La carte SD n’est pas montée.', battery: 'Batterie à {pct} % ({v} V).', nobat: 'Cet appareil n’indique pas le niveau de sa batterie.', ram: 'RAM libre : {kb} Ko (plus grand bloc {blk} Ko).', uptime: 'L’appareil est allumé depuis {d}.', version: 'NucleoOS {v}.', net: 'Connecté au réseau Wi-Fi « {ssid} », adresse {ip}.', ap: 'L’appareil est en mode point d’accès ({ip}).', nonet: 'L’appareil n’est connecté à aucun réseau.', time: 'Il est {t}.', date: 'Nous sommes le {d}.', year: 'Nous sommes en {y}.', h: 'h', m: 'min' },
+   de: { space: 'Deine SD-Karte hat {free} GB frei von {total} GB.', nosd: 'Die SD-Karte ist nicht eingebunden.', battery: 'Akku bei {pct} % ({v} V).', nobat: 'Dieses Gerät meldet keinen Akkustand.', ram: 'Freier RAM: {kb} KB (größter Block {blk} KB).', uptime: 'Das Gerät läuft seit {d}.', version: 'NucleoOS {v}.', net: 'Verbunden mit dem WLAN „{ssid}“, Adresse {ip}.', ap: 'Das Gerät ist im Access-Point-Modus ({ip}).', nonet: 'Das Gerät ist mit keinem Netz verbunden.', time: 'Es ist {t}.', date: 'Heute ist {d}.', year: 'Wir haben {y}.', h: 'Std.', m: 'Min.' },
+ };
+-const LOCALE = { it: 'it-IT', en: 'en-GB', es: 'es-ES', fr: 'fr-FR', de: 'de-DE' };
++const LOCALE = { pt: 'pt-BR', it: 'it-IT', en: 'en-GB', es: 'es-ES', fr: 'fr-FR', de: 'de-DE' };
+ export function liveFromStatus(kind, st, lang = 'it', now = new Date()) {
+   if (!st || typeof st !== 'object') return null;
+   const T = LIVE_T[lang] || LIVE_T.en, loc = LOCALE[lang] || 'en-GB';
+@@ -316,25 +335,25 @@
+ // object must BE a name, so "apri il file note.txt" or "ouvre une page avec…" stay with the normal ladder. → id | null
+ const LAUNCH_SYN = {
+   calculator: ['calcolatrice', 'calculadora', 'calculatrice', 'taschenrechner', 'rechner'],
+-  notepad: ['blocco note', 'note', 'bloc de notas', 'notas', 'bloc-notes', 'bloc notes', 'notizen', 'notizblock', 'editor'],
++  notepad: ['bloco de notas', 'blocco note', 'note', 'bloc de notas', 'notas', 'bloc-notes', 'bloc notes', 'notizen', 'notizblock', 'editor'],
+   'media-player': ['musica', 'music', 'reproductor', 'reproductor de musica', 'musique', 'lecteur de musique', 'musik', 'musikplayer', 'player'],
+   'photo-viewer': ['foto', 'fotos', 'galeria', 'galerie', 'bilder', 'photos', 'gallery'],
+-  settings: ['impostazioni', 'ajustes', 'configuracion', 'parametres', 'reglages', 'einstellungen'],
++  settings: ['configuracoes', 'impostazioni', 'ajustes', 'configuracion', 'parametres', 'reglages', 'einstellungen'],
+   'file-commander': ['file', 'archivos', 'explorador de archivos', 'fichiers', 'gestionnaire de fichiers', 'dateien', 'dateimanager', 'datei-manager'],
+   calendar: ['calendario', 'calendrier', 'kalender', 'agenda'],
+-  clock: ['orologio', 'sveglia', 'reloj', 'alarma', 'horloge', 'reveil', 'uhr', 'wecker'],
++  clock: ['relogio', 'orologio', 'sveglia', 'reloj', 'alarma', 'horloge', 'reveil', 'uhr', 'wecker'],
+   weather: ['meteo', 'tiempo', 'el tiempo', 'clima', 'wetter'],
+-  recorder: ['registratore', 'grabadora', 'enregistreur', 'dictaphone', 'rekorder', 'diktiergerat'],
++  recorder: ['gravador', 'registratore', 'grabadora', 'enregistreur', 'dictaphone', 'rekorder', 'diktiergerat'],
+   paint: ['disegno', 'dibujo', 'dessin', 'malen', 'zeichnen'],
+   browser: ['navegador', 'navigateur'],
+-  spreadsheet: ['foglio di calcolo', 'hoja de calculo', 'tableur', 'feuille de calcul', 'tabelle', 'tabellenkalkulation'],
+-  contacts: ['contatti', 'contactos', 'kontakte'],
+-  tasks: ['attivita', 'tareas', 'taches', 'aufgaben'],
++  spreadsheet: ['planilha', 'foglio di calcolo', 'hoja de calculo', 'tableur', 'feuille de calcul', 'tabelle', 'tabellenkalkulation'],
++  contacts: ['contatos', 'contatti', 'contactos', 'kontakte'],
++  tasks: ['tarefas', 'attivita', 'tareas', 'taches', 'aufgaben'],
+   games: ['giochi', 'juegos', 'jeux', 'spiele'],
+   mail: ['posta', 'correo', 'courrier', 'courriel'],
+   terminal: ['terminale', 'terminal', 'konsole'],
+ };
+-const LAUNCH_OBJ = /^(?:(?:apri|avvia|lancia|open|launch|abre|abrir|inicia|ouvre|ouvrir|lance|lancer|offne|offnen|starte)\s+)(?:(?:mi|me|moi|mir)\s+)?(?:(?:il|lo|la|i|gli|le|the|my|el|los|las|mi|mis|tu|tus|un|una|une|les|mon|ma|mes|den|die|das|der|meine?n?|dein(?:e|en)?)\s+|l'\s*)?(?:(?:app|applicazione|aplicacion|application|anwendung)\s+(?:(?:di|de|del|della|des|du|of the|of)\s+)?)?(.+?)(?:\s+(?:app|per favore|please|por favor|s'il te plait|s'il vous plait|bitte))?$/;
++const LAUNCH_OBJ = /^(?:(?:apri|avvia|lancia|open|launch|abre|abra|abrir|inicia|ouvre|ouvrir|lance|lancer|offne|offnen|starte)\s+)(?:(?:mi|me|moi|mir)\s+)?(?:(?:o|a|os|as|il|lo|la|i|gli|le|the|my|el|los|las|mi|mis|tu|tus|un|una|une|les|mon|ma|mes|den|die|das|der|meine?n?|dein(?:e|en)?)\s+|l'\s*)?(?:(?:app|applicazione|aplicacion|application|anwendung)\s+(?:(?:di|de|del|della|des|du|of the|of)\s+)?)?(.+?)(?:\s+(?:app|per favore|please|por favor|s'il te plait|s'il vous plait|bitte))?$/;
+ export function launchTarget(q, names = {}) {
+   const t = fold(q).replace(/[?!.,;:¿¡]+/g, ' ').replace(/\s+/g, ' ').trim();
+   if (!LAUNCH.test(t)) return null;
+@@ -345,17 +364,17 @@
+   for (const [id, list] of Object.entries(LAUNCH_SYN)) if (list.includes(obj)) return id;
+   return null;
+ }
+-const LAUNCH_T = { it: 'Apro {app}.', en: 'Opening {app}.', es: 'Abro {app}.', fr: 'J’ouvre {app}.', de: 'Ich öffne {app}.' };
++const LAUNCH_T = { pt: 'Abrindo {app}.', it: 'Apro {app}.', en: 'Opening {app}.', es: 'Abro {app}.', fr: 'J’ouvre {app}.', de: 'Ich öffne {app}.' };
+ export const launchReply = (app, lang = 'it') => (LAUNCH_T[lang] || LAUNCH_T.en).replace('{app}', app);
+ 
+ // settingAct(q): a volume / brightness order read WITHOUT an engine — for a Cardputer whose brain is paused (web
+ // mode) and a browser with no WASM brain installed: "luminosità al 50%" said "not carried out" although
+ // POST /api/anima/act sets it in one call. Only unambiguous orders: an explicit percentage, max / min / half /
+ // mute, or a plain up / down (±10, the native step). Anything else → null (the normal ladder decides).
+-const BRIGHT_NOUN = /\b(luminosita|luce|brightness|schermo|screen|display|retroilluminazione|backlight|brillo|pantalla|luminosite|ecran|helligkeit|bildschirm)\b/;
+-const VOL_NOUN = /\b(volume|audio|suono|sound|volumen|sonido|lautstarke)\b/;
+-const UP = /\b(alza|aumenta|piu|raise|increase|up|louder|brighter|brighten|sube|mas|monte|augmente|plus|erhohe|mehr|lauter|heller)\b/;
+-const DOWN = /\b(abbassa|diminuisci|riduci|meno|lower|decrease|down|quieter|dim|baja|menos|reduce|baisse|diminue|moins|verringere|reduziere|weniger|leiser|dunkler)\b/;
++const BRIGHT_NOUN = /\b(brilho|tela|luminosita|luce|brightness|schermo|screen|display|retroilluminazione|backlight|brillo|pantalla|luminosite|ecran|helligkeit|bildschirm)\b/;
++const VOL_NOUN = /\b(som|volume|audio|suono|sound|volumen|sonido|lautstarke)\b/;
++const UP = /\b(aumente|mais|alto|claro|alza|aumenta|piu|raise|increase|up|louder|brighter|brighten|sube|mas|monte|augmente|plus|erhohe|mehr|lauter|heller)\b/;
++const DOWN = /\b(diminui|diminua|abaixa|abaixe|baixo|escuro|abbassa|diminuisci|riduci|meno|lower|decrease|down|quieter|dim|baja|menos|reduce|baisse|diminue|moins|verringere|reduziere|weniger|leiser|dunkler)\b/;
+ export function settingAct(q) {
+   if (commandHint(q) !== 'act') return null;
+   const t = fold(q).replace(/[?!.,;:¿¡]+/g, ' ').replace(/\s+/g, ' ').trim();
+@@ -366,8 +385,8 @@
+   if (pct && +pct[1] <= 100) arg = String(+pct[1]);
+   else if (/\b(massim[oa]|max|maximum|maximo|maximal|al massimo|a tope)\b/.test(t)) arg = '100';
+   else if (/\b(minim[oa]|min|minimum|minimo|minimal)\b/.test(t)) arg = '0';
+-  else if (/\b(meta|half|mitad|moitie|halb|halbe)\b/.test(t)) arg = '50';
+-  else if (vol && /\b(muto|muta|silenzia|mute|silencia|coupe|stumm)\b/.test(t)) arg = '0';
++  else if (/\b(metade|meta|half|mitad|moitie|halb|halbe)\b/.test(t)) arg = '50';
++  else if (vol && /\b(mudo|muto|muta|silenzia|mute|silencia|coupe|stumm)\b/.test(t)) arg = '0';
+   else if (UP.test(t) && !DOWN.test(t)) arg = '+10';
+   else if (DOWN.test(t) && !UP.test(t)) arg = '-10';
+   if (arg == null) return null;
+@@ -377,6 +396,7 @@
+ // The reply for a setting the DEVICE applied (its own reply is it/en only and carries the value it really set).
+ const SETTING_DONE = {
+   it: { set_volume: 'Volume al {p}%.', set_brightness: 'Luminosità al {p}%.' },
++  pt: { set_volume: 'Volume em {p}%.', set_brightness: 'Brilho em {p}%.' },
+   en: { set_volume: 'Volume {p}%.', set_brightness: 'Brightness {p}%.' },
+   es: { set_volume: 'Volumen al {p} %.', set_brightness: 'Brillo al {p} %.' },
+   fr: { set_volume: 'Volume à {p} %.', set_brightness: 'Luminosité à {p} %.' },

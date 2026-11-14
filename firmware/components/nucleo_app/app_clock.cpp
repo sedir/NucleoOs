@@ -70,16 +70,15 @@ static int  s_last_unit = -1;  // last drawn second/minute, for change-detection
 
 // Localised day/month names — strftime() only yields English in newlib's C locale, so map by hand.
 static const char *DOW_IT[7] = { "Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab" };
-static const char *DOW_EN[7] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+static const char *DOW_EN[7] = { I18N_EN("Sun", "Dom"), I18N_EN("Mon", "Lun"), I18N_EN("Tue", "Mar"), I18N_EN("Wed", "Mer"), I18N_EN("Thu", "Gio"), I18N_EN("Fri", "Ven"), I18N_EN("Sat", "Sab") };
 static const char *MON_IT[12] = { "Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic" };
-static const char *MON_EN[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+static const char *MON_EN[12] = { I18N_EN("Jan", "Gen"), I18N_EN("Feb", "Feb"), I18N_EN("Mar", "Mar"), I18N_EN("Apr", "Apr"), I18N_EN("May", "Mag"), I18N_EN("Jun", "Giu"), I18N_EN("Jul", "Lug"), I18N_EN("Aug", "Ago"), I18N_EN("Sep", "Set"), I18N_EN("Oct", "Ott"), I18N_EN("Nov", "Nov"), I18N_EN("Dec", "Dic") };
 
 static void fmt_date(const struct tm *tm, char *out, int n)
 {
     if (!tm) { snprintf(out, n, "----"); return; }
-    bool en = !nucleo_i18n_is_it();   // English floor for es/fr/de, as TR() does
-    const char *dow = (tm->tm_wday >= 0 && tm->tm_wday < 7) ? (en ? DOW_EN : DOW_IT)[tm->tm_wday] : "";
-    const char *mon = (tm->tm_mon  >= 0 && tm->tm_mon  < 12) ? (en ? MON_EN : MON_IT)[tm->tm_mon] : "";
+    const char *dow = (tm->tm_wday >= 0 && tm->tm_wday < 7) ? nucleo_tr(DOW_IT[tm->tm_wday], DOW_EN[tm->tm_wday]) : "";
+    const char *mon = (tm->tm_mon  >= 0 && tm->tm_mon  < 12) ? nucleo_tr(MON_IT[tm->tm_mon], MON_EN[tm->tm_mon]) : "";
     snprintf(out, n, "%s %d %s %d", dow, tm->tm_mday, mon, 1900 + tm->tm_year);
 }
 

@@ -1,0 +1,54 @@
+{
+  "_lang": "pt",
+  "app_title": "Gerenciador de Arquivos Compactados",
+  "extract_here": "Extrair Aqui",
+  "compress": "Comprimir",
+  "status_idle": "Nenhum arquivo carregado. Esperando por um arquivo...",
+  "empty_open_hint": "Abra um arquivo .zip do Gerenciador de arquivos",
+  "working": "A trabalhar...",
+  "prog_files": {
+    "one": "{done} / {total} arquivo",
+    "other": "{done} / {total} arquivos"
+  },
+  "err_parse_compress": "Erro ao processar os arquivos para comprimir.",
+  "loading_file": "Carregando {path}...",
+  "loading_archive": "A carregar o arquivo...",
+  "items_in": {
+    "one": "{count} item em {path}",
+    "other": "{count} itens em {path}"
+  },
+  "error_x": "Erro: {msg}",
+  "open_failed": "Falha ao abrir o arquivo.",
+  "archive_empty": "Este arquivo está vazio.",
+  "extracting_to": "Extraindo para {dir}",
+  "extracting_file": "Extração {name}... ({done}/{total})",
+  "extract_complete": "Extração Completa!",
+  "files_extracted": {
+    "one": "{count} arquivo extraído.",
+    "other": "{count} arquivos extraídos."
+  },
+  "extract_error": "Erro de extração",
+  "create_in": "Criar um arquivo em {dir}",
+  "name_label": "Nome:",
+  "preparing": "Preparando arquivos...",
+  "scanning": "Escaneando diretórios...",
+  "compressing": "Compressão...",
+  "reading_file": "Leitura {name}... ({i}/{total})",
+  "generating_zip": "Gerando arquivo .zip...",
+  "saving_archive": "Salvando arquivo...",
+  "compress_complete": "Compressão Completa!",
+  "saved_x": "Salvo {name}",
+  "compress_error": "Erro de Compressão",
+  "no_files": "Nenhum arquivo para comprimir",
+  "err_read_file": "Não foi possível ler o arquivo do dispositivo (erro {status}).",
+  "err_write_file": "Não foi possível escrever {name} (erro {status}).",
+  "err_mkdir": "Não foi possível criar a pasta {name} (erro {status}).",
+  "err_list_dir": "Não foi possível listar a pasta {name} (erro {status}).",
+  "err_read_src": "Não foi possível ler {name} (erro {status}).",
+  "err_save_archive": "Não foi possível salvar {name} (erro {status}).",
+  "confirm_overwrite": {
+    "one": "{count} arquivo já existe e será substituído:\n{names}\n\nExtrair mesmo assim?",
+    "other": "{count} arquivos já existem e serão substituídos:\n{names}\n\nExtrair mesmo assim?"
+  },
+  "format_label": "Formato:"
+}

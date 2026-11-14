@@ -1,0 +1,16 @@
+{
+  "_lang": "pt",
+  "prev_month": "Mês anterior",
+  "next_month": "Próximo mês",
+  "new_event_ph": "Novo evento… (Digite)",
+  "pick_day": "Escolha um dia",
+  "empty_events": "Sem eventos. Adicione um abaixo.",
+  "saved_device": "Gravado no dispositivo",
+  "save_failed": "O salvamento falhou — dispositivo não acessível",
+  "more_events": {
+    "one": "+{count} mais",
+    "other": "+{count} mais"
+  },
+  "read_failed": "Não foi possível ler o calendário do dispositivo. A edição está pausada para que nada seja substituído — tente novamente em breve.",
+  "not_paired": "Este navegador não está pareado com o dispositivo — pareie-o para salvar o calendário."
+}

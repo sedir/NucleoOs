@@ -1,0 +1,15 @@
+{
+  "_lang": "pt",
+  "title": "Comunidade",
+  "lede": "Junte-se à NucleoOS Discórdia: fazer perguntas, mostrar o que você construiu, receber notícias de lançamento primeiro.",
+  "open": "Abrir Discórdia",
+  "copy": "Copiar o link do convite",
+  "copied": "Copiado!",
+  "scan": "Analisar com o seu celular",
+  "bot.title": "Respostas rápidas",
+  "bot.text": "No servidor, digite <code>/ask</code> e a sua pergunta, ou <code>/guide</code> para guias curtos.",
+  "help.title": "Preciso de ajuda?",
+  "help.text": "Abra um post no fórum de ajuda: um problema por post, com seu tabuleiro e firmware version.",
+  "rules.title": "Seja gentil, tenha cuidado",
+  "rules.text": "Nunca publique senhas, chaves API ou detalhes Wi-Fi. Sem ROMs ou arquivos pirateados."
+}

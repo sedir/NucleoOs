@@ -7,7 +7,9 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <direct.h>
+#ifdef _WIN32
 #include <io.h>
+#endif
 #include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
@@ -17,4 +19,13 @@ time_t host_time(time_t *out);              // host_stubs.cpp: the scene's wall 
 }
 #endif
 #define time(p) host_time(p)
+#ifdef _WIN32
 #define mkdir(p, m) _mkdir(p)
+#else
+#define _mkgmtime timegm
+#define _rmdir rmdir
+#define _tzset tzset
+#define _putenv(s) putenv((char *)(s))
+#include <unistd.h>
+#include <stdlib.h>
+#endif

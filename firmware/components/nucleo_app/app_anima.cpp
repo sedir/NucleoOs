@@ -719,7 +719,7 @@ static void save_settings(void)
     if (!f) return;
     const char *om = s_omode == OM_OFF ? "off" : s_omode == OM_ONLY ? "only" : "on";
     fprintf(f, "{\"online\":\"%s\",\"big\":%s,\"lang\":\"%s\"}\n",
-            om, s_big ? "true" : "false", s_en ? "en" : "it");
+            om, s_big ? "true" : "false", TR("it", "en"));
     fclose(f);
 }
 
@@ -1075,8 +1075,8 @@ static void speak_result(const anima_result_t &r, bool en)
 // Short weekday/month names for the glance card and the Today header (ASCII, both languages).
 static const char *WD3_IT[] = { "dom", "lun", "mar", "mer", "gio", "ven", "sab" };
 static const char *MO3_IT[] = { "gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic" };
-static const char *WD3_EN[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-static const char *MO3_EN[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+static const char *WD3_EN[] = { I18N_EN("Sun", "dom"), I18N_EN("Mon", "lun"), I18N_EN("Tue", "mar"), I18N_EN("Wed", "mer"), I18N_EN("Thu", "gio"), I18N_EN("Fri", "ven"), I18N_EN("Sat", "sab") };
+static const char *MO3_EN[] = { I18N_EN("Jan", "gen"), I18N_EN("Feb", "feb"), I18N_EN("Mar", "mar"), I18N_EN("Apr", "apr"), I18N_EN("May", "maggio"), I18N_EN("Jun", "giu"), I18N_EN("Jul", "lug"), I18N_EN("Aug", "ago"), I18N_EN("Sep", "set"), I18N_EN("Oct", "ott"), I18N_EN("Nov", "nov"), I18N_EN("Dec", "dic") };
 
 // Parse calendar.json (NULL: missing, empty, over the cap, OOM or corrupt). *had_data = the file exists
 // with content — the writer uses it to fail closed instead of overwriting a calendar it could not read.
@@ -1124,7 +1124,7 @@ static void cal_refresh(bool force)
     S->cal_ok = true; S->cal_size = sz; S->cal_mtime = mt; S->cal_en = s_en;
     snprintf(S->cal_key, sizeof S->cal_key, "%s", key);
     snprintf(S->today_hdr, sizeof S->today_hdr, TR("Oggi, %s %d %s", "Today, %s %d %s"),
-             (s_en ? WD3_EN : WD3_IT)[t.tm_wday], t.tm_mday, (s_en ? MO3_EN : MO3_IT)[t.tm_mon]);
+             nucleo_tr(WD3_IT[t.tm_wday], WD3_EN[t.tm_wday]), t.tm_mday, nucleo_tr(MO3_IT[t.tm_mon], MO3_EN[t.tm_mon]));
     s_today_n = s_today_count = 0; S->agenda_n = 0; S->agenda[0] = 0; S->cal_next[0] = 0;
     cJSON *root = exists ? cal_load(nullptr) : nullptr;
     cJSON *evs = root ? cJSON_GetObjectItem(root, "events") : nullptr;
@@ -1261,15 +1261,15 @@ static void fill_system_value(const char *arg, char *out, size_t n, bool en)
     } else if (!strcmp(arg, "date") && tm) {
         static const char *WD_IT[] = {"domenica","lunedi","martedi","mercoledi","giovedi","venerdi","sabato"};
         static const char *MO_IT[] = {"gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"};
-        static const char *WD_EN[] = {"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
-        static const char *MO_EN[] = {"January","February","March","April","May","June","July","August","September","October","November","December"};
+        static const char *WD_EN[] = {I18N_EN("Sunday", "domenica"),I18N_EN("Monday", "lunedi"),I18N_EN("Tuesday", "martedi"),I18N_EN("Wednesday", "mercoledi"),I18N_EN("Thursday", "giovedi"),I18N_EN("Friday", "venerdi"),I18N_EN("Saturday", "sabato")};
+        static const char *MO_EN[] = {I18N_EN("January", "gennaio"),I18N_EN("February", "febbraio"),I18N_EN("March", "marzo"),I18N_EN("April", "aprile"),I18N_EN("May", "maggio"),I18N_EN("June", "giugno"),I18N_EN("July", "luglio"),I18N_EN("August", "agosto"),I18N_EN("September", "settembre"),I18N_EN("October", "ottobre"),I18N_EN("November", "novembre"),I18N_EN("December", "dicembre")};
         if (en) snprintf(out, n, "Today is %s %d %s %d", WD_EN[tm->tm_wday], tm->tm_mday, MO_EN[tm->tm_mon], tm->tm_year + 1900);
         else    snprintf(out, n, "Oggi e %s %d %s %d", WD_IT[tm->tm_wday], tm->tm_mday, MO_IT[tm->tm_mon], tm->tm_year + 1900);
     } else if (!strcmp(arg, "year") && tm) {
         snprintf(out, n, "%d", tm->tm_year + 1900);
     } else if (!strcmp(arg, "season") && tm) {
         static const char *SE_IT[] = {"inverno","primavera","estate","autunno"};   // astronomical, N. hemisphere
-        static const char *SE_EN[] = {"winter","spring","summer","autumn"};
+        static const char *SE_EN[] = {I18N_EN("winter", "inverno"),I18N_EN("spring", "primavera"),I18N_EN("summer", "estate"),I18N_EN("autumn", "autunno")};
         int mo = tm->tm_mon, dy = tm->tm_mday;
         int s = ((mo == 2 && dy >= 20) || mo == 3 || mo == 4 || (mo == 5 && dy <= 20)) ? 1
               : ((mo == 5 && dy >= 21) || mo == 6 || mo == 7 || (mo == 8 && dy <= 22)) ? 2
@@ -1430,10 +1430,10 @@ static void draw(void);   // fwd: the inline Solo path paints the answer SYNCHRO
 // ---- "open <app>" answers ------------------------------------------------------------------------------
 // Native apps whose launcher name is a proper noun (no row in launcher_app_localized_name's table).
 static const struct { const char *id, *it, *en; } APP_PROPER[] = {
-    { "video", "Video", "Video" },       { "pomodoro", "Pomodoro", "Pomodoro" }, { "ssh", "SSH", "SSH" },
-    { "ble", "BLE", "BLE" },             { "payloads", "Payloads", "Payloads" }, { "ethernet", "Ethernet", "Ethernet" },
-    { "updates", "Aggiornamenti", "Updates" }, { "pong", "Pong", "Pong" },       { "poker", "Poker", "Poker" },
-    { "yahtzee", "Yahtzee", "Yahtzee" }, { "gbemu", "Game Boy", "Game Boy" },    { "anima", "ANIMA", "ANIMA" },
+    { "video", "Video", I18N_EN("Video", "Video") },       { "pomodoro", "Pomodoro", I18N_EN("Pomodoro", "Pomodoro") }, { "ssh", "SSH", I18N_EN("SSH", "SSH") },
+    { "ble", "BLE", I18N_EN("BLE", "BLE") },             { "payloads", "Payloads", I18N_EN("Payloads", "Payloads") }, { "ethernet", "Ethernet", I18N_EN("Ethernet", "Ethernet") },
+    { "updates", "Aggiornamenti", I18N_EN("Updates", "Aggiornamenti") }, { "pong", "Pong", I18N_EN("Pong", "Pong") },       { "poker", "Poker", I18N_EN("Poker", "Poker") },
+    { "yahtzee", "Yahtzee", I18N_EN("Yahtzee", "Yahtzee") }, { "gbemu", "Game Boy", I18N_EN("Game Boy", "Game Boy") },    { "anima", "ANIMA", I18N_EN("ANIMA", "ANIMA") },
 };
 // The NATIVE launcher id for an ANIMA/registry app id ("media-player" -> "music") and its display name in
 // the OS language, or NULL when the app has no native screen (web-only: paint, spreadsheet, ...).
@@ -1486,7 +1486,7 @@ static const char *launch_target(const char *arg, char *nm, size_t n)
     const char *loc = launcher_app_localized_name(nat);
     if (loc) { snprintf(nm, n, "%s", loc); return nat; }
     for (unsigned i = 0; i < sizeof APP_PROPER / sizeof APP_PROPER[0]; i++)
-        if (!strcmp(nat, APP_PROPER[i].id)) { snprintf(nm, n, "%s", s_en ? APP_PROPER[i].en : APP_PROPER[i].it); return APP_PROPER[i].id; }
+        if (!strcmp(nat, APP_PROPER[i].id)) { snprintf(nm, n, "%s", nucleo_tr(APP_PROPER[i].it, APP_PROPER[i].en)); return APP_PROPER[i].id; }
     return nullptr;
 }
 
@@ -1969,16 +1969,16 @@ static const char *SUG_IT[SUG_N] = {
     "Cos'e il DNA"
 };
 static const char *SUG_EN[SUG_N] = {
-    "What time is it", "What's today's date", "Weather in London",
-    "How much SD space is free", "What network am I on", "How much is 18 x 24",
-    "What is 15% of 80", "Remind me groceries tomorrow at 6pm", "What can you do",
+    I18N_EN("What time is it", "Che ore sono"), I18N_EN("What's today's date", "Che giorno e oggi"), I18N_EN("Weather in London", "Meteo a Brescia"),
+    I18N_EN("How much SD space is free", "Quanto spazio ho sulla SD"), I18N_EN("What network am I on", "A che rete sono connesso"), I18N_EN("How much is 18 x 24", "Quanto fa 18 x 24"),
+    I18N_EN("What is 15% of 80", "Quanto e il 15% di 80"), I18N_EN("Remind me groceries tomorrow at 6pm", "Ricordami la spesa domani alle 18"), I18N_EN("What can you do", "Cosa sai fare"),
     // new suggestions
-    "Square root of 144", "Convert 5 miles to km",
-    "Who is Ada Lovelace", "How much is 37 times 48",
-    "What season is it", "Remind me gym tomorrow at 7am",
-    "What is DNA"
+    I18N_EN("Square root of 144", "Radice quadrata di 144"), I18N_EN("Convert 5 miles to km", "Converti 5 miglia in km"),
+    I18N_EN("Who is Ada Lovelace", "Chi e Ada Lovelace"), I18N_EN("How much is 37 times 48", "Quanto fa 37 per 48"),
+    I18N_EN("What season is it", "In che stagione siamo"), I18N_EN("Remind me gym tomorrow at 7am", "Ricordami palestra domani alle 7"),
+    I18N_EN("What is DNA", "Cos'e il DNA")
 };
-static const char *cur_sug(int i) { return (s_en ? SUG_EN : SUG_IT)[i < SUG_N ? i : 0]; }
+static const char *cur_sug(int i) { return nucleo_tr(SUG_IT[i < SUG_N ? i : 0], SUG_EN[i < SUG_N ? i : 0]); }
 static bool deck_active(void)     { return !s_user_sent && s_ilen == 0 && !s_menu_open; }
 
 // Recall a history entry into the input. dir<0 = older (ctrl+;), dir>0 = newer (ctrl+.). The live
@@ -2033,9 +2033,9 @@ static bool autocomplete(const char *pfx, char *out, int cap)
 #define CAT_N 9
 static const char *CAT_IT[CAT_N] = { "Sistema", "Calcolo", "Geometria", "Conversioni", "Meteo",
                                      "Agenda", "App e file", "Sapere", "Traduci" };
-static const char *CAT_EN[CAT_N] = { "System", "Math", "Geometry", "Conversions", "Weather",
-                                     "Agenda", "Apps & files", "Knowledge", "Translate" };
-static const char *cat_label(int c) { return (s_en ? CAT_EN : CAT_IT)[c]; }
+static const char *CAT_EN[CAT_N] = { I18N_EN("System", "Sistema"), I18N_EN("Math", "Calcolo"), I18N_EN("Geometry", "Geometria"), I18N_EN("Conversions", "Conversioni"), I18N_EN("Weather", "Meteo"),
+                                     I18N_EN("Agenda", "Agenda"), I18N_EN("Apps & files", "App e file"), I18N_EN("Knowledge", "Sapere"), I18N_EN("Translate", "Traduci") };
+static const char *cat_label(int c) { return nucleo_tr(CAT_IT[c], CAT_EN[c]); }
 
 typedef struct {
     unsigned char cat, slots;        // parent category; number of %s the template needs (0/1/2)
@@ -2049,94 +2049,94 @@ typedef struct {
 // the offline cascade already understands (mirrors the corpus + solver intents).
 static const Leaf LEAVES[] = {
     // -- Sistema (0): live device readouts, all ready-to-send --
-    { 0,0, "Ora","Time",                 "Che ore sono","What time is it",                       0,0,0,0 },
-    { 0,0, "Data","Date",                "Che giorno e oggi","What is today's date",             0,0,0,0 },
-    { 0,0, "Anno","Year",                "In che anno siamo","What year is it",                  0,0,0,0 },
-    { 0,0, "Stagione","Season",          "In che stagione siamo","What season is it",            0,0,0,0 },
-    { 0,1, "Giorno di...","Weekday of",  "Che giorno della settimana e il %s","What day of the week is %s","Data es 25 dic 2026","Date e.g. dec 25 2026",0,0 },
-    { 0,1, "Giorni a...","Days until",   "Quanti giorni mancano a %s","How many days until %s",   "Data o festa","Date or holiday",0,0 },
-    { 0,1, "Giorni nel mese","Days in month","Quanti giorni ha %s","How many days in %s",           "Mese es febbraio","Month e.g. february",0,0 },
-    { 0,1, "Eta da anno","Age from year", "Quanti anni ha chi e nato nel %s","How old is someone born in %s","Anno nascita","Birth year",0,0 },
-    { 0,1, "Ora nel mondo","World clock", "Che ore sono a %s","What time is it in %s",                 "Citta es Tokyo","City e.g. Tokyo",0,0 },
-    { 0,1, "Segno zodiacale","Star sign", "Che segno e chi nasce il %s","What star sign is someone born on %s","Data es 5 agosto","Date e.g. august 5",0,0 },
-    { 0,2, "Ore tra orari","Hours between","Quante ore da %s a %s","How many hours from %s to %s",   "Da HH:MM","From HH:MM","A HH:MM","To HH:MM" },
-    { 0,0, "Spazio SD","SD space",       "Quanto spazio ho sulla SD","How much SD space is free",0,0,0,0 },
-    { 0,0, "RAM libera","Free RAM",      "Quanta RAM libera ho","How much free RAM do I have",    0,0,0,0 },
-    { 0,0, "Rete","Network",             "A che rete sono connesso","What network am I on",       0,0,0,0 },
-    { 0,0, "Acceso da","Uptime",         "Da quanto sei acceso","What is your uptime",           0,0,0,0 },
-    { 0,0, "Versione","Version",         "Che versione di NucleoOS e","What NucleoOS version is this", 0,0,0,0 },
-    { 0,0, "Cosa sai fare","Skills",     "Cosa sai fare","What can you do",                       0,0,0,0 },
+    { 0,0, "Ora", I18N_EN("Time", "Ora"),                 "Che ore sono",I18N_EN("What time is it", "Che ore sono"),                       0,0,0,0 },
+    { 0,0, "Data", I18N_EN("Date", "Data"),                "Che giorno e oggi", I18N_EN("What is today's date", "Che giorno e oggi"),             0,0,0,0 },
+    { 0,0, "Anno", I18N_EN("Year", "Anno"),                "In che anno siamo", I18N_EN("What year is it", "In che anno siamo"),                  0,0,0,0 },
+    { 0,0, "Stagione", I18N_EN("Season", "Stagione"),          "In che stagione siamo",I18N_EN("What season is it", "In che stagione siamo"),            0,0,0,0 },
+    { 0,1, "Giorno di...", I18N_EN("Weekday of", "Giorno di..."),  "Che giorno della settimana e il %s", I18N_EN("What day of the week is %s", "Che giorno della settimana e il %s"),"Data es 25 dic 2026", I18N_EN("Date e.g. dec 25 2026", "Data es 25 dic 2026"),0,0 },
+    { 0,1, "Giorni a...", I18N_EN("Days until", "Giorni a..."),   "Quanti giorni mancano a %s", I18N_EN("How many days until %s", "Quanti giorni mancano a %s"),   "Data o festa", I18N_EN("Date or holiday", "Data o festa"),0,0 },
+    { 0,1, "Giorni nel mese", I18N_EN("Days in month", "Giorni nel mese"),"Quanti giorni ha %s", I18N_EN("How many days in %s", "Quanti giorni ha %s"),           "Mese es febbraio", I18N_EN("Month e.g. february", "Mese es febbraio"),0,0 },
+    { 0,1, "Eta da anno", I18N_EN("Age from year", "Eta da anno"), "Quanti anni ha chi e nato nel %s", I18N_EN("How old is someone born in %s", "Quanti anni ha chi e nato nel %s"),"Anno nascita", I18N_EN("Birth year", "Anno nascita"),0,0 },
+    { 0,1, "Ora nel mondo", I18N_EN("World clock", "Ora nel mondo"), "Che ore sono a %s", I18N_EN("What time is it in %s", "Che ore sono a %s"),                 "Citta es Tokyo", I18N_EN("City e.g. Tokyo", "Citta es Tokyo"),0,0 },
+    { 0,1, "Segno zodiacale", I18N_EN("Star sign", "Segno zodiacale"), "Che segno e chi nasce il %s", I18N_EN("What star sign is someone born on %s", "Che segno e chi nasce il %s"),"Data es 5 agosto", I18N_EN("Date e.g. august 5", "Data es 5 agosto"),0,0 },
+    { 0,2, "Ore tra orari", I18N_EN("Hours between", "Ore tra orari"),"Quante ore da %s a %s", I18N_EN("How many hours from %s to %s", "Quante ore da %s a %s"),   "Da HH:MM", I18N_EN("From HH:MM", "Da HH:MM"),"A HH:MM", I18N_EN("To HH:MM", "A HH:MM") },
+    { 0,0, "Spazio SD", I18N_EN("SD space", "Spazio SD"),       "Quanto spazio ho sulla SD",I18N_EN("How much SD space is free", "Quanto spazio ho sulla SD"),0,0,0,0 },
+    { 0,0, "RAM libera", I18N_EN("Free RAM", "RAM libera"),      "Quanta RAM libera ho", I18N_EN("How much free RAM do I have", "Quanta RAM libera ho"),    0,0,0,0 },
+    { 0,0, "Rete", I18N_EN("Network", "Rete"),             "A che rete sono connesso",I18N_EN("What network am I on", "A che rete sono connesso"),       0,0,0,0 },
+    { 0,0, "Acceso da", I18N_EN("Uptime", "Acceso da"),         "Da quanto sei acceso", I18N_EN("What is your uptime", "Da quanto sei acceso"),           0,0,0,0 },
+    { 0,0, "Versione", I18N_EN("Version", "Versione"),         "Che versione di NucleoOS e", I18N_EN("What NucleoOS version is this", "Che versione di NucleoOS e"), 0,0,0,0 },
+    { 0,0, "Cosa sai fare", I18N_EN("Skills", "Cosa sai fare"),     "Cosa sai fare",I18N_EN("What can you do", "Cosa sai fare"),                       0,0,0,0 },
     // -- Calcolo (1): the calculator + finance helpers --
-    { 1,2, "Moltiplica","Multiply",      "Quanto fa %s per %s","How much is %s times %s",         "Primo numero","First number","Secondo numero","Second number" },
-    { 1,2, "Dividi","Divide",            "Quanto fa %s diviso %s","How much is %s divided by %s", "Dividendo","Dividend","Divisore","Divisor" },
-    { 1,2, "Somma","Add",                "Quanto fa %s piu %s","How much is %s plus %s",          "Primo numero","First number","Secondo numero","Second number" },
-    { 1,2, "Sottrai","Subtract",         "Quanto fa %s meno %s","How much is %s minus %s",        "Primo numero","First number","Secondo numero","Second number" },
-    { 1,2, "Percentuale","Percentage",   "Quanto e il %s%% di %s","What is %s%% of %s",           "Percentuale","Percent","Totale","Total" },
-    { 1,2, "Sconto","Discount",          "Quanto costa %s euro con sconto del %s%%","What is %s euro with %s%% discount","Prezzo euro","Price euro","Sconto %%","Discount %%" },
-    { 1,2, "IVA","VAT",                  "Quanto e il %s%% di IVA su %s euro","What is %s%% VAT on %s euro","IVA %%","VAT %%","Imponibile","Net amount" },
-    { 1,2, "Potenza","Power",            "Quanto fa %s elevato a %s","What is %s to the power %s","Base","Base","Esponente","Exponent" },
-    { 1,1, "Radice","Square root",       "Radice quadrata di %s","Square root of %s",             "Numero","Number",0,0 },
-    { 1,2, "Logaritmo","Logarithm",      "Logaritmo in base %s di %s","Logarithm base %s of %s",  "Base","Base","Numero","Number" },
-    { 1,2, "MCD","GCD",                  "Massimo comun divisore di %s e %s","Greatest common divisor of %s and %s","Primo","First","Secondo","Second" },
-    { 1,2, "mcm","LCM",                  "Minimo comune multiplo di %s e %s","Least common multiple of %s and %s","Primo","First","Secondo","Second" },
-    { 1,1, "Fattoriale","Factorial",     "Fattoriale di %s","Factorial of %s",                    "Numero","Number",0,0 },
-    { 1,1, "Numero primo?","Is prime?",  "Il numero %s e primo","Is %s a prime number",           "Numero","Number",0,0 },
-    { 1,1, "In romano","To roman",       "Scrivi %s in numeri romani","Write %s in roman numerals","Numero","Number",0,0 },
-    { 1,1, "In binario","To binary",     "Converti %s in binario","Convert %s to binary",         "Numero","Number",0,0 },
+    { 1,2, "Moltiplica", I18N_EN("Multiply", "Moltiplica"),      "Quanto fa %s per %s", I18N_EN("How much is %s times %s", "Quanto fa %s per %s"),         "Primo numero", I18N_EN("First number", "Primo numero"),"Secondo numero", I18N_EN("Second number", "Secondo numero") },
+    { 1,2, "Dividi", I18N_EN("Divide", "Dividi"),            "Quanto fa %s diviso %s", I18N_EN("How much is %s divided by %s", "Quanto fa %s diviso %s"), "Dividendo", I18N_EN("Dividend", "Dividendo"),"Divisore", I18N_EN("Divisor", "Divisore") },
+    { 1,2, "Somma", I18N_EN("Add", "Somma"),                "Quanto fa %s piu %s", I18N_EN("How much is %s plus %s", "Quanto fa %s piu %s"),          "Primo numero", I18N_EN("First number", "Primo numero"),"Secondo numero", I18N_EN("Second number", "Secondo numero") },
+    { 1,2, "Sottrai", I18N_EN("Subtract", "Sottrai"),         "Quanto fa %s meno %s", I18N_EN("How much is %s minus %s", "Quanto fa %s meno %s"),        "Primo numero", I18N_EN("First number", "Primo numero"),"Secondo numero", I18N_EN("Second number", "Secondo numero") },
+    { 1,2, "Percentuale", I18N_EN("Percentage", "Percentuale"),   "Quanto e il %s%% di %s", I18N_EN("What is %s%% of %s", "Quanto e il %s%% di %s"),           "Percentuale", I18N_EN("Percent", "Percentuale"),"Totale", I18N_EN("Total", "Totale") },
+    { 1,2, "Sconto", I18N_EN("Discount", "Sconto"),          "Quanto costa %s euro con sconto del %s%%", I18N_EN("What is %s euro with %s%% discount", "Quanto costa %s euro con sconto del %s%%"),"Prezzo euro", I18N_EN("Price euro", "Prezzo euro"),"Sconto %%", I18N_EN("Discount %%", "Sconto %%") },
+    { 1,2, "IVA", I18N_EN("VAT", "IVA"),                  "Quanto e il %s%% di IVA su %s euro", I18N_EN("What is %s%% VAT on %s euro", "Quanto e il %s%% di IVA su %s euro"),"IVA %%", I18N_EN("VAT %%", "IVA %%"),"Imponibile", I18N_EN("Net amount", "Imponibile") },
+    { 1,2, "Potenza", I18N_EN("Power", "Potenza"),            "Quanto fa %s elevato a %s", I18N_EN("What is %s to the power %s", "Quanto fa %s elevato a %s"),"Base", I18N_EN("Base", "Base"),"Esponente", I18N_EN("Exponent", "Esponente") },
+    { 1,1, "Radice", I18N_EN("Square root", "Radice"),       "Radice quadrata di %s", I18N_EN("Square root of %s", "Radice quadrata di %s"),             "Numero", I18N_EN("Number", "Numero"),0,0 },
+    { 1,2, "Logaritmo", I18N_EN("Logarithm", "Logaritmo"),      "Logaritmo in base %s di %s", I18N_EN("Logarithm base %s of %s", "Logaritmo in base %s di %s"),  "Base", I18N_EN("Base", "Base"),"Numero", I18N_EN("Number", "Numero") },
+    { 1,2, "MCD", I18N_EN("GCD", "MCD"),                  "Massimo comun divisore di %s e %s", I18N_EN("Greatest common divisor of %s and %s", "Massimo comun divisore di %s e %s"),"Primo", I18N_EN("First", "Primo"),"Secondo", I18N_EN("Second", "Secondo") },
+    { 1,2, "mcm", I18N_EN("LCM", "mcm"),                  "Minimo comune multiplo di %s e %s", I18N_EN("Least common multiple of %s and %s", "Minimo comune multiplo di %s e %s"),"Primo", I18N_EN("First", "Primo"),"Secondo", I18N_EN("Second", "Secondo") },
+    { 1,1, "Fattoriale", I18N_EN("Factorial", "Fattoriale"),     "Fattoriale di %s", I18N_EN("Factorial of %s", "Fattoriale di %s"),                    "Numero", I18N_EN("Number", "Numero"),0,0 },
+    { 1,1, "Numero primo?", I18N_EN("Is prime?", "Numero primo?"),  "Il numero %s e primo", I18N_EN("Is %s a prime number", "Il numero %s e primo"),           "Numero", I18N_EN("Number", "Numero"),0,0 },
+    { 1,1, "In romano", I18N_EN("To roman", "In romano"),       "Scrivi %s in numeri romani", I18N_EN("Write %s in roman numerals", "Scrivi %s in numeri romani"),"Numero", I18N_EN("Number", "Numero"),0,0 },
+    { 1,1, "In binario", I18N_EN("To binary", "In binario"),     "Converti %s in binario", I18N_EN("Convert %s to binary", "Converti %s in binario"),         "Numero", I18N_EN("Number", "Numero"),0,0 },
     // -- Geometria (2): geometry + physics solvers --
-    { 2,1, "Area cerchio","Circle area", "Area di un cerchio di raggio %s","Area of a circle radius %s","Raggio","Radius",0,0 },
-    { 2,1, "Circonferenza","Perimeter",  "Circonferenza di un cerchio di raggio %s","Circumference of a circle radius %s","Raggio","Radius",0,0 },
-    { 2,2, "Area rettang.","Rect area",  "Area di un rettangolo %s per %s","Area of a rectangle %s by %s","Base","Width","Altezza","Height" },
-    { 2,2, "Area triangolo","Triangle",  "Area di un triangolo base %s altezza %s","Area of a triangle base %s height %s","Base","Base","Altezza","Height" },
-    { 2,2, "Ipotenusa","Hypotenuse",     "Ipotenusa con cateti %s e %s","Hypotenuse with legs %s and %s","Cateto 1","Leg 1","Cateto 2","Leg 2" },
-    { 2,1, "Volume cubo","Cube vol.",    "Volume di un cubo di lato %s","Volume of a cube side %s",  "Lato","Side",0,0 },
-    { 2,1, "Volume sfera","Sphere vol.", "Volume di una sfera di raggio %s","Volume of a sphere radius %s","Raggio","Radius",0,0 },
-    { 2,2, "Legge di Ohm","Ohm law",     "Tensione con %s ohm e %s ampere","Voltage with %s ohm and %s amp","Resistenza ohm","Resistance ohm","Corrente A","Current A" },
-    { 2,2, "Potenza el.","Elec power",   "Potenza elettrica con %s volt e %s ampere","Electrical power with %s volt and %s amp","Tensione V","Voltage V","Corrente A","Current A" },
-    { 2,2, "Velocita","Speed",           "Velocita per %s km in %s ore","Speed for %s km in %s hours","Distanza km","Distance km","Tempo h","Time h" },
+    { 2,1, "Area cerchio", I18N_EN("Circle area", "Area cerchio"), "Area di un cerchio di raggio %s", I18N_EN("Area of a circle radius %s", "Area di un cerchio di raggio %s"),"Raggio", I18N_EN("Radius", "Raggio"),0,0 },
+    { 2,1, "Circonferenza", I18N_EN("Perimeter", "Circonferenza"),  "Circonferenza di un cerchio di raggio %s", I18N_EN("Circumference of a circle radius %s", "Circonferenza di un cerchio di raggio %s"),"Raggio", I18N_EN("Radius", "Raggio"),0,0 },
+    { 2,2, "Area rettang.", I18N_EN("Rect area", "Area rettang."),  "Area di un rettangolo %s per %s", I18N_EN("Area of a rectangle %s by %s", "Area di un rettangolo %s per %s"),"Base", I18N_EN("Width", "Base"),"Altezza", I18N_EN("Height", "Altezza") },
+    { 2,2, "Area triangolo", I18N_EN("Triangle", "Area triangolo"),  "Area di un triangolo base %s altezza %s", I18N_EN("Area of a triangle base %s height %s", "Area di un triangolo base %s altezza %s"),"Base", I18N_EN("Base", "Base"),"Altezza", I18N_EN("Height", "Altezza") },
+    { 2,2, "Ipotenusa", I18N_EN("Hypotenuse", "Ipotenusa"),     "Ipotenusa con cateti %s e %s", I18N_EN("Hypotenuse with legs %s and %s", "Ipotenusa con cateti %s e %s"),"Cateto 1", I18N_EN("Leg 1", "Cateto 1"),"Cateto 2", I18N_EN("Leg 2", "Cateto 2") },
+    { 2,1, "Volume cubo", I18N_EN("Cube vol.", "Volume cubo"),    "Volume di un cubo di lato %s", I18N_EN("Volume of a cube side %s", "Volume di un cubo di lato %s"),  "Lato", I18N_EN("Side", "Lato"),0,0 },
+    { 2,1, "Volume sfera", I18N_EN("Sphere vol.", "Volume sfera"), "Volume di una sfera di raggio %s", I18N_EN("Volume of a sphere radius %s", "Volume di una sfera di raggio %s"),"Raggio", I18N_EN("Radius", "Raggio"),0,0 },
+    { 2,2, "Legge di Ohm", I18N_EN("Ohm law", "Legge di Ohm"),     "Tensione con %s ohm e %s ampere", I18N_EN("Voltage with %s ohm and %s amp", "Tensione con %s ohm e %s ampere"),"Resistenza ohm", I18N_EN("Resistance ohm", "Resistenza ohm"),"Corrente A", I18N_EN("Current A", "Corrente A") },
+    { 2,2, "Potenza el.", I18N_EN("Elec power", "Potenza el."),   "Potenza elettrica con %s volt e %s ampere", I18N_EN("Electrical power with %s volt and %s amp", "Potenza elettrica con %s volt e %s ampere"),"Tensione V", I18N_EN("Voltage V", "Tensione V"),"Corrente A", I18N_EN("Current A", "Corrente A") },
+    { 2,2, "Velocita", I18N_EN("Speed", "Velocita"),           "Velocita per %s km in %s ore", I18N_EN("Speed for %s km in %s hours", "Velocita per %s km in %s ore"),"Distanza km", I18N_EN("Distance km", "Distanza km"),"Tempo h", I18N_EN("Time h", "Tempo h") },
     // -- Conversioni (3) --
-    { 3,1, "Miglia>km","Miles>km",       "Quanti km sono %s miglia","How many km is %s miles",    "Miglia","Miles",0,0 },
-    { 3,1, "km>miglia","km>miles",       "Quante miglia sono %s km","How many miles is %s km",    "Chilometri","Kilometers",0,0 },
-    { 3,1, "Pollici>cm","Inch>cm",       "Quanti cm sono %s pollici","How many cm is %s inches",   "Pollici","Inches",0,0 },
-    { 3,1, "C>F","C>F",                  "Quanti gradi F sono %s gradi C","How many F is %s C",    "Gradi C","Degrees C",0,0 },
-    { 3,1, "F>C","F>C",                  "Quanti gradi C sono %s gradi F","How many C is %s F",    "Gradi F","Degrees F",0,0 },
-    { 3,1, "kg>libbre","kg>lb",          "Quante libbre sono %s kg","How many pounds is %s kg",   "Chilogrammi","Kilograms",0,0 },
-    { 3,1, "Byte>KB/MB","Bytes>KB/MB",   "Converti %s byte in kilobyte e megabyte","Convert %s bytes to KB and MB","Byte","Bytes",0,0 },
-    { 3,1, "Ettari>m2","Hectares>m2",    "Quanti metri quadri sono %s ettari","How many square meters is %s hectares","Ettari","Hectares",0,0 },
-    { 3,2, "Generica","Generic",         "Converti %s in %s","Convert %s to %s",                  "Quantita es 5 m","Amount e.g. 5 m","Unita es cm","Unit e.g. cm" },
+    { 3,1, "Miglia>km", I18N_EN("Miles>km", "Miglia>km"),       "Quanti km sono %s miglia", I18N_EN("How many km is %s miles", "Quanti km sono %s miglia"),    "Miglia", I18N_EN("Miles", "Miglia"),0,0 },
+    { 3,1, "km>miglia", I18N_EN("km>miles", "km>miglia"),       "Quante miglia sono %s km", I18N_EN("How many miles is %s km", "Quante miglia sono %s km"),    "Chilometri", I18N_EN("Kilometers", "Chilometri"),0,0 },
+    { 3,1, "Pollici>cm", I18N_EN("Inch>cm", "Pollici>cm"),       "Quanti cm sono %s pollici", I18N_EN("How many cm is %s inches", "Quanti cm sono %s pollici"),   "Pollici", I18N_EN("Inches", "Pollici"),0,0 },
+    { 3,1, "C>F", I18N_EN("C>F", "C>F"),                  "Quanti gradi F sono %s gradi C", I18N_EN("How many F is %s C", "Quanti gradi F sono %s gradi C"),    "Gradi C", I18N_EN("Degrees C", "Gradi C"),0,0 },
+    { 3,1, "F>C", I18N_EN("F>C", "F>C"),                  "Quanti gradi C sono %s gradi F", I18N_EN("How many C is %s F", "Quanti gradi C sono %s gradi F"),    "Gradi F", I18N_EN("Degrees F", "Gradi F"),0,0 },
+    { 3,1, "kg>libbre", I18N_EN("kg>lb", "kg>libbre"),          "Quante libbre sono %s kg", I18N_EN("How many pounds is %s kg", "Quante libbre sono %s kg"),   "Chilogrammi", I18N_EN("Kilograms", "Chilogrammi"),0,0 },
+    { 3,1, "Byte>KB/MB", I18N_EN("Bytes>KB/MB", "Byte>KB/MB"),   "Converti %s byte in kilobyte e megabyte", I18N_EN("Convert %s bytes to KB and MB", "Converti %s byte in kilobyte e megabyte"),"Byte", I18N_EN("Bytes", "Byte"),0,0 },
+    { 3,1, "Ettari>m2", I18N_EN("Hectares>m2", "Ettari>m2"),    "Quanti metri quadri sono %s ettari", I18N_EN("How many square meters is %s hectares", "Quanti metri quadri sono %s ettari"),"Ettari", I18N_EN("Hectares", "Ettari"),0,0 },
+    { 3,2, "Generica", I18N_EN("Generic", "Generica"),         "Converti %s in %s", I18N_EN("Convert %s to %s", "Converti %s in %s"),                  "Quantita es 5 m", I18N_EN("Amount e.g. 5 m", "Quantita es 5 m"),"Unita es cm", I18N_EN("Unit e.g. cm", "Unita es cm") },
     // -- Meteo (4) --
-    { 4,1, "Citta","City",               "Meteo a %s","Weather in %s",                            "Citta","City",0,0 },
-    { 4,1, "Domani","Tomorrow",          "Che tempo fa domani a %s","Weather tomorrow in %s",     "Citta","City",0,0 },
+    { 4,1, "Citta", I18N_EN("City", "Citta"),               "Meteo a %s", I18N_EN("Weather in %s", "Meteo a %s"),                            "Citta", I18N_EN("City", "Citta"),0,0 },
+    { 4,1, "Domani", I18N_EN("Tomorrow", "Domani"),          "Che tempo fa domani a %s", I18N_EN("Weather tomorrow in %s", "Che tempo fa domani a %s"),     "Citta", I18N_EN("City", "Citta"),0,0 },
     // -- Agenda (5) --
-    { 5,0, "Impegni oggi","Today",       "Che impegni ho oggi","What are my events today",        0,0,0,0 },
-    { 5,1, "Timer","Timer",              "Timer di %s minuti","Timer for %s minutes",             "Minuti","Minutes",0,0 },
-    { 5,1, "Sveglia","Alarm",            "Sveglia alle %s","Alarm at %s",                         "Ora HH:MM","Time HH:MM",0,0 },
-    { 5,2, "Promem. domani","Tomorrow",  "Ricordami %s domani alle %s","Remind me %s tomorrow at %s","Cosa","What","Ora HH:MM","Time HH:MM" },
-    { 5,2, "Promem. oggi","Today rem.",  "Ricordami %s oggi alle %s","Remind me %s today at %s",  "Cosa","What","Ora HH:MM","Time HH:MM" },
+    { 5,0, "Impegni oggi", I18N_EN("Today", "Impegni oggi"),       "Che impegni ho oggi", I18N_EN("What are my events today", "Che impegni ho oggi"),        0,0,0,0 },
+    { 5,1, "Timer", I18N_EN("Timer", "Timer"),              "Timer di %s minuti", I18N_EN("Timer for %s minutes", "Timer di %s minuti"),             "Minuti", I18N_EN("Minutes", "Minuti"),0,0 },
+    { 5,1, "Sveglia", I18N_EN("Alarm", "Sveglia"),            "Sveglia alle %s", I18N_EN("Alarm at %s", "Sveglia alle %s"),                         "Ora HH:MM", I18N_EN("Time HH:MM", "Ora HH:MM"),0,0 },
+    { 5,2, "Promem. domani", I18N_EN("Tomorrow", "Promem. domani"),  "Ricordami %s domani alle %s", I18N_EN("Remind me %s tomorrow at %s", "Ricordami %s domani alle %s"),"Cosa", I18N_EN("What", "Cosa"),"Ora HH:MM", I18N_EN("Time HH:MM", "Ora HH:MM") },
+    { 5,2, "Promem. oggi", I18N_EN("Today rem.", "Promem. oggi"),  "Ricordami %s oggi alle %s", I18N_EN("Remind me %s today at %s", "Ricordami %s oggi alle %s"),  "Cosa", I18N_EN("What", "Cosa"),"Ora HH:MM", I18N_EN("Time HH:MM", "Ora HH:MM") },
     // -- App e file (6): open a device app (the answer offers "Enter = open X": ANIMA reboots into the full
     // OS, which opens it — see launch_now), then ANIMA's OWN built-in editor (quick note + create file).
-    { 6,1, "Apri app","Open app",        "Apri %s","Open %s",                                     "App es musica","App e.g. music",0,0 },
-    { 6,0, "Musica","Music",             "Apri la musica","Open music",                           0,0,0,0 },
-    { 6,0, "Impostazioni","Settings",    "Apri le impostazioni","Open settings",                  0,0,0,0 },
+    { 6,1, "Apri app", I18N_EN("Open app", "Apri app"),        "Apri %s", I18N_EN("Open %s", "Apri %s"),                                     "App es musica", I18N_EN("App e.g. music", "App es musica"),0,0 },
+    { 6,0, "Musica", I18N_EN("Music", "Musica"),             "Apri la musica", I18N_EN("Open music", "Apri la musica"),                           0,0,0,0 },
+    { 6,0, "Impostazioni", I18N_EN("Settings", "Impostazioni"),    "Apri le impostazioni", I18N_EN("Open settings", "Apri le impostazioni"),                  0,0,0,0 },
     // QUICK NOTE: @note sentinel in p1 (slots=0) -> activate_leaf opens the editor with a timestamp path
-    { 6,0, "Nota rapida","Quick note",   0,0,  "@note",0,  0,0 },
+    { 6,0, "Nota rapida", I18N_EN("Quick note", "Nota rapida"),   0,0,  "@note",0,  0,0 },
     // EDITOR leaf: slots=1 collects the PATH, then "@editor" (sentinel in p2) opens the full-screen
     // textarea instead of sending a query; the typed content is written to that path on Ctrl+S.
-    { 6,1, "Crea file","Create file",    "Crea il file %s","Create the file %s",                  "Percorso /data/..","Path /data/..","@editor","@editor" },
+    { 6,1, "Crea file", I18N_EN("Create file", "Crea file"),    "Crea il file %s", I18N_EN("Create the file %s", "Crea il file %s"),                  "Percorso /data/..", I18N_EN("Path /data/..", "Percorso /data/.."),"@editor", I18N_EN("@editor", "@editor") },
     // -- Sapere (7): knowledge Q&A --
-    { 7,1, "Chi e","Who is",             "Chi e %s","Who is %s",                                  "Nome","Name",0,0 },
-    { 7,1, "Cos'e","What is",            "Cos'e %s","What is %s",                                 "Argomento","Topic",0,0 },
-    { 7,1, "Spiega","Explain",           "Spiegami %s","Explain %s",                              "Argomento","Topic",0,0 },
-    { 7,1, "Capitale di","Capital of",   "Qual e la capitale di %s","What is the capital of %s",  "Nazione","Country",0,0 },
-    { 7,1, "Formula chim.","Chem form.", "Formula chimica di %s","Chemical formula of %s",        "Sostanza","Substance",0,0 },
-    { 7,1, "Capo di stato","Head of st.","Chi e il capo di stato di %s","Who is the head of state of %s","Nazione","Country",0,0 },
-    { 7,1, "Esempio codice","Code ex.",  "Scrivimi un esempio di codice %s","Write a code example in %s","Linguaggio","Language",0,0 },
-    { 7,0, "Su NucleoOS","About OS",     "Cos'e NucleoOS","What is NucleoOS",                     0,0,0,0 },
+    { 7,1, "Chi e", I18N_EN("Who is", "Chi e"),             "Chi e %s", I18N_EN("Who is %s", "Chi e %s"),                                  "Nome", I18N_EN("Name", "Nome"),0,0 },
+    { 7,1, "Cos'e", I18N_EN("What is", "Cos'e"),            "Cos'e %s", I18N_EN("What is %s", "Cos'e %s"),                                 "Argomento", I18N_EN("Topic", "Argomento"),0,0 },
+    { 7,1, "Spiega", I18N_EN("Explain", "Spiega"),           "Spiegami %s", I18N_EN("Explain %s", "Spiegami %s"),                              "Argomento", I18N_EN("Topic", "Argomento"),0,0 },
+    { 7,1, "Capitale di", I18N_EN("Capital of", "Capitale di"),   "Qual e la capitale di %s", I18N_EN("What is the capital of %s", "Qual e la capitale di %s"),  "Nazione", I18N_EN("Country", "Nazione"),0,0 },
+    { 7,1, "Formula chim.", I18N_EN("Chem form.", "Formula chim."), "Formula chimica di %s", I18N_EN("Chemical formula of %s", "Formula chimica di %s"),        "Sostanza", I18N_EN("Substance", "Sostanza"),0,0 },
+    { 7,1, "Capo di stato", I18N_EN("Head of st.", "Capo di stato"),"Chi e il capo di stato di %s", I18N_EN("Who is the head of state of %s", "Chi e il capo di stato di %s"),"Nazione", I18N_EN("Country", "Nazione"),0,0 },
+    { 7,1, "Esempio codice", I18N_EN("Code ex.", "Esempio codice"),  "Scrivimi un esempio di codice %s", I18N_EN("Write a code example in %s", "Scrivimi un esempio di codice %s"),"Linguaggio", I18N_EN("Language", "Linguaggio"),0,0 },
+    { 7,0, "Su NucleoOS", I18N_EN("About OS", "Su NucleoOS"),     "Cos'e NucleoOS", I18N_EN("What is NucleoOS", "Cos'e NucleoOS"),                     0,0,0,0 },
     // -- Traduci (8) -- the WORD goes BEFORE the language: the translator's parser extracts the remainder between
     // "traduci"/"translate" and "in inglese"/"to english". With the old "Traduci in inglese: <parola>" the
     // word ended up after the colon and was NOT extracted -> "Cosa traduco?". Now "traduci <parola> in ...".
-    { 8,1, "In inglese","To English",    "traduci %s in inglese","translate %s to english",     "Testo","Text",0,0 },
-    { 8,1, "In italiano","To Italian",   "traduci %s in italiano","translate %s to italian",     "Testo","Text",0,0 },
+    { 8,1, "In inglese", I18N_EN("To English", "In inglese"),    "traduci %s in inglese", I18N_EN("translate %s to english", "traduci %s in inglese"),     "Testo", I18N_EN("Text", "Testo"),0,0 },
+    { 8,1, "In italiano", I18N_EN("To Italian", "In italiano"),   "traduci %s in italiano", I18N_EN("translate %s to italian", "traduci %s in italiano"),     "Testo", I18N_EN("Text", "Testo"),0,0 },
 };
 #define LEAF_N ((int)(sizeof(LEAVES) / sizeof(LEAVES[0])))
 
@@ -2146,7 +2146,7 @@ static bool ready_leaf_complete(const char *pfx, char *out, int cap, int pl)
 {
     for (int i = 0; i < LEAF_N; i++) {
         if (LEAVES[i].slots) continue;
-        const char *t = s_en ? LEAVES[i].t_en : LEAVES[i].t_it;
+        const char *t = nucleo_tr(LEAVES[i].t_it, LEAVES[i].t_en);
         if (!t) continue;
         if ((int)strlen(t) > pl && !strncasecmp(t, pfx, pl)) { snprintf(out, cap, "%s", t); return true; }
     }
@@ -2163,7 +2163,7 @@ static void form_build_query(char *out, size_t n, bool preview)
 {
     if (s_form_leaf < 0) { out[0] = 0; return; }
     const Leaf *L = &LEAVES[s_form_leaf];
-    const char *t = s_en ? L->t_en : L->t_it;
+    const char *t = nucleo_tr(L->t_it, L->t_en);
     const char *a = s_ses->slot[0][0] ? s_ses->slot[0] : (preview ? "?" : "");
     const char *b = s_ses->slot[1][0] ? s_ses->slot[1] : (preview ? "?" : "");
     if      (L->slots >= 2) snprintf(out, n, t, a, b);   // format is OUR constant; a/b are inert args
@@ -2175,7 +2175,7 @@ static void form_build_query(char *out, size_t n, bool preview)
 // Short ASCII labels so all five fit the 240/5 = 48px segments and never clip (worst case
 // "STATUS" = 36px, centred with 6px margins). Localised IT/EN like the rest of the app.
 static const char *const TABS_IT[TAB_N] = { "IDEE", "OGGI", "GUIDA", "IA", "STATO" };
-static const char *const TABS_EN[TAB_N] = { "IDEAS", "TODAY", "GUIDE", "AI", "STATUS" };
+static const char *const TABS_EN[TAB_N] = { I18N_EN("IDEAS", "IDEE"), I18N_EN("TODAY", "OGGI"), I18N_EN("GUIDE", "GUIDA"), I18N_EN("AI", "IA"), I18N_EN("STATUS", "STATO") };
 // Number of UP/DOWN-navigable rows in a tab. STATO is a read-only readout (0 rows); OGGI is the
 // live agenda length (0 => empty state, DOWN does nothing). s_today_n is the cached agenda count.
 static int tab_rows(int t)
@@ -2434,8 +2434,7 @@ static void menu_hint(void)
         if (LEAVES[s_form_leaf].slots < 2)                     // single field: nothing to hop between
             nucleo_app_set_hint(TR("digita  fn / riempi  invio invia", "type  fn / fill  enter send"));
         else                                                   // ; . , / type; fn+;/. hop fields, fn+/ fills
-            nucleo_app_set_hint(s_en ? (last ? "fn / fill  fn ;. field  enter send" : "fn / fill  fn ;. field  enter next")
-                                     : (last ? "fn / riempi  fn ;. campo  invio invia" : "fn / riempi  fn ;. campo  invio avanti"));
+            nucleo_app_set_hint(last ? TR("fn / riempi  fn ;. campo  invio invia", "fn / fill  fn ;. field  enter send") : TR("fn / riempi  fn ;. campo  invio avanti", "fn / fill  fn ;. field  enter next"));
         return;
     }
     if (s_mrow == -1) { nucleo_app_set_hint(TR("sx/dx scheda  giu entra  esc", "l/r tab   down enter   esc")); return; }
@@ -2622,7 +2621,7 @@ static void activate_leaf(int li)
             editor_open(path);
             return;
         }
-        send_query(s_en ? L->t_en : L->t_it);
+        send_query(nucleo_tr(L->t_it, L->t_en));
     } else {
         s_form_leaf = li; s_form_slot = 0; s_ses->slot[0][0] = s_ses->slot[1][0] = 0;
         menu_hint(); nucleo_app_request_draw();
@@ -2691,7 +2690,7 @@ static void idee_key(int key, char ch)
         else if (key == NK_ENTER && s_mrow >= 0) { activate_leaf(cat_leaf_at(s_idee_cat, s_mrow)); return; }
         else if (is_alpha(ch)) {                                         // type-ahead over the leaf labels
             char lc = lc1(ch);
-            for (int k = 1; k <= n; k++) { int i = ((s_mrow < 0 ? -1 : s_mrow) + k + n) % n; const Leaf *L = &LEAVES[cat_leaf_at(s_idee_cat, i)]; const char *lab = s_en ? L->l_en : L->l_it; if (lc1(lab[0]) == lc) { s_mrow = i; break; } }
+            for (int k = 1; k <= n; k++) { int i = ((s_mrow < 0 ? -1 : s_mrow) + k + n) % n; const Leaf *L = &LEAVES[cat_leaf_at(s_idee_cat, i)]; const char *lab = nucleo_tr(L->l_it, L->l_en); if (lc1(lab[0]) == lc) { s_mrow = i; break; } }
         }
         else return;
         if (s_mrow >= 0) s_ses->focus_leaf[s_idee_cat] = s_mrow;             // remember where you were
@@ -2813,9 +2812,9 @@ static void ia_key(int key)
             case IA_MODEL:  nucleo_anima_model_step(+1); break;    // next model (wraps), saved to teacher.json
             case IA_EFFORT: nucleo_anima_effort_step(+1); break;   // low -> medium -> high -> xhigh -> max -> low
             case IA_LANG:                                    // the OS language itself (settings.json ui.language)
-                nucleo_i18n_set_en(!s_en); s_en = !nucleo_i18n_is_it(); save_settings();
+                nucleo_i18n_next_lang(); s_en = !nucleo_i18n_is_it(); save_settings();
                 if (s_ses->vmode == V_MANUAL) s_ses->vmode = V_FOLLOW;
-                rebuild_rows(); break;                       // re-wrap + relabel
+                rebuild_rows(); mark_all_dirty(); break;      // re-wrap + relabel, including EN -> PT
             case IA_TEXT:                                    // re-wrap the transcript: row indices change
                 s_big = !s_big; save_settings();
                 if (s_ses->vmode == V_MANUAL) s_ses->vmode = V_FOLLOW;
@@ -3009,7 +3008,7 @@ static void back_pill(int x, int y, int h)
 static void draw_tabbar(int active)
 {
     if (lg()) {                                     // two screens: five equal segments across the panel, Font2,
-        const char *const *nm = s_en ? TABS_EN : TABS_IT;   // each one a touch target (touch_targets)
+        const char *nm[TAB_N]; for (int i = 0; i < TAB_N; i++) nm[i] = nucleo_tr(TABS_IT[i], TABS_EN[i]);   // each one a touch target (touch_targets)
         const int tx0 = 48, tw = (AW - tx0) / TAB_N;
         G.setFont(&fonts::Font2); G.setTextSize(1);
         G.fillRect(0, 0, AW, 22, BG);
@@ -3024,7 +3023,8 @@ static void draw_tabbar(int active)
         return;
     }
     G.setFont(&fonts::Font0); G.setTextSize(1);
-    app_ui_tabs(0, s_en ? TABS_EN : TABS_IT, TAB_N, active, ACC);
+    const char *tabs[TAB_N]; for (int i = 0; i < TAB_N; i++) tabs[i] = nucleo_tr(TABS_IT[i], TABS_EN[i]);
+    app_ui_tabs(0, tabs, TAB_N, active, ACC);
     G.fillRect(0, 20, AW, 2, BG);
 }
 // A menu row band [y, y+h): focused = the accent pill (INK content), else BG (MUTED content). It paints the
@@ -3128,7 +3128,7 @@ static int build_ia(IAItem *it)
         else if (!strcmp(e, "max"))    snprintf(it[IA_EFFORT].val, 14, "%s", TR5("Massimo", "Max", "Maximo", "Maximum", "Maximal"));
         else                           snprintf(it[IA_EFFORT].val, 14, "%s", TR5("Medio", "Medium", "Medio", "Moyen", "Mittel"));
     }
-    it[IA_LANG].label = TR("Lingua", "Lang"); it[IA_LANG].kind = SV_TEXT;   // the OS language (Enter: IT <-> EN)
+    it[IA_LANG].label = TR("Lingua", "Lang"); it[IA_LANG].kind = SV_TEXT;   // cycle every supported OS language
     snprintf(it[IA_LANG].val, 14, "%.2s", nucleo_i18n_lang());
     for (char *c = it[IA_LANG].val; *c; c++) if (*c >= 'a' && *c <= 'z') *c -= 32;
     it[IA_TEXT].label = TR("Testo", "Text"); it[IA_TEXT].kind = SV_TEXT;
@@ -3197,15 +3197,15 @@ static const GuidePage GUIDE_IT[GUIDE_N] = {
     { "Voce",          "Legge le risposte.\nAmbra = aspetto una\ntua risposta." },
 };
 static const GuidePage GUIDE_EN[GUIDE_N] = {
-    { "ANIMA",         "Offline assistant.\nType and press Enter.\nWorks with no network." },
-    { "Keys",          "fn ;/.  page the chat\nctrl ;/.  history\nfn /  complete, mode" },
-    { "Reading",       "Enter on empty line:\nfull-screen reader,\n;/. flips pages." },
-    { "Menu",          "TAB opens the menu.\nEnter opens, Esc back.\nLeft/Right switch tab." },
-    { "What to ask",   "Time, weather, math,\nreminders, translate.\n\"Open Music\" + Enter." },
-    { "IDEAS",         "Catalog of all I\ncan do. Enter to open.\n\"...\" asks for input." },
-    { "Modes",         "Offline: device only.\nHybrid: then cloud.\nOnline: cloud only." },
-    { "Online only",   "Uses a cloud LLM.\nNeeds Wi-Fi and an\nAPI key (from web)." },
-    { "Voice",         "Reads answers aloud.\nAmber = waiting for\nyour reply." },
+    { I18N_EN("ANIMA", "ANIMA"),         I18N_EN("Offline assistant.\nType and press Enter.\nWorks with no network.", "Assistente offline.\nScrivi e premi Invio.\nVa anche senza rete.") },
+    { I18N_EN("Keys", "Tasti"),          I18N_EN("fn ;/.  page the chat\nctrl ;/.  history\nfn /  complete, mode", "fn ;/.  pagina la chat\nctrl ;/.  cronologia\nfn /  completa, modo") },
+    { I18N_EN("Reading", "Lettura"),       I18N_EN("Enter on empty line:\nfull-screen reader,\n;/. flips pages.", "Invio a riga vuota:\nlettore a schermo\npieno, ;/. pagina.") },
+    { I18N_EN("Menu", "Menu"),          I18N_EN("TAB opens the menu.\nEnter opens, Esc back.\nLeft/Right switch tab.", "TAB apre il menu.\nInvio apri, Esc su.\nDx/Sx cambia scheda.") },
+    { I18N_EN("What to ask", "Cosa chiedere"),   I18N_EN("Time, weather, math,\nreminders, translate.\n\"Open Music\" + Enter.", "Ora, meteo, calcoli,\npromemoria, traduzioni.\n\"Apri Musica\" + Invio.") },
+    { I18N_EN("IDEAS", "IDEE"),         I18N_EN("Catalog of all I\ncan do. Enter to open.\n\"...\" asks for input.", "Catalogo di cio' che\nso fare. Invio entra.\n\"...\" chiede i dati.") },
+    { I18N_EN("Modes", "Modalita"),         I18N_EN("Offline: device only.\nHybrid: then cloud.\nOnline: cloud only.", "Offline: solo qui.\nIbrido: poi il cloud.\nSolo online: cloud.") },
+    { I18N_EN("Online only", "Solo online"),   I18N_EN("Uses a cloud LLM.\nNeeds Wi-Fi and an\nAPI key (from web).", "Usa un LLM nel cloud.\nServe Wi-Fi e una\nchiave API (da web).") },
+    { I18N_EN("Voice", "Voce"),         I18N_EN("Reads answers aloud.\nAmber = waiting for\nyour reply.", "Legge le risposte.\nAmbra = aspetto una\ntua risposta.") },
 };
 // A guide card: BIG bold violet title under a hairline, BIG anti-aliased FreeSans body, and a row of
 // carousel page dots at the foot (current = a fat ACC dot, the others small + MUTED) — the modern
@@ -3218,10 +3218,10 @@ static void draw_guide(int ch)
     s_ses->mpage = (short)pg;
     const GuidePage *g = (s_en ? GUIDE_EN : GUIDE_IT) + pg;
     set_font(F_BOLD);                                     // big bold title (was a tiny 6x8), painted in place
-    box_text(0, 22, AW, 21, 8, 22, g->title, ACC, BG);
+    box_text(0, 22, AW, 21, 8, 22, nucleo_tr_en(g->title), ACC, BG);
     G.drawFastHLine(8, 43, (AW - 16), LINE);
     G.setClipRect(0, 45, AW, ch - 53);                  // body band, kept clear of the title and the dots
-    int by = draw_wrapped(g->body, 8, 47, (AW - 16), F_BIG, FG, 18);   // big anti-aliased FreeSans body
+    int by = draw_wrapped(nucleo_tr_en(g->body), 8, 47, (AW - 16), F_BIG, FG, 18);   // big anti-aliased FreeSans body
     G.clearClipRect();
     if (by < ch - 8) G.fillRect(0, by, AW, ch - 8 - by, BG);
     int gap = 14, span = (GUIDE_N - 1) * gap, x0 = (AW / 2) - span / 2, dy = ch - 6;          // carousel page dots
@@ -3468,7 +3468,7 @@ static void draw_leaf_row(int y, bool focus, int c, int i)
     G.setFont(&fonts::Font0); G.setTextSize(1); G.setTextColor(focus ? INK : DIM, bg);
     G.setCursor(11, cy - 3); G.print(num);
     G.setFont(&fonts::Font0); G.setTextSize(2); G.setTextColor(ink, bg);     // big label
-    char line[44]; snprintf(line, sizeof line, "%s", s_en ? L->l_en : L->l_it);
+    char line[44]; snprintf(line, sizeof line, "%s", nucleo_tr(L->l_it, L->l_en));
     fit_w(line, form ? (AW - 88) : (AW - 52));                                           // ".." if longer; room for the form badge
     G.setCursor(34, ty - 1); G.print(line);
     if (form) { G.setFont(&fonts::Font0); G.setTextSize(2); G.setTextColor(ink, bg);
@@ -3556,7 +3556,7 @@ static void draw_idee_form(int ch)
     if (s_ses->mfull) {
         draw_cat_icon(L->cat, 6, 22, ACC);
         G.setFont(&fonts::Font0); G.setTextSize(1);
-        char hd[52]; snprintf(hd, sizeof hd, "%s > %s", cat_label(L->cat), s_en ? L->l_en : L->l_it);
+        char hd[52]; snprintf(hd, sizeof hd, "%s > %s", cat_label(L->cat), nucleo_tr(L->l_it, L->l_en));
         while (hd[0] && (int)G.textWidth(hd) > 150) hd[strlen(hd) - 1] = 0;
         G.setTextColor(ACC, BG); G.setCursor(28, 27); G.print(hd);
         G.drawFastHLine(8, 40, (AW - 16), LINE);
@@ -3576,7 +3576,7 @@ static void draw_idee_form(int ch)
         }
     }
     // -- BIG question label (this slot's field), opaque in its band --
-    const char *pl = (s == 0) ? (s_en ? L->p1_en : L->p1_it) : (s_en ? L->p2_en : L->p2_it);
+    const char *pl = (s == 0) ? (nucleo_tr(L->p1_it, L->p1_en)) : (nucleo_tr(L->p2_it, L->p2_en));
     char lab[40]; snprintf(lab, sizeof lab, "%s", pl ? pl : "");
     G.setFont(&fonts::FreeSans9pt7b); G.setTextSize(1);
     while (lab[0] && (int)G.textWidth(lab) > (AW - 16)) lab[strlen(lab) - 1] = 0;
@@ -3728,8 +3728,8 @@ static void put_badge(int top)
         const bool clk = tm && now > 1672531200;                // pre-NTP: no clock/date yet
         int p, n;
         if (answer_pos(chat_avail(), &p, &n)) { snprintf(a, sizeof a, "%d/%d", p, n); ca = ACC; }
-        else if (clk) snprintf(a, sizeof a, "%s %d %s", (s_en ? WD3_EN : WD3_IT)[tm->tm_wday], tm->tm_mday,
-                               (s_en ? MO3_EN : MO3_IT)[tm->tm_mon]);
+        else if (clk) snprintf(a, sizeof a, "%s %d %s", nucleo_tr(WD3_IT[tm->tm_wday], WD3_EN[tm->tm_wday]), tm->tm_mday,
+                               nucleo_tr(MO3_IT[tm->tm_mon], MO3_EN[tm->tm_mon]));
         if (clk) snprintf(b, sizeof b, "%02d:%02d", tm->tm_hour, tm->tm_min);
     }
     if (lg()) {                                                 // two screens: one Font2 cluster left of the menu button
@@ -3780,8 +3780,7 @@ static void draw_deck(int ty0, int avail)
     // Painted in place (opaque text + leftovers): moving the pick repaints the rows, never a blank body.
     time_t now = time(NULL); struct tm *tm = localtime(&now);
     int hr = tm ? tm->tm_hour : 9;
-    const char *greet = s_en ? (hr < 12 ? "Good morning" : hr < 18 ? "Good afternoon" : "Good evening")
-                             : (hr < 12 ? "Buongiorno"   : hr < 18 ? "Buon pomeriggio" : "Buonasera");
+    const char *greet = hr < 12 ? TR("Buongiorno", "Good morning") : hr < 18 ? TR("Buon pomeriggio", "Good afternoon") : TR("Buonasera", "Good evening");
     char hm[8] = "";
     if (tm && now > 1672531200) snprintf(hm, sizeof hm, "%02d:%02d", tm->tm_hour, tm->tm_min);
     G.setFont(&fonts::Font2); G.setTextSize(1);
@@ -4243,18 +4242,18 @@ static void draw_companion(void)
             cmp_card("Editor", s_ed && s_ed->path[0] ? s_ed->path : "(file)", FG, cnt);
         } else if (scene == 4) {
             // The menu: the tab, then the focused entry big (what Enter would open), its detail below.
-            const char *tab = (s_en ? TABS_EN : TABS_IT)[s_tab];
+            const char *tab = nucleo_tr(TABS_IT[s_tab], TABS_EN[s_tab]);
             char val[64] = "", sub[64] = "";
             if (s_tab == TAB_IDEE) {
                 if (s_form_leaf >= 0) {
                     const Leaf *L = &LEAVES[s_form_leaf];
                     snprintf(val, sizeof val, "%s", s_ses->slot[s_form_slot][0] ? s_ses->slot[s_form_slot] : "...");
-                    snprintf(sub, sizeof sub, "%s", s_en ? L->l_en : L->l_it);
+                    snprintf(sub, sizeof sub, "%s", nucleo_tr(L->l_it, L->l_en));
                 } else if (s_idee_cat < 0) {
                     if (s_mrow >= 0) { snprintf(val, sizeof val, "%s", cat_label(s_mrow)); snprintf(sub, sizeof sub, "%d %s", cat_leaf_count(s_mrow), TR("abilita", "skills")); }
                 } else if (s_mrow >= 0) {
                     const Leaf *L = &LEAVES[cat_leaf_at(s_idee_cat, s_mrow)];
-                    snprintf(val, sizeof val, "%s", s_en ? L->l_en : L->l_it);
+                    snprintf(val, sizeof val, "%s", nucleo_tr(L->l_it, L->l_en));
                     snprintf(sub, sizeof sub, "%s", cat_label(s_idee_cat));
                 }
             } else if (s_tab == TAB_IA && s_mrow >= 0 && s_mrow < IA_ROWS) {
@@ -4265,7 +4264,7 @@ static void draw_companion(void)
                 else snprintf(sub, sizeof sub, "%s", it[s_mrow].val);
             } else if (s_tab == TAB_GUIDA) {
                 int pg = s_mrow < 0 ? 0 : s_mrow; if (pg >= GUIDE_N) pg = GUIDE_N - 1;
-                snprintf(val, sizeof val, "%s", (s_en ? GUIDE_EN : GUIDE_IT)[pg].title);
+                snprintf(val, sizeof val, "%s", nucleo_tr(GUIDE_IT[pg].title, GUIDE_EN[pg].title));
                 snprintf(sub, sizeof sub, "%d / %d", pg + 1, GUIDE_N);
             } else if (s_tab == TAB_OGGI) {
                 snprintf(val, sizeof val, "%s", s_ses->today_hdr);
@@ -4316,9 +4315,9 @@ static void draw_companion(void)
                 char wd[16] = "", dm[16] = "";
                 if (clk) {
                     static const char *const WDL_IT[7] = { "domenica", "lunedi", "martedi", "mercoledi", "giovedi", "venerdi", "sabato" };
-                    static const char *const WDL_EN[7] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
-                    snprintf(wd, sizeof wd, "%s", (s_en ? WDL_EN : WDL_IT)[tm->tm_wday]);
-                    snprintf(dm, sizeof dm, "%d %s", tm->tm_mday, (s_en ? MO3_EN : MO3_IT)[tm->tm_mon]);
+                    static const char *const WDL_EN[7] = { I18N_EN("Sunday", "domenica"), I18N_EN("Monday", "lunedi"), I18N_EN("Tuesday", "martedi"), I18N_EN("Wednesday", "mercoledi"), I18N_EN("Thursday", "giovedi"), I18N_EN("Friday", "venerdi"), I18N_EN("Saturday", "sabato") };
+                    snprintf(wd, sizeof wd, "%s", nucleo_tr(WDL_IT[tm->tm_wday], WDL_EN[tm->tm_wday]));
+                    snprintf(dm, sizeof dm, "%d %s", tm->tm_mday, nucleo_tr(MO3_IT[tm->tm_mon], MO3_EN[tm->tm_mon]));
                 }
                 box_text(152, CMP_TOP, AW - 152, 22, 156, CMP_TOP + 5, wd, MUTED, BG);
                 box_text(152, CMP_TOP + 22, AW - 152, 24, 156, CMP_TOP + 25, dm, ACC, BG);
@@ -4523,6 +4522,10 @@ static bool touch_key(int key, char ch)
 
 static void draw(void)
 {
+    // A language change from the browser can cross the old IT/EN table boundary.
+    // Resolve that boundary before rendering the now-cataloged static tables.
+    const bool en = !nucleo_i18n_is_it();
+    if (s_en != en) { s_en = en; if (s_ses) rebuild_rows(); mark_all_dirty(); }
     // The panel changed size (the external one came or went): the transcript re-wraps to the new width.
     static int s_wrap_aw = 0;
     if (s_ses && s_wrap_aw != AW) { s_wrap_aw = AW; rebuild_rows(); mark_all_dirty(); composer_invalidate(); }

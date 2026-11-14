@@ -165,10 +165,10 @@ static void draw_spam(int top, int h)
 {
     (void)top; (void)h;
     static const char *TN_IT[] = { "iOS", "Android", "Windows", "Samsung", "Tutti" };
-    static const char *TN_EN[] = { "iOS", "Android", "Windows", "Samsung", "All" };
+    static const char *TN_EN[] = { I18N_EN("iOS", "iOS"), I18N_EN("Android", "Android"), I18N_EN("Windows", "Windows"), I18N_EN("Samsung", "Samsung"), I18N_EN("All", "Tutti") };
     const char *const *TN = nucleo_i18n_is_it() ? TN_IT : TN_EN;
     int y0 = app_ui_title("Spam", WARN, "burst BLE adv");
-    txt(8, y0 + 6, TN[s_target], FG, BG, 2);
+    txt(8, y0 + 6, nucleo_tr_en(TN[s_target]), FG, BG, 2);
     char ln[40];
     snprintf(ln, sizeof(ln), "%lu adv inviati", (unsigned long)nucleo_ble_spam_count());
     txt(8, y0 + 34, ln, GRN, BG, 2);

@@ -132,7 +132,7 @@ const simState = {
   bootMs: Date.now(),
   minFree: 17000,                 // drifts slowly downward like the real watermark
   l1Mode: 'auto', externalBrain: false,
-  lang: (() => { try { const l = JSON.parse(readFileSync(join(SD, 'system', 'config', 'settings.json'), 'utf8')).ui.language; return /^(it|en|es|fr|de)$/.test(l) ? l : 'en'; } catch { return 'en'; } })(),
+  lang: (() => { try { const l = JSON.parse(readFileSync(join(SD, 'system', 'config', 'settings.json'), 'utf8')).ui.language; return /^(it|en|es|fr|de|pt)$/.test(l) ? l : 'en'; } catch { return 'en'; } })(),
   langGen: 1,                     // OS language + generation counter, like nucleo_i18n on the device
   ttsEnabled: false,
   voiceAlwaysOn: false,
@@ -764,7 +764,7 @@ const server = createServer(async (req, res) => {
       if (!isAuthed(req)) return reject401(res);
       let b = {}; try { b = JSON.parse((await readBody(req)).toString('utf8') || '{}'); } catch {}
       const lg = String(b.lang || '').trim();
-      if (/^(it|en|es|fr|de)$/.test(lg)) {
+      if (/^(it|en|es|fr|de|pt)$/.test(lg)) {
         const changed = lg !== simState.lang;
         simState.lang = lg;
         persistSimLang(lg);                            // like nucleo_i18n.c persist_lang(): settings.json ui.language, always

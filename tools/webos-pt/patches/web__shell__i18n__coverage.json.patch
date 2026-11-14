@@ -1,0 +1,24 @@
+--- a/web/shell/i18n/coverage.json
++++ b/web/shell/i18n/coverage.json
+@@ -1,5 +1,5 @@
+ {
+-  "generated": "tools/build.py",
++  "generated": "tools/build.py + tools/webos-pt",
+   "base": "en",
+   "langs": [
+     "en",
+@@ -7,11 +7,13 @@
+     "es",
+     "fr",
+     "de",
++    "pt",
+     "zh"
+   ],
+   "required": [
+     "en",
+-    "it"
++    "it",
++    "pt"
+   ],
+   "extra": [
+     "es",

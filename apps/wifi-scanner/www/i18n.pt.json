@@ -1,0 +1,38 @@
+{
+  "_lang": "pt",
+  "title": "Gerenciador de Wi-Fi",
+  "btn_auto": "Automático",
+  "auto_hint": "Atualizar automaticamente a cada 25s",
+  "connect": "Conectar",
+  "reconnect": "Reconectar",
+  "forget": "Esquecer rede",
+  "password": "Senha",
+  "password_keep": "Senha (em branco = usar a senha salva)",
+  "saved": "salvo",
+  "saved_hint": "Rede salva — conexão automática",
+  "priority": "prioridade",
+  "connecting": "Conectando a {ssid}…",
+  "connected_to": "Conectado a {ssid}",
+  "connect_failed": "Falha na conexão — verifique a senha",
+  "forgotten": "Rede esquecida",
+  "need_pair": "Faça o pareamento com o dispositivo para gerenciar redes",
+  "src_idle": "ocioso",
+  "empty_msg": "Nenhuma rede encontrada.<br>Pressione <b>Escanear</b> para pesquisar novamente.",
+  "count": {
+    "one": "{count} rede",
+    "other": "{count} redes"
+  },
+  "count_open": {
+    "one": "{count} aberta",
+    "other": "{count} abertas"
+  },
+  "ch": "ch {ch}",
+  "sec_open": "aberto",
+  "sec_open_hint": "Rede aberta",
+  "hidden_ssid": "(oculto)",
+  "src_failed": "Falha na verificação — dispositivo inacessível ou ocupado",
+  "src_need_pair": "sem pareamento — pareie este navegador para buscar redes",
+  "src_live": "Busca ao vivo",
+  "forget_failed": "Não foi possível esquecer a rede",
+  "wifi_unavailable": "O gerenciamento de Wi-Fi não está disponível neste dispositivo."
+}

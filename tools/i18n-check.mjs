@@ -17,7 +17,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const LANGS = ['en', 'it'];                  // REQUIRED: complete + strict parity. Keep in sync with nucleo-i18n.js.
+const LANGS = ['en', 'it', 'pt'];            // pt-BR is required on every shipped surface too.
 const EXTRA_LANGS = ['es', 'fr', 'de', 'zh'];   // tier-2 (zh: web OS only, never stored on the device): translation IN PROGRESS — optional + partial OK (runtime falls back to base).
 const ALL_LANGS = [...LANGS, ...EXTRA_LANGS];
 const BASE = 'en';                           // English is the source of truth + fallback floor (matches nucleo-i18n.js BASE).

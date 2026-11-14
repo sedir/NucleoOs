@@ -63,7 +63,9 @@ function encode(s) {     // JS string of bytes -> one C literal, escaping safely
   }
   return out + '"';
 }
-const fmts = (s) => (s.match(/%[-+ #0]*(\d+|\*)?(\.(\d+|\*))?(hh|h|ll|l|z|j|t|L)?[diouxXeEfFgGcsp%]/g) || []);
+const fmts = (s) => [...s.matchAll(/%[-+ #0]*(\d+|\*)?(\.(\d+|\*))?(hh|h|ll|l|z|j|t|L)?[diouxXeEfFgGcsp%]/g)]
+  // A displayed "15% of 80" is not a printf octal conversion ("% o").
+  .filter(m => !(/^% /.test(m[0]) && /[a-z]/i.test(s[m.index + m[0].length] || ''))).map(m => m[0]);
 const visible = (s) => s.replace(/%[-+ #0]*(\d+|\*)?(\.(\d+|\*))?(hh|h|ll|l|z|j|t|L)?[diouxXeEfFgGcsp%]/g, '').length;
 
 // ---- scan the firmware ---------------------------------------------------------------------------------------
@@ -80,6 +82,17 @@ function scan() {
   const strings = new Map();   // en -> { room, hint, sites: [file:line] }
   for (const f of files(FW)) {
     const src = readFileSync(f, 'utf8');
+    // Static tables cannot call a translator in their initializer. I18N_EN marks
+    // their literals; renderers translate the selected value with nucleo_tr_en.
+    for (const m of src.matchAll(new RegExp(String.raw`\bI18N_EN\(\s*(${LIT})(?:\s*,\s*(${LIT}))?\s*\)`, 'g'))) {
+      const en = decode(m[1]);
+      if (!en.trim()) continue;
+      const line = src.slice(0, m.index).split('\n').length;
+      const e = strings.get(en) || { room: Infinity, hint: false, sites: [] };
+      e.room = Math.min(e.room, Math.max(visible(en), m[2] ? visible(decode(m[2])) : 0));
+      e.sites.push(`${relative(FW, f)}:${line}`);
+      strings.set(en, e);
+    }
     for (const m of src.matchAll(re)) {
       const rest = [...(m[4] || '').matchAll(new RegExp(LIT, 'g'))].map((x) => decode(x[0]));
       const it = decode(m[2]), en = decode(m[3]);

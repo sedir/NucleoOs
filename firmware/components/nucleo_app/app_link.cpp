@@ -51,7 +51,7 @@ static const unsigned short
 #define T_HELP 5
 #define NTABS  6
 static const char *const TABS[NTABS]    = { "INVIA","RICEVI","PEER","CMD","OPZ","?" };
-static const char *const TABS_EN[NTABS] = { "SEND","RECV","PEER","CMD","OPT","?" };
+static const char *const TABS_EN[NTABS] = { I18N_EN("SEND", "INVIA"),I18N_EN("RECV", "RICEVI"),I18N_EN("PEER", "PEER"),I18N_EN("CMD", "CMD"),I18N_EN("OPT", "OPZ"),I18N_EN("?", "?") };
 
 // ---- state -----------------------------------------------------------------
 static int   s_tab = T_SEND, s_sel = -1;
@@ -79,8 +79,8 @@ static char s_cbuf[120]; static int s_clen = 0;
 #define CMD_SHOW 18
 static const char *cmd_too_long(void) { return TR5("Comando troppo lungo", "Command too long", "Comando muy largo", "Commande trop longue", "Befehl zu lang"); }
 
-static void toast(const char *it, const char *en) { snprintf(s_msg, sizeof s_msg, "%s", s_en ? en : it); s_msg_t = 20; }
-static const char *tab_label(int i) { return s_en ? TABS_EN[i] : TABS[i]; }
+static void toast(const char *it, const char *en) { snprintf(s_msg, sizeof s_msg, "%s", nucleo_tr(it, en)); s_msg_t = 20; }
+static const char *tab_label(int i) { return nucleo_tr(TABS[i], TABS_EN[i]); }
 
 // ---- draw primitives -------------------------------------------------------
 static void txt(int x, int y, const char *s, uint16_t fg, uint16_t bg, int sz) {
@@ -180,9 +180,9 @@ static void draw_list(int top, int ch, Row *it, int n, int sel) {
 static bool progress_text(char *hd, char *rt, uint16_t *vc, int bw, int *onw) {
     nlink_status_t st; nlink_svc_status(&st);
     if (!st.active && st.state != NL_ST_DONE && st.state != NL_ST_FAIL) return false;
-    const char *verb = st.state == NL_ST_DONE ? (s_en ? "Done" : "Fatto")
-                     : st.state == NL_ST_FAIL ? (s_en ? "Failed" : "Errore")
-                     : st.sending ? (s_en ? "Sending" : "Invio") : (s_en ? "Receiving" : "Ricezione");
+    const char *verb = st.state == NL_ST_DONE ? (TR("Fatto", "Done"))
+                     : st.state == NL_ST_FAIL ? (TR("Errore", "Failed"))
+                     : st.sending ? (TR("Invio", "Sending")) : (TR("Ricezione", "Receiving"));
     *vc = st.state == NL_ST_DONE ? GRN : st.state == NL_ST_FAIL ? REDC : ACC;
     snprintf(hd, 40, "%s %.18s", verb, st.name);
     if (st.active && st.rate_bps) snprintf(rt, 28, "%uKB/s  %u%%", (unsigned)(st.rate_bps / 1024), st.total ? (unsigned)(100ULL * st.done / st.total) : 0);
@@ -252,7 +252,7 @@ static unsigned short pr_col(int i, void *) {
 }
 // Name of the chosen send/command target, clamped in case the peer list shrank under us.
 static const char *peer_target_name(void) {
-    int n = nlink_svc_peer_count(); if (n <= 0) return s_en ? "no peer" : "nessun peer";
+    int n = nlink_svc_peer_count(); if (n <= 0) return TR("nessun peer", "no peer");
     int i = s_peer_sel; if (i < 0 || i >= n) i = 0;
     return nlink_svc_peer_name(i);
 }
@@ -263,22 +263,22 @@ static void draw_send(int ch) {
     const char *base = strrchr(s_dir, '/'); base = (base && base[1]) ? base + 1 : "SD";
     int y0 = link_head(base, rt);
     int tn = snd_count();
-    if (tn == 0) { txt(14, y0 + 12, s_en ? "Empty folder" : "Cartella vuota", DIM, BG, 1); return; }
+    if (tn == 0) { txt(14, y0 + 12, TR("Cartella vuota", "Empty folder"), DIM, BG, 1); return; }
     app_ui_list(y0, ch - y0, tn, s_fsel, snd_label, snd_right, snd_col, nullptr);
     draw_progress(ch);
 }
 static void draw_peer(int ch) {
     int n = nlink_svc_peer_count();
     char rt[16]; snprintf(rt, sizeof rt, "ch%d", nlink_svc_channel());
-    int y0 = link_head(s_en ? "Devices" : "Dispositivi", rt);
+    int y0 = link_head(TR("Dispositivi", "Devices"), rt);
     bool hf = (s_sel < 0);
     d.fillRoundRect(6, y0, W - 12, 20, 7, hf ? CAP : SURF);
     if (hf) d.fillRoundRect(6, y0 + 3, 5, 14, 2, ACC);
-    txt(16, y0 + 6, s_en ? "Scan for peers" : "Cerca dispositivi", hf ? FG : MUTED, hf ? CAP : SURF, 1);
-    txt(W - 52, y0 + 6, s_en ? "ENTER" : "INVIO", hf ? ACC : DIM, hf ? CAP : SURF, 1);
+    txt(16, y0 + 6, TR("Cerca dispositivi", "Scan for peers"), hf ? FG : MUTED, hf ? CAP : SURF, 1);
+    txt(W - 52, y0 + 6, TR("INVIO", "ENTER"), hf ? ACC : DIM, hf ? CAP : SURF, 1);
     int ly = y0 + 24;
-    if (!n) { txt(16, ly + 8, s_en ? "No peers yet." : "Nessun peer trovato.", DIM, BG, 1);
-              txt(16, ly + 22, s_en ? "Press ENTER to scan." : "Premi INVIO per cercare.", MUTED, BG, 1);
+    if (!n) { txt(16, ly + 8, TR("Nessun peer trovato.", "No peers yet."), DIM, BG, 1);
+              txt(16, ly + 22, TR("Premi INVIO per cercare.", "Press ENTER to scan."), MUTED, BG, 1);
               draw_progress(ch); return; }
     app_ui_list(ly, ch - ly, n, s_sel, pr_label, pr_right, pr_col, nullptr);
     draw_progress(ch);
@@ -286,52 +286,52 @@ static void draw_peer(int ch) {
 // Green/red decision chips, shared by RECV (offer) and CMD (command). Draw at (x,y).
 static void draw_yn_chips(int x, int y, bool yes = true) {
     const int bw = 78, bh = 20, gap = 8;
-    if (yes) { d.fillRoundRect(x, y, bw, bh, 6, GRN); txt(x + 8, y + 6, s_en ? "Y Accept" : "Y Accetta", INK, GRN, 1); x += bw + gap; }
-    d.fillRoundRect(x, y, bw, bh, 6, REDC); txt(x + 8, y + 6, s_en ? "N Reject" : "N Rifiuta", INK, REDC, 1);
+    if (yes) { d.fillRoundRect(x, y, bw, bh, 6, GRN); txt(x + 8, y + 6, TR("Y Accetta", "Y Accept"), INK, GRN, 1); x += bw + gap; }
+    d.fillRoundRect(x, y, bw, bh, 6, REDC); txt(x + 8, y + 6, TR("N Rifiuta", "N Reject"), INK, REDC, 1);
 }
 static void draw_recv(int ch) {
     const char *ib = nlink_svc_inbox(); const char *ibn = strrchr(ib, '/'); ibn = ibn ? ibn + 1 : ib;
-    int y0 = link_head(s_en ? "Receive" : "Ricevi", ibn);
+    int y0 = link_head(TR("Ricevi", "Receive"), ibn);
     char name[64], from[40]; uint32_t sz;
     if (nlink_svc_offer_pending(name, sizeof name, from, sizeof from, &sz)) {
         int cx = 8, cw = W - 16, cy = y0 + 2, chh = 66;
         d.fillRoundRect(cx, cy, cw, chh, 9, CAP);
         d.drawRoundRect(cx, cy, cw, chh, 9, ACC);
-        char h[48]; snprintf(h, sizeof h, s_en ? "%.14s wants to send:" : "%.14s vuole inviarti:", from);
+        char h[48]; snprintf(h, sizeof h, TR("%.14s vuole inviarti:", "%.14s wants to send:"), from);
         txt(cx + 12, cy + 7, h, MUTED, CAP, 1);
         char f[24]; snprintf(f, sizeof f, "%.16s", name); txt(cx + 12, cy + 20, f, AMB, CAP, 2);
         char szs[20]; snprintf(szs, sizeof szs, "%u KB", (unsigned)(sz / 1024)); txt(cx + cw - 12 - (int)strlen(szs) * 6, cy + 22, szs, DIM, CAP, 1);
         draw_yn_chips(cx + 12, cy + chh - 26);
         return;
     }
-    txt(14, y0 + 8, s_en ? "Listening for offers..." : "In ascolto di offerte...", ACC, BG, 1);
-    txt(14, y0 + 24, s_en ? "Received files land in the inbox above." : "I file ricevuti vanno nell'inbox.", DIM, BG, 1);
+    txt(14, y0 + 8, TR("In ascolto di offerte...", "Listening for offers..."), ACC, BG, 1);
+    txt(14, y0 + 24, TR("I file ricevuti vanno nell'inbox.", "Received files land in the inbox above."), DIM, BG, 1);
     draw_progress(ch);
 }
 static void draw_cmd(int ch) {
     char cmd[160], from[40];
     if (nlink_svc_cmd_pending(cmd, sizeof cmd, from, sizeof from)) {
         char fr[24]; snprintf(fr, sizeof fr, "%.14s", from);
-        int y0 = link_head(s_en ? "Command" : "Comando", fr);
+        int y0 = link_head(TR("Comando", "Command"), fr);
         int cx = 8, cw = W - 16, cy = y0 + 2, chh = 66;
         d.fillRoundRect(cx, cy, cw, chh, 9, CAP);
         d.drawRoundRect(cx, cy, cw, chh, 9, AMB);
         bool lng = (int)strlen(cmd) > CMD_SHOW;          // not fully visible -> only N (refuse) is offered
-        txt(cx + 12, cy + 7, lng ? cmd_too_long() : (s_en ? "Requested command:" : "Comando richiesto:"), lng ? REDC : MUTED, CAP, 1);
+        txt(cx + 12, cy + 7, lng ? cmd_too_long() : (TR("Comando richiesto:", "Requested command:")), lng ? REDC : MUTED, CAP, 1);
         char c[24]; snprintf(c, sizeof c, "%.*s", CMD_SHOW, cmd); txt(cx + 12, cy + 20, c, AMB, CAP, 2);
         draw_yn_chips(cx + 12, cy + chh - 26, !lng);
         return;
     }
     char rt[24]; snprintf(rt, sizeof rt, "-> %.13s", peer_target_name());
-    int y0 = link_head(s_en ? "Command" : "Comando", rt);
-    txt(12, y0 + 4, s_en ? "Type, ENTER to send:" : "Scrivi, INVIO per inviare:", MUTED, BG, 1);
+    int y0 = link_head(TR("Comando", "Command"), rt);
+    txt(12, y0 + 4, TR("Scrivi, INVIO per inviare:", "Type, ENTER to send:"), MUTED, BG, 1);
     int by = y0 + 18;
     d.fillRoundRect(8, by, W - 16, 30, 7, SURF);
     int vis = 16, off = s_clen > vis ? s_clen - vis : 0;
     char sh[20]; int k = 0; for (int i = off; i < s_clen && k < vis; i++, k++) sh[k] = s_cbuf[i]; sh[k] = 0;
     d.setTextSize(2); d.setTextColor(FG, SURF); d.setCursor(14, by + 8); d.print(sh);
     d.fillRect(14 + k * 12, by + 7, 3, 16, ACC);
-    txt(12, by + 40, s_en ? "Receiver confirms before it runs." : "Il ricevente conferma prima di eseguire.", DIM, BG, 1);
+    txt(12, by + 40, TR("Il ricevente conferma prima di eseguire.", "Receiver confirms before it runs."), DIM, BG, 1);
 }
 #define O_PROTO 0
 #define O_AUTO  1
@@ -343,13 +343,13 @@ static void draw_cmd(int ch) {
 static void build_opt(Row *it, int *n) {
     s_seg2[0] = "Nucleo"; s_seg2[1] = "Bruce";
     int k = 0;
-    it[k].label = s_en ? "Protocol" : "Protocollo"; it[k].kind = RV_SEG; it[k].seg = s_proto; k++;
-    it[k].label = s_en ? "Auto-accept" : "Auto-accetta"; it[k].kind = RV_TOGGLE; it[k].on = s_auto; k++;
-    it[k].label = s_en ? "Confirm cmds" : "Conferma cmd"; it[k].kind = RV_TOGGLE; it[k].on = true; k++;
+    it[k].label = TR("Protocollo", "Protocol"); it[k].kind = RV_SEG; it[k].seg = s_proto; k++;
+    it[k].label = TR("Auto-accetta", "Auto-accept"); it[k].kind = RV_TOGGLE; it[k].on = s_auto; k++;
+    it[k].label = TR("Conferma cmd", "Confirm cmds"); it[k].kind = RV_TOGGLE; it[k].on = true; k++;
     it[k].label = "Inbox"; it[k].kind = RV_TEXT; { const char *b = strrchr(nlink_svc_inbox(), '/'); snprintf(it[k].val, sizeof it[k].val, "%s", b ? b + 1 : nlink_svc_inbox()); } k++;
-    it[k].label = s_en ? "Channel" : "Canale"; it[k].kind = RV_TEXT; snprintf(it[k].val, sizeof it[k].val, "ch%d", nlink_svc_channel()); k++;
-    it[k].label = s_en ? "Name" : "Nome"; it[k].kind = RV_TEXT; snprintf(it[k].val, sizeof it[k].val, "%.15s", nlink_svc_name()); k++;
-    it[k].label = s_en ? "Language" : "Lingua"; it[k].kind = RV_TEXT; snprintf(it[k].val, sizeof it[k].val, "%s", s_en ? "EN" : "IT"); k++;
+    it[k].label = TR("Canale", "Channel"); it[k].kind = RV_TEXT; snprintf(it[k].val, sizeof it[k].val, "ch%d", nlink_svc_channel()); k++;
+    it[k].label = TR("Nome", "Name"); it[k].kind = RV_TEXT; snprintf(it[k].val, sizeof it[k].val, "%.15s", nlink_svc_name()); k++;
+    it[k].label = TR("Lingua", "Language"); it[k].kind = RV_TEXT; snprintf(it[k].val, sizeof it[k].val, "%s", TR("IT", "EN")); k++;
     *n = k;
 }
 // The guide, shared by the Cardputer and the panel (keys and touch in the same lines).
@@ -361,16 +361,16 @@ static const char *const HELP_IT[] = {
     "RICEVI / CMD: Y accetta, N rifiuta",
     "OPZ: Nucleo affidabile / Bruce compat.", 0 };
 static const char *const HELP_EN[] = {
-    "TAB / RIGHT / tap: switch tab",
-    "1-9 quick-jump, letters = search",
-    "PEER: scan, then pick the device",
-    "SEND: browse, ENTER / tap sends",
-    "RECV / CMD: Y accept, N reject",
-    "OPT: Nucleo reliable / Bruce compat.", 0 };
+    I18N_EN("TAB / RIGHT / tap: switch tab", "TAB / DESTRA / tocco: cambia scheda"),
+    I18N_EN("1-9 quick-jump, letters = search", "1-9 salto rapido, lettere = cerca"),
+    I18N_EN("PEER: scan, then pick the device", "PEER: cerca, poi scegli il dispositivo"),
+    I18N_EN("SEND: browse, ENTER / tap sends", "INVIA: sfoglia, INVIO / tocco invia"),
+    I18N_EN("RECV / CMD: Y accept, N reject", "RICEVI / CMD: Y accetta, N rifiuta"),
+    I18N_EN("OPT: Nucleo reliable / Bruce compat.", "OPZ: Nucleo affidabile / Bruce compat."), 0 };
 static void draw_help(int ch) {
-    int y0 = link_head(s_en ? "Guide" : "Guida", "Vicino");
+    int y0 = link_head(TR("Guida", "Guide"), "Vicino");
     const char *const *m = s_en ? HELP_EN : HELP_IT;
-    for (int i = 0; m[i]; i++) txt(10, y0 + 2 + i * 12, m[i], i == 0 || i == 1 ? FG : MUTED, BG, 1);
+    for (int i = 0; nucleo_tr_en(m[i]); i++) txt(10, y0 + 2 + i * 12, nucleo_tr_en(m[i]), i == 0 || i == 1 ? FG : MUTED, BG, 1);
     (void)ch;
 }
 
@@ -379,14 +379,14 @@ static int opt_rows(void) { Row it[8]; int n; build_opt(it, &n); return n; }
 static void update_hint(void) {
     const char *h;
     switch (s_tab) {
-        case T_SEND: h = s_en ? "UP/DN  ENTER send  DEL up" : "SU/GIU  INVIO invia  DEL su"; break;
-        case T_PEER: h = (s_sel < 0) ? (s_en ? "DOWN list  ENTER scan" : "GIU lista  INVIO cerca")
-                                     : (s_en ? "UP/DN  ENTER set target" : "SU/GIU  INVIO scegli"); break;
-        case T_RECV: h = s_en ? "Y accept   N reject" : "Y accetta   N rifiuta"; break;
-        case T_CMD:  h = s_en ? "type   ENTER send   Y/N" : "scrivi   INVIO invia   Y/N"; break;
-        case T_OPT:  h = (s_sel < 0) ? (s_en ? "DOWN rows  TAB tab" : "GIU righe  TAB scheda")
-                                     : (s_en ? "UP/DN  ENTER change" : "SU/GIU  INVIO cambia"); break;
-        default:     h = s_en ? "TAB switch tab   ESC exit" : "TAB scheda   ESC esci"; break;
+        case T_SEND: h = TR("SU/GIU  INVIO invia  DEL su", "UP/DN  ENTER send  DEL up"); break;
+        case T_PEER: h = (s_sel < 0) ? (TR("GIU lista  INVIO cerca", "DOWN list  ENTER scan"))
+                                     : (TR("SU/GIU  INVIO scegli", "UP/DN  ENTER set target")); break;
+        case T_RECV: h = TR("Y accetta   N rifiuta", "Y accept   N reject"); break;
+        case T_CMD:  h = TR("scrivi   INVIO invia   Y/N", "type   ENTER send   Y/N"); break;
+        case T_OPT:  h = (s_sel < 0) ? (TR("GIU righe  TAB scheda", "DOWN rows  TAB tab"))
+                                     : (TR("SU/GIU  INVIO cambia", "UP/DN  ENTER change")); break;
+        default:     h = TR("TAB scheda   ESC esci", "TAB switch tab   ESC exit"); break;
     }
     nucleo_app_set_hint(h);
 }
@@ -428,7 +428,7 @@ static void lg_send(int y, int bot) {
     d.setTextColor(ACC, BG); lg::font(1); char bb[28]; lg::fit(bb, sizeof bb, base, W - 160); d.drawString(bb, 10, y + 2);
     const int ly = y + 24;
     const int tn = snd_count();
-    if (!tn) { lg::message(0, ly, W, bot - ly, s_en ? "Empty folder" : "Cartella vuota", nullptr, DIM); return; }
+    if (!tn) { lg::message(0, ly, W, bot - ly, TR("Cartella vuota", "Empty folder"), nullptr, DIM); return; }
     lg::text_list(0, ly, W, bot - ly, tn, s_fsel, &s_lg_scroll, snd_label, snd_right, snd_col, nullptr, ACC);
 }
 
@@ -442,11 +442,11 @@ static void lg_peer_card(int i, int x, int y, int w, int h, bool focus, unsigned
     lg::font(0); d.setTextColor(focus ? INK : pr_col(i, nullptr), bg);
     d.drawString(pr_right(i, nullptr), x + 26, y + 24);
     if (!focus) return;
-    static const char *const it[2] = { "Invia file", "Comando" }, *const en[2] = { "Send file", "Command" };
+    static const char *const it[2] = { "Invia file", "Comando" }, *const en[2] = { I18N_EN("Send file", "Invia file"), I18N_EN("Command", "Comando") };
     for (int k = 0; k < 2; k++) {                    // the card's actions: send a file to it, send it a command
         const int bx = x + w - 184 + k * 92;
         d.fillRoundRect(bx, y + 7, 86, h - 14, 8, INK);
-        d.setTextDatum(middle_center); d.setTextColor(ACC, INK); d.drawString(s_en ? en[k] : it[k], bx + 43, y + h / 2);
+        d.setTextDatum(middle_center); d.setTextColor(ACC, INK); d.drawString(nucleo_tr(it[k], en[k]), bx + 43, y + h / 2);
         nucleo_touch_add(bx - 2, y, 90, h, NK_CHAR, LK_TAB0 + (k ? T_CMD : T_SEND));
     }
     d.setTextDatum(top_left);
@@ -455,9 +455,9 @@ static void lg_peer_card(int i, int x, int y, int w, int h, bool focus, unsigned
 static void lg_peer(int y, int bot) {
     const int W = d.width();
     const int n = nlink_svc_peer_count();
-    lg::button(8, y + 2, W - 16, 28, s_en ? "Scan for peers" : "Cerca dispositivi", s_sel < 0 ? ACC : lg::card(), s_sel < 0 ? INK : FG, NK_CHAR, LK_SCAN);
+    lg::button(8, y + 2, W - 16, 28, TR("Cerca dispositivi", "Scan for peers"), s_sel < 0 ? ACC : lg::card(), s_sel < 0 ? INK : FG, NK_CHAR, LK_SCAN);
     const int ly = y + 34;
-    if (!n) { lg::message(0, ly, W, bot - ly, s_en ? "No peers yet." : "Nessun peer trovato.", s_en ? "Tap Scan to look." : "Tocca Cerca.", DIM); return; }
+    if (!n) { lg::message(0, ly, W, bot - ly, TR("Nessun peer trovato.", "No peers yet."), TR("Tocca Cerca.", "Tap Scan to look."), DIM); return; }
     lg::list(0, ly, W, bot - ly, 44, n, s_sel, &s_lg_scroll, lg_peer_card, nullptr, ACC);
 }
 
@@ -477,13 +477,13 @@ static void lg_ask(int y, unsigned short edge, const char *head, unsigned short 
 static void lg_recv(int y, int bot) {
     char name[64], from[40], h[48], szs[20]; uint32_t sz;
     if (nlink_svc_offer_pending(name, sizeof name, from, sizeof from, &sz)) {
-        snprintf(h, sizeof h, s_en ? "%.14s wants to send:" : "%.14s vuole inviarti:", from);
+        snprintf(h, sizeof h, TR("%.14s vuole inviarti:", "%.14s wants to send:"), from);
         snprintf(szs, sizeof szs, "%u KB", (unsigned)(sz / 1024));
-        lg_ask(y, ACC, h, MUTED, name, szs, s_en ? "Accept" : "Accetta", s_en ? "Reject" : "Rifiuta");
+        lg_ask(y, ACC, h, MUTED, name, szs, TR("Accetta", "Accept"), TR("Rifiuta", "Reject"));
         return;
     }
-    lg::message(0, y, 320, bot - y, s_en ? "Listening for offers..." : "In ascolto di offerte...",
-                s_en ? "Received files land in the inbox." : "I file ricevuti vanno nell'inbox.", ACC);
+    lg::message(0, y, 320, bot - y, TR("In ascolto di offerte...", "Listening for offers..."),
+                TR("I file ricevuti vanno nell'inbox.", "Received files land in the inbox."), ACC);
 }
 
 static void lg_cmd(int y, int bot) {
@@ -492,16 +492,16 @@ static void lg_cmd(int y, int bot) {
     if (nlink_svc_cmd_pending(cmd, sizeof cmd, from, sizeof from)) {
         const bool lng = (int)strlen(cmd) > CMD_SHOW;
         char c[24]; snprintf(c, sizeof c, "%.*s", CMD_SHOW, cmd);
-        lg_ask(y, AMB, lng ? cmd_too_long() : (s_en ? "Requested command:" : "Comando richiesto:"), lng ? REDC : MUTED, c, from,
-               lng ? nullptr : (s_en ? "Run" : "Esegui"), lng ? (s_en ? "Reject" : "Rifiuta") : (s_en ? "Discard" : "Scarta"));
+        lg_ask(y, AMB, lng ? cmd_too_long() : (TR("Comando richiesto:", "Requested command:")), lng ? REDC : MUTED, c, from,
+               lng ? nullptr : (TR("Esegui", "Run")), lng ? (TR("Rifiuta", "Reject")) : (TR("Scarta", "Discard")));
         return;
     }
-    lg::font(1); d.setTextColor(MUTED, BG); d.drawString(s_en ? "Type on the Cardputer, ENTER sends:" : "Scrivi sul Cardputer, INVIO invia:", 16, y + 6);
+    lg::font(1); d.setTextColor(MUTED, BG); d.drawString(TR("Scrivi sul Cardputer, INVIO invia:", "Type on the Cardputer, ENTER sends:"), 16, y + 6);
     d.fillRoundRect(16, y + 32, W - 32, 42, 8, SURF);
     char sh[48]; snprintf(sh, sizeof sh, "%s_", s_cbuf); char f[48]; lg::font(2); lg::fit(f, sizeof f, sh, W - 56);
     d.setTextDatum(middle_left); d.setTextColor(FG, SURF); d.drawString(f, 28, y + 53); d.setTextDatum(top_left);
     lg_target(y + 84);
-    lg::font(0); d.setTextColor(DIM, BG); d.drawString(s_en ? "Receiver confirms before it runs." : "Il ricevente conferma prima di eseguire.", 16, bot - 16);
+    lg::font(0); d.setTextColor(DIM, BG); d.drawString(TR("Il ricevente conferma prima di eseguire.", "Receiver confirms before it runs."), 16, bot - 16);
     (void)bot;
 }
 
@@ -522,7 +522,7 @@ static void lg_opt(int y) {
 static void lg_help(int y) {
     const char *const *m = s_en ? HELP_EN : HELP_IT;
     lg::font(0);
-    for (int i = 0; m[i]; i++) { d.setTextColor(i < 2 ? FG : MUTED, BG); d.drawString(m[i], 16, y + 6 + i * 24); }
+    for (int i = 0; nucleo_tr_en(m[i]); i++) { d.setTextColor(i < 2 ? FG : MUTED, BG); d.drawString(nucleo_tr_en(m[i]), 16, y + 6 + i * 24); }
 }
 
 static void draw_large(void) {
@@ -556,32 +556,33 @@ static void draw_companion(void) {
     char buf[64];
     if (s_tab == T_SEND) {
         const char *base = strrchr(s_dir, '/'); base = (base && base[1]) ? base + 1 : "SD";
-        snprintf(buf, sizeof buf, s_en ? "%.14s  ->  %.12s" : "%.14s  ->  %.12s", base, peer_target_name()); d.drawString(buf, 8, y + 26);
+        snprintf(buf, sizeof buf, TR("%.14s  ->  %.12s", "%.14s  ->  %.12s"), base, peer_target_name()); d.drawString(buf, 8, y + 26);
         const Ent *e = snd_at(s_fsel); d.setTextColor(MUTED, BG);
         d.drawString(snd_is_up(s_fsel) ? ".." : (e ? e->name : ""), 8, y + 40);
     } else if (s_tab == T_PEER) {
-        snprintf(buf, sizeof buf, s_en ? "%d peers  -  ch%d" : "%d peer  -  ch%d", nlink_svc_peer_count(), nlink_svc_channel()); d.drawString(buf, 8, y + 26);
+        snprintf(buf, sizeof buf, TR("%d peer  -  ch%d", "%d peers  -  ch%d"), nlink_svc_peer_count(), nlink_svc_channel()); d.drawString(buf, 8, y + 26);
         d.setTextColor(GRN, BG); snprintf(buf, sizeof buf, "-> %.18s", peer_target_name()); d.drawString(buf, 8, y + 40);
     } else if (s_tab == T_RECV) {
         char name[64], from[40]; uint32_t sz;
-        if (nlink_svc_offer_pending(name, sizeof name, from, sizeof from, &sz)) { d.setTextColor(AMB, BG); snprintf(buf, sizeof buf, s_en ? "%.12s: %.18s" : "%.12s: %.18s", from, name); d.drawString(buf, 8, y + 26); d.setTextColor(FG, BG); d.drawString(s_en ? "Answer on the panel" : "Rispondi sul pannello", 8, y + 40); }
-        else { d.setTextColor(MUTED, BG); d.drawString(s_en ? "Listening..." : "In ascolto...", 8, y + 26); }
+        if (nlink_svc_offer_pending(name, sizeof name, from, sizeof from, &sz)) { d.setTextColor(AMB, BG); snprintf(buf, sizeof buf, TR("%.12s: %.18s", "%.12s: %.18s"), from, name); d.drawString(buf, 8, y + 26); d.setTextColor(FG, BG); d.drawString(TR("Rispondi sul pannello", "Answer on the panel"), 8, y + 40); }
+        else { d.setTextColor(MUTED, BG); d.drawString(TR("In ascolto...", "Listening..."), 8, y + 26); }
     } else if (s_tab == T_CMD) {
         char cmd[160], from[40];
         if (nlink_svc_cmd_pending(cmd, sizeof cmd, from, sizeof from)) { d.setTextColor(AMB, BG); snprintf(buf, sizeof buf, "%.26s", cmd); d.drawString(buf, 8, y + 26); }
         else { d.setTextColor(FG, BG); snprintf(buf, sizeof buf, "%.26s_", s_cbuf); d.drawString(buf, 8, y + 26); d.setTextColor(DIM, BG); snprintf(buf, sizeof buf, "-> %.18s", peer_target_name()); d.drawString(buf, 8, y + 40); }
     } else if (s_tab == T_OPT) {
-        d.setTextColor(MUTED, BG); snprintf(buf, sizeof buf, "%s  -  %s", s_proto ? "Bruce" : "Nucleo", s_auto ? (s_en ? "Auto on" : "Auto on") : (s_en ? "Auto off" : "Auto off")); d.drawString(buf, 8, y + 26);
+        d.setTextColor(MUTED, BG); snprintf(buf, sizeof buf, "%s  -  %s", s_proto ? "Bruce" : "Nucleo", s_auto ? (TR("Auto on", "Auto on")) : (TR("Auto off", "Auto off"))); d.drawString(buf, 8, y + 26);
     } else {
-        d.setTextColor(MUTED, BG); d.drawString(s_en ? "Guide on the panel" : "Guida sul pannello", 8, y + 26);
+        d.setTextColor(MUTED, BG); d.drawString(TR("Guida sul pannello", "Guide on the panel"), 8, y + 26);
     }
     nlink_status_t st; nlink_svc_status(&st);
-    if (st.active) { d.setTextColor(ACC, BG); char p[40]; snprintf(p, sizeof p, "%s %u%%", st.sending ? (s_en ? "Send" : "Invio") : (s_en ? "Recv" : "Ric"), st.total ? (unsigned)(100ULL * st.done / st.total) : 0); d.drawString(p, 8, y + 54); }
-    lg::comp_keys(s_en ? "TAB tab   keys on the Cardputer" : "TAB scheda   tasti sul Cardputer");
+    if (st.active) { d.setTextColor(ACC, BG); char p[40]; snprintf(p, sizeof p, "%s %u%%", st.sending ? (TR("Invio", "Send")) : (TR("Ric", "Recv")), st.total ? (unsigned)(100ULL * st.done / st.total) : 0); d.drawString(p, 8, y + 54); }
+    lg::comp_keys(TR("TAB scheda   tasti sul Cardputer", "TAB tab   keys on the Cardputer"));
 }
 
 // ---- on_draw ---------------------------------------------------------------
 static void on_draw(void) {
+    s_en = !nucleo_i18n_is_it();
     if (nucleo_app_two_screens()) { draw_companion(); return; }
     int ch = nucleo_app_content_height();
     d.fillRect(0, 0, W, ch, BG);
@@ -594,7 +595,7 @@ static void on_draw(void) {
         case T_RECV: draw_recv(ch); break;
         case T_PEER: draw_peer(ch); break;
         case T_CMD:  draw_cmd(ch);  break;
-        case T_OPT:  { int y0 = link_head(s_en ? "Options" : "Opzioni", nullptr); build_opt(it, &n); draw_list(y0, ch, it, n, s_sel); } break;
+        case T_OPT:  { int y0 = link_head(TR("Opzioni", "Options"), nullptr); build_opt(it, &n); draw_list(y0, ch, it, n, s_sel); } break;
         default:     draw_help(ch); break;
     }
     if (s_msg_t > 0) { int iy = ch - 20; d.fillRoundRect(6, iy, W - 12, 18, 5, SURF); txt(12, iy + 5, s_msg, AMB, SURF, 1); }
@@ -614,16 +615,16 @@ static void send_selected(void) {
     if (snd_is_up(s_fsel)) { dir_up(); return; }
     Ent *e = snd_at(s_fsel); if (!e) return;
     if (e->dir) { char nx[224]; snprintf(nx, sizeof nx, "%s/%s", s_dir, e->name); snprintf(s_dir, sizeof s_dir, "%.159s", nx); read_dir(); return; }
-    if (!nlink_svc_peer_count()) { toast("Scegli un peer", "Pick a peer"); return; }
+    if (!nlink_svc_peer_count()) { toast("Scegli un peer", I18N_EN("Pick a peer", "Scegli un peer")); return; }
     char path[224]; snprintf(path, sizeof path, "%s/%s", s_dir, e->name);
-    if (nlink_svc_send_file(s_peer_sel, path, (nlink_proto_t)s_proto)) toast("Invio avviato", "Sending");
-    else toast("Occupato/illeggibile", "Busy/unreadable");
+    if (nlink_svc_send_file(s_peer_sel, path, (nlink_proto_t)s_proto)) toast("Invio avviato", I18N_EN("Sending", "Invio avviato"));
+    else toast("Occupato/illeggibile", I18N_EN("Busy/unreadable", "Occupato/illeggibile"));
 }
 static void opt_activate(int row) {
     switch (row) {
-        case O_PROTO: s_proto ^= 1; toast(s_proto ? "Modo Bruce" : "Modo Nucleo", s_proto ? "Bruce mode" : "Nucleo mode"); break;
-        case O_AUTO:  s_auto = !s_auto; toast(s_auto ? "Auto-accetta ON" : "Auto-accetta OFF", s_auto ? "Auto-accept ON" : "Auto-accept OFF"); break;
-        case O_LANG:  nucleo_i18n_set_en(!s_en); s_en = !nucleo_i18n_is_it(); update_hint(); break;
+        case O_PROTO: s_proto ^= 1; toast(s_proto ? "Modo Bruce" : "Modo Nucleo", s_proto ? I18N_EN("Bruce mode") : I18N_EN("Nucleo mode")); break;
+        case O_AUTO:  s_auto = !s_auto; toast(s_auto ? "Auto-accetta ON" : "Auto-accetta OFF", s_auto ? I18N_EN("Auto-accept ON") : I18N_EN("Auto-accept OFF")); break;
+        case O_LANG:  nucleo_i18n_next_lang(); s_en = !nucleo_i18n_is_it(); update_hint(); break;
         default: break;
     }
 }
@@ -636,23 +637,23 @@ static void on_key(int key, char ch) {
     // panel touch: tapped rows (SEND files / PEER list / OPT rows) and the PEER scan button (ch==1)
     if (nucleo_touch_is_row(key, ch)) {
         if (s_tab == T_SEND) { if (lg::row_tap(key, ch, s_lg_scroll, snd_count(), &s_fsel) == 2) send_selected(); nucleo_app_request_draw(); return; }
-        if (s_tab == T_PEER) { if (lg::row_tap(key, ch, s_lg_scroll, nlink_svc_peer_count(), &s_sel) && s_peer_sel != s_sel) { s_peer_sel = s_sel; toast("Peer scelto", "Peer set"); } update_hint(); nucleo_app_request_draw(); return; }
+        if (s_tab == T_PEER) { if (lg::row_tap(key, ch, s_lg_scroll, nlink_svc_peer_count(), &s_sel) && s_peer_sel != s_sel) { s_peer_sel = s_sel; toast("Peer scelto", I18N_EN("Peer set", "Peer scelto")); } update_hint(); nucleo_app_request_draw(); return; }
         if (s_tab == T_OPT)  { int i = ch - NUCLEO_TOUCH_ROW; if (i < opt_rows()) { s_sel = i; opt_activate(i); } update_hint(); nucleo_app_request_draw(); return; }
         return;
     }
     if (key == NK_CHAR && ch >= LK_TAB0 && ch < LK_TAB0 + NTABS) { set_tab(ch - LK_TAB0); return; }   // a panel tab / card chip
-    if (key == NK_CHAR && ch == LK_SCAN && s_tab == T_PEER) { nlink_svc_discover((nlink_proto_t)s_proto); toast("Cerco...", "Scanning..."); nucleo_app_request_draw(); return; }
+    if (key == NK_CHAR && ch == LK_SCAN && s_tab == T_PEER) { nlink_svc_discover((nlink_proto_t)s_proto); toast("Cerco...", I18N_EN("Scanning...", "Cerco...")); nucleo_app_request_draw(); return; }
 
     // Y/N answers (RECV offer, CMD pending) — only when something is actually pending.
     if ((s_tab == T_RECV || s_tab == T_CMD) && (ch == 'y' || ch == 'Y' || ch == 'n' || ch == 'N')) {
         bool ok = (ch == 'y' || ch == 'Y');
         char tmp[CMD_SHOW + 2], tf[8];
-        if (s_tab == T_RECV && nlink_svc_offer_pending(tmp, 0, tf, 0, 0)) { nlink_svc_offer_answer(ok); toast(ok ? "Accettato" : "Rifiutato", ok ? "Accepted" : "Rejected"); nucleo_app_request_draw(); return; }
+        if (s_tab == T_RECV && nlink_svc_offer_pending(tmp, 0, tf, 0, 0)) { nlink_svc_offer_answer(ok); toast(ok ? "Accettato" : "Rifiutato", ok ? I18N_EN("Accepted") : I18N_EN("Rejected")); nucleo_app_request_draw(); return; }
         if (s_tab == T_CMD && nlink_svc_cmd_pending(tmp, sizeof tmp, tf, 0)) {
             if (ok && (int)strlen(tmp) > CMD_SHOW) {      // never run text the card could not show in full
                 nlink_svc_cmd_confirm(false);
                 snprintf(s_msg, sizeof s_msg, "%s", cmd_too_long()); s_msg_t = 20;
-            } else { nlink_svc_cmd_confirm(ok); toast(ok ? "Eseguito" : "Scartato", ok ? "Run" : "Discarded"); }
+            } else { nlink_svc_cmd_confirm(ok); toast(ok ? "Eseguito" : "Scartato", ok ? I18N_EN("Run") : I18N_EN("Discarded")); }
             nucleo_app_request_draw(); return;
         }
     }
@@ -665,8 +666,8 @@ static void on_key(int key, char ch) {
             if (key == NK_CHAR && ch >= 32 && ch < 127) { if (s_clen < (int)sizeof(s_cbuf) - 1) { s_cbuf[s_clen++] = ch; s_cbuf[s_clen] = 0; } nucleo_app_request_draw(); return; }
             if (key == NK_DEL) { if (s_clen > 0) s_cbuf[--s_clen] = 0; nucleo_app_request_draw(); return; }
             if (key == NK_ENTER) {
-                if (!nlink_svc_peer_count()) { toast("Scegli un peer", "Pick a peer"); return; }
-                if (s_clen && nlink_svc_send_cmd(s_peer_sel, s_cbuf, (nlink_proto_t)s_proto)) { toast("Comando inviato", "Command sent"); s_clen = 0; s_cbuf[0] = 0; }
+                if (!nlink_svc_peer_count()) { toast("Scegli un peer", I18N_EN("Pick a peer", "Scegli un peer")); return; }
+                if (s_clen && nlink_svc_send_cmd(s_peer_sel, s_cbuf, (nlink_proto_t)s_proto)) { toast("Comando inviato", I18N_EN("Command sent", "Comando inviato")); s_clen = 0; s_cbuf[0] = 0; }
                 nucleo_app_request_draw(); return;
             }
         }
@@ -685,12 +686,12 @@ static void on_key(int key, char ch) {
         int n = nlink_svc_peer_count();
         if (n == 0) s_sel = -1; else if (s_sel >= n) s_sel = n - 1;
         if (s_sel < 0) {
-            if (key == NK_ENTER) { nlink_svc_discover((nlink_proto_t)s_proto); toast("Cerco...", "Scanning..."); }
+            if (key == NK_ENTER) { nlink_svc_discover((nlink_proto_t)s_proto); toast("Cerco...", I18N_EN("Scanning...", "Cerco...")); }
             else if (key == NK_DOWN && n > 0) s_sel = 0;
         } else {
             if (key == NK_UP && s_sel == 0) s_sel = -1;                 // back up onto the scan row
             else if (app_ui_list_key(key, ch, &s_sel, n, pr_label, nullptr)) { /* moved */ }
-            else if (key == NK_ENTER) { s_peer_sel = s_sel; toast("Peer scelto", "Peer set"); }
+            else if (key == NK_ENTER) { s_peer_sel = s_sel; toast("Peer scelto", I18N_EN("Peer set", "Peer scelto")); }
         }
         update_hint(); nucleo_app_request_draw(); return;
     }
@@ -730,7 +731,7 @@ static void on_enter(void) {
     if (!s_ent) s_ent = (Ent *)calloc(ENT_MAX, sizeof *s_ent);   // heap-resident only while open; ZERO RAM at boot
     nucleo_app_set_tab_handler(page_tab);     // TAB pages the tabs (the "tab system")
     nucleo_app_set_back_handler(on_back);
-    if (!nlink_svc_start()) { toast("ESP-NOW non avviato", "ESP-NOW failed"); return; }
+    if (!nlink_svc_start()) { toast("ESP-NOW non avviato", I18N_EN("ESP-NOW failed", "ESP-NOW non avviato")); return; }
     nlink_svc_listen(NLINK_PROTO_NUCLEO);     // always ready to receive
     nlink_svc_discover(NLINK_PROTO_NUCLEO);
     read_dir(); update_hint();

@@ -1,0 +1,24 @@
+{
+  "_lang": "pt",
+  "title_new": "Novo (Ctrl+N)",
+  "title_open": "Abrir (Ctrl+O)",
+  "title_save": "Salvar (Ctrl+S)",
+  "title_saveas": "Salvar como (Ctrl+Shift+S)",
+  "ph_editor": "Digite aqui… · Ctrl+S salvar · Ctrl+O abrir · Ctrl+N novo",
+  "stats": {
+    "one": "{chars} caracteres · {lines} linha",
+    "other": "{chars} caracteres · {lines} linhas"
+  },
+  "loaded": "Carregado {name}",
+  "could_not_open": "Não foi possível abrir {name}",
+  "open_failed_unbound": "Não foi possível ler {name} — o arquivo está intocado; Salvar irá perguntar onde salvar.",
+  "open_hint": "Abra um arquivo pelo Gerenciador de arquivos para editá-lo aqui.",
+  "saved_file": "Salvo {name}",
+  "save_failed": "A gravação falhou ({status})",
+  "save_pending": "Salvar pendente: API de arquivo OS não acessível.",
+  "dlg_saveas": "Salvar como",
+  "dlg_open": "Abrir arquivo de texto",
+  "confirm_dirty": "Há alterações não salvas. Continuar e descartá-las?",
+  "prompt_save": "Salvar como (caminho no SD):",
+  "prompt_open": "Abrir (caminho no SD):"
+}

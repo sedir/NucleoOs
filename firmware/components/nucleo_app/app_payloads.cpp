@@ -50,7 +50,7 @@ static Item *s_items = nullptr;
 static int   s_count = 0;
 
 static const char *BI_NAMES_IT[] = { "Demo: scrivi riga", "Win: apri Notepad", "Win: blocca schermo" };
-static const char *BI_NAMES_EN[] = { "Demo: type a line", "Win: open Notepad", "Win: lock screen" };
+static const char *BI_NAMES_EN[] = { I18N_EN("Demo: type a line", "Demo: scrivi riga"), I18N_EN("Win: open Notepad", "Win: apri Notepad"), I18N_EN("Win: lock screen", "Win: blocca schermo") };
 #define BI_NAMES (nucleo_i18n_is_it() ? BI_NAMES_IT : BI_NAMES_EN)
 static const char *BI_SCRIPTS[] = {
     "STRING Ciao da NucleoOS HID\nENTER\n",
@@ -64,7 +64,7 @@ static void scan_items(void)
 {
     s_count = 0;
     if (!s_items) return;
-    for (int i = 0; i < N_BI; i++) { snprintf(s_items[s_count].name, 40, "%s", BI_NAMES[i]); s_items[s_count].builtin = true; s_items[s_count].bi = i; s_count++; }
+    for (int i = 0; i < N_BI; i++) { snprintf(s_items[s_count].name, 40, "%s", nucleo_tr_en(BI_NAMES[i])); s_items[s_count].builtin = true; s_items[s_count].bi = i; s_count++; }
     DIR *dir = opendir(DUCKY_DIR);
     if (dir) {
         struct dirent *e;

@@ -1,0 +1,21 @@
+{
+  "_lang": "pt",
+  "app_title": "Tarefas",
+  "filter_active": "Ativas",
+  "add_ph": "Adicione uma tarefa e pressione Enter…",
+  "priority": "Prioridade",
+  "clear_done": "Limpar concluídas",
+  "saving": "Salvando…",
+  "saved_locally": "Salvo localmente",
+  "copied": "Copiado",
+  "empty_done": "Ainda não há tarefas concluídas.",
+  "empty_active": "Nada a fazer — tudo pronto! 🎉",
+  "empty_all": "Ainda não há tarefas.<br>Digite acima e pressione Enter.",
+  "toggle": "Alternar",
+  "count": "{active} ativas · {total} no total",
+  "read_failed": "Não foi possível ler as suas tarefas a partir do dispositivo. A edição está pausada para que nada seja substituído — tente novamente em breve.",
+  "read_corrupt": "O arquivo de tarefas no dispositivo não pode ser lido: ele fica intocado para que nada seja perdido.",
+  "not_paired": "Este navegador não está pareado com o dispositivo — pareie-o para salvar suas tarefas.",
+  "save_failed": "Não salvo — o dispositivo não está respondendo, tentando novamente",
+  "not_loaded": "Tarefas ainda não carregadas do dispositivo."
+}

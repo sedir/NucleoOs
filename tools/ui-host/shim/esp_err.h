@@ -12,10 +12,12 @@ typedef int esp_err_t;
 #include <ctype.h>
 #include <string.h>
 // newlib has it, mingw does not: a case-insensitive strstr (the emulators look for ".zip" in a path).
+#ifdef _WIN32
 static inline char *strcasestr(const char *h, const char *n)
 {
     size_t l = strlen(n);
     for (; *h; h++) { size_t i = 0; while (i < l && tolower((unsigned char)h[i]) == tolower((unsigned char)n[i])) i++; if (i == l) return (char *)h; }
     return l ? NULL : (char *)h;
 }
+#endif
 static inline const char *esp_err_to_name(esp_err_t e) { (void)e; return "ERR"; }

@@ -48,7 +48,7 @@ confirmation is pt too.
 Knowledge stays EN/IT: a pt L1 pack would cost ~11.6 MB of SD and a corpus nobody has. With a key, pt knowledge
 questions go to the LLM, which already answers in pt. Offline, they get the honest "Nao sei."
 
-### Cost (measured, ESP-IDF 5.4.4 build)
+### Original implementation cost (before the completion pass, ESP-IDF 5.4.4)
 
 | | |
 |---|---|
@@ -86,20 +86,54 @@ arg, the exact pt reply, the payload the device writes (calendar entry, note bod
 
 Host: `npm run anima -- --pt "abre a calculadora"`, the REPL's `/pt`.
 
-## Not done, and why
+## Completion pass (2026-11-14)
 
-1. **Browser engine.** `apps/anima/www/local/anima-local.{mjs,wasm}` and `cascade.js` are pinned in `webos.lock`: they
-   come from nucleo-webos, not this repo. The WASM must be rebuilt there (Emscripten, `apps/anima/local/build.ps1`) so
-   the browser cascade gains the bridge, and `cascade.js` `guessLang`/`commandHint` (it/en/es/fr/de) needs `pt`. Until
-   then the gate's `anima-local` parity check reports the engine as stale.
-2. **Voice on the card.** The pt voice is done in code and as a pack (docs/tts.md, "Brazilian Portuguese"): pt numbers,
-   time and mathspeak in `nucleo_tts_plan.c`, `voice_lang()` in `app_anima.cpp`, a 328-clip pack
-   (`pt-BR-FranciscaNeural`, 11.7 MB) built into `build/tts-staging/pt/` and checked there (0/1440 minutes, 57/57
-   replies). Not done: copying it to `/sd/data/tts/pt/` (an SD sync, only on request). Until then a pt turn finds no
-   pt index and stays silent instead of the English "read it on the screen" hint. The pack covers the device
-   replies only (no dictionary/frequency layer), so knowledge answers still fall to "Leia na tela."; the PTT path
-   (`nucleo_voice.c`) still speaks it/en.
-3. **Knowledge.** Only if a pt corpus appears: a pt L1 encoder/index (~11.6 MB SD). Until then, online or "Nao sei."
+- Cardinal parsing consumes the whole number: `vinte e cinco`, `trinta e cinco`, `setenta`,
+  `oitenta` and `cento e vinte e cinco` schedule the requested duration. Note/file bodies bypass the
+  bridge after their frame, preserving numbers, accents, punctuation and spacing.
+- Greetings, thanks and common RAM/network/uptime requests work offline. A small reviewed seed corpus
+  answers exact Portuguese questions about NucleoOS, computing, a few capitals and basic science without
+  an encoder. It is deliberately narrow: unknown names never borrow a similar fact.
+- The ANIMA native screen now catalogs the English literals in static tables (`I18N_EN`): suggestions,
+  skill labels/templates, field labels, tabs, the guide, greetings and date abbreviations. Native SSH,
+  NucleoLink, Clock and the security-tool guides use the same mechanism. ANIMA and NucleoLink cycle all
+  six native languages; ANIMA repaints its static menu when moving between English and Portuguese.
+- The HTTP ANIMA endpoint accepts `lang=pt` and resolves time, date, season, storage, RAM, network,
+  battery and agenda values in Portuguese. The PTT query/TTS path also selects `pt`.
+- The browser's engine passes `pt` through to the same C cascade. Its portable build is
+  `npm run anima:local:build`; `npm run webos:pt` applies the generated artifacts and refreshes gzip twins
+  and the lock. The parity gate covers Portuguese commands, number words, greetings and calculations.
+- The web translation from the earlier SD work is recovered in `tools/webos-pt/catalogs/`: 52 current
+  namespaces, 4,922 base keys, strict key/placeholder parity. `tools/webos-pt/README.md` describes this
+  reproducible edition layer over the pinned upstream, including ANIMA's inline UI and language routing.
+- The pt voice pack is staged locally as a matched `index.bin`/`clips.pcm` pair. It includes the new
+  greetings and seed answers. SD provisioning, deploy staging, write policy and filesystem protection
+  recognize the Portuguese pack. Copying to a device remains a separate explicit deployment action.
 
-Known limits: "tempo" means the Weather app (as in Italian), never the clock; the bridge reads the first 32 words of
-a line; when a pt line has a command cue and still falls through to the LLM, the LLM gets the bridged text.
+Verification commands:
+
+```sh
+npm run i18n:native
+npm run i18n:gate
+npm run anima:pt
+npm run anima:local:parity
+node --test tools/webos-pt/web.test.mjs
+npm run ui:shots -- --only .pt.
+NUCLEO_TTS_DIR=build/tts-staging npm run anima:tts-time
+NUCLEO_TTS_DIR=build/tts-staging npm run anima:tts-replies
+```
+
+## Remaining limits
+
+The broad semantic L1 corpus and encoder remain IT/EN. The Portuguese seeds are an exact-question FAQ,
+not a general Portuguese knowledge model. More questions can be answered online; unknown offline
+questions can still decline or expose an English reply whose template has not yet been cataloged.
+The Portuguese voice has no general dictionary/frequency layer, so arbitrary text can fall back to
+"Leia na tela." Browser offline dictation still has only the IT/EN Vosk models; Portuguese dictation
+uses the browser speech engine when available. The native PTT language is Portuguese, but recognition
+still uses the device's trained voice templates.
+
+Known bridge limits: "tempo" means the Weather app, not the clock; command parsing reads the first
+32 words (a literal note/file tail is copied directly, within the output buffer); a command-cued turn
+that falls through to an online model can still carry the bridged text. Native game packs are outside
+this completion pass.

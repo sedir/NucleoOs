@@ -1,0 +1,21 @@
+{
+  "_lang": "pt",
+  "tab_clock": "Relógio",
+  "tab_timer": "Temporizador",
+  "stopwatch": "Cronômetro",
+  "lap": "Lap",
+  "cfg_title": "Configuração do relógio",
+  "opt_24h": "Relógio 24 horas",
+  "opt_seconds": "Mostrar segundos",
+  "opt_analog": "Relógio analógico",
+  "dev_init": "relógio do dispositivo…",
+  "dev_unreachable": "dispositivo inatingível",
+  "dev_synced": "nucleo NTP sincronizado · {hh}:{mm}",
+  "dev_synced_drift": "nucleo NTP-synced · drif {secs}s ({hh}:{mm})",
+  "dev_waiting": "nucleo: à espera da sincronização NTP",
+  "dev_browser_set": "tempo definido a partir do navegador",
+  "timer_done": "Acabou o tempo!",
+  "save_ok": "Gravado no dispositivo",
+  "save_fail": "O salvamento falhou — dispositivo não acessível",
+  "save_unread": "Não gravado — as suas configurações salvas não puderam ser lidas. Tente novamente quando o dispositivo estiver acessível."
+}

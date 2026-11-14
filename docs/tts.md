@@ -148,3 +148,16 @@ IO/FD intact, zero RAM). To be confirmed **by ear** after the flash: concatenate
 sound smoother at the joins (no "tick"). Reversible (just stop calling the declick in
 `copy_clip`). The deterministic text coverage is already saturated (replies 0 uncovered, time 0/1440) → to
 *read even more things* one would need to widen the clip pool (regen) or add acronym spelling (letter clips).
+
+## pt-BR completion validation (2026-11-14)
+
+The locally staged Portuguese voice has 352 clips (about 14.9 MB PCM), including greetings and the
+reviewed Portuguese FAQ. `test-replies.pt.txt` now covers 81 replies. The pack passes every minute of
+the day and all 81 replies without uncovered words. The index builder trims a trailing underscore
+after slug truncation, matching the device's `nucleo_tts_full_slug`; otherwise a long phrase whose
+47th byte was a separator could be packed but never found.
+
+The matched pair is staged in `build/tts-staging/pt/` and `deploy/sd-safe/data/tts/pt/`. The SD
+provisioner can also use the local staging directory. Native PTT now chooses `pt` for Portuguese
+queries/replies; its recognizer still relies on trained voice templates. No device synchronization
+is performed by the checks or by voice generation.

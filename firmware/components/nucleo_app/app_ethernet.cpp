@@ -250,12 +250,12 @@ static void draw_consent(int h)
     d.setTextSize(2); d.setTextColor(YEL, BG); d.setCursor(10, 28); d.print(TR("Test autorizzati","Authorized testing"));
     const char *L_it[] = { "Attacchi L2/L3 cablati:", "scan, ARP MITM/poison,", "DHCP starve, MAC flood,",
                         "rogue DHCP, PCAP.", "Solo reti tue o con", "permesso scritto." };
-    const char *L_en[] = { "Wired L2/L3 attacks:", "scan, ARP MITM/poison,", "DHCP starve, MAC flood,",
-                        "rogue DHCP, PCAP.", "Your own networks or with", "written permission." };
+    const char *L_en[] = { I18N_EN("Wired L2/L3 attacks:", "Attacchi L2/L3 cablati:"), I18N_EN("scan, ARP MITM/poison,", "scan, ARP MITM/poison,"), I18N_EN("DHCP starve, MAC flood,", "DHCP starve, MAC flood,"),
+                        I18N_EN("rogue DHCP, PCAP.", "DHCP starve, MAC flood,"), I18N_EN("Your own networks or with", "Solo reti tue o con"), I18N_EN("written permission.", "permesso scritto.") };
     const char *const *L = nucleo_i18n_is_it() ? L_it : L_en;
     unsigned short C[] = { FG, FG, FG, FG, MUTED, MUTED };
     d.setTextSize(1);
-    for (int i = 0; i < 6; i++) { d.setTextColor(C[i], BG); d.setCursor(10, 52 + i * 11); d.print(L[i]); }
+    for (int i = 0; i < 6; i++) { d.setTextColor(C[i], BG); d.setCursor(10, 52 + i * 11); d.print(nucleo_tr_en(L[i])); }
     (void)h;
 }
 
@@ -265,7 +265,7 @@ static void draw_nomodule(int h)
     d.setTextSize(2); d.setTextColor(COL_RED, BG); d.setCursor(10, 28); d.print("Modulo assente");
     const char *L[] = { "Collega un W5500 SPI:", "SCLK40 MOSI14 MISO39", "CS->G1 (Grove)  saldato", "sul bus microSD condiviso." };
     d.setTextSize(1);
-    for (int i = 0; i < 4; i++) { d.setTextColor(i==0?FG:MUTED, BG); d.setCursor(10, 56 + i * 11); d.print(L[i]); }
+    for (int i = 0; i < 4; i++) { d.setTextColor(i==0?FG:MUTED, BG); d.setCursor(10, 56 + i * 11); d.print(nucleo_tr_en(L[i])); }
     (void)h;
 }
 
@@ -428,7 +428,7 @@ static void draw_busy(const char *title, const char *msg, int h)
 
 // ---- guide ------------------------------------------------------------------
 static const char *GH_IT[GUIDE_PAGES] = { "Cos'e'", "Hardware", "Scan & mappa", "Attacchi", "Comandi" };
-static const char *GH_EN[GUIDE_PAGES] = { "What", "Hardware", "Scan & map", "Attacks", "Keys" };
+static const char *GH_EN[GUIDE_PAGES] = { I18N_EN("What", "Cos'e'"), I18N_EN("Hardware", "Hardware"), I18N_EN("Scan & map", "Scan & mappa"), I18N_EN("Attacks", "Attacchi"), I18N_EN("Keys", "Comandi") };
 #define GH (nucleo_i18n_is_it() ? GH_IT : GH_EN)
 static const char *GB_IT[GUIDE_PAGES][6] = {
     { "Attacchi L2/L3 cablati via", "modulo W5500 in MACRAW.", "Niente lwIP: forgiamo i", "frame a mano -> gira sul",
@@ -443,26 +443,26 @@ static const char *GB_IT[GUIDE_PAGES][6] = {
       "esc     lascia attivo (bg)", "tab     questa guida" },
 };
 static const char *GB_EN[GUIDE_PAGES][6] = {
-    { "Wired L2/L3 attacks via", "the W5500 in MACRAW.", "No lwIP: we forge the", "frames by hand -> runs on",
-      "the Cardputer where Bruce can't.", "One op at a time." },
-    { "W5500 SPI on the microSD bus:", "SCLK40 MOSI14 MISO39 +", "CS on G1 (Grove), soldered.", "Without the module the app says so",
-      "and does not fake it.", "" },
-    { "Scan: DHCP self-config then", "ARP sweep of the /24.", "Vendor from offline OUI.", "Map: GATEWAY on top, ME",
-      "below, hosts fanned out.", "Enter on a host = MITM." },
-    { "MITM/poison are REVERSIBLE:", "on exit we restore the", "ARP caches (Bruce doesn't).", "Rogue DHCP: router+DNS->me.",
-      "PCAP: capture to SD.", "Authorized networks only." },
-    { "up/dn  pick", "enter   start / MITM / stop", "m       map/list", "left    back",
-      "esc     leave on (bg)", "tab     this guide" },
+    { I18N_EN("Wired L2/L3 attacks via", "Attacchi L2/L3 cablati via"), I18N_EN("the W5500 in MACRAW.", "modulo W5500 in MACRAW."), I18N_EN("No lwIP: we forge the", "Niente lwIP: forgiamo i"), I18N_EN("frames by hand -> runs on", "frame a mano -> gira sul"),
+      I18N_EN("the Cardputer where Bruce can't.", "Cardputer dove Bruce no."), I18N_EN("One op at a time.", "Una sola op alla volta.") },
+    { I18N_EN("W5500 SPI on the microSD bus:", "W5500 SPI sul bus microSD:"), I18N_EN("SCLK40 MOSI14 MISO39 +", "SCLK40 MOSI14 MISO39 +"), I18N_EN("CS on G1 (Grove), soldered.", "CS su G1 (Grove), saldato."), I18N_EN("Without the module the app says so", "Senza modulo l'app lo dice"),
+      I18N_EN("and does not fake it.", "e non finge."), I18N_EN("", "") },
+    { I18N_EN("Scan: DHCP self-config then", "Scan: DHCP self-config poi"), I18N_EN("ARP sweep of the /24.", "ARP sweep del /24."), I18N_EN("Vendor from offline OUI.", "Vendor da OUI offline."), I18N_EN("Map: GATEWAY on top, ME", "Mappa: GATEWAY in alto, IO"),
+      I18N_EN("below, hosts fanned out.", "in basso, host a raggiera."), I18N_EN("Enter on a host = MITM.", "Invio su host = MITM.") },
+    { I18N_EN("MITM/poison are REVERSIBLE:", "MITM/poison sono REVERSIBILI:"), I18N_EN("on exit we restore the", "all'uscita ripristino le"), I18N_EN("ARP caches (Bruce doesn't).", "cache ARP (Bruce no)."), I18N_EN("Rogue DHCP: router+DNS->me.", "Rogue DHCP: router+DNS->me."),
+      I18N_EN("PCAP: capture to SD.", "PCAP: cattura su SD."), I18N_EN("Authorized networks only.", "Solo reti autorizzate.") },
+    { I18N_EN("up/dn  pick", "su/giu  scegli"), I18N_EN("enter   start / MITM / stop", "invio   avvia / MITM / ferma"), I18N_EN("m       map/list", "m       mappa/lista"), I18N_EN("left    back", "sx      indietro"),
+      I18N_EN("esc     leave on (bg)", "esc     lascia attivo (bg)"), I18N_EN("tab     this guide", "tab     questa guida") },
 };
 #define GB (nucleo_i18n_is_it() ? GB_IT : GB_EN)
 static void draw_guide(void)
 {
     char rt[10]; snprintf(rt, sizeof rt, "%d/%d", s_page + 1, GUIDE_PAGES);
     app_ui_title("Guida", ATK, rt);
-    d.setTextSize(2); d.setTextColor(YEL, BG); d.setCursor(10, 26); d.print(GH[s_page]);
+    d.setTextSize(2); d.setTextColor(YEL, BG); d.setCursor(10, 26); d.print(nucleo_tr_en(GH[s_page]));
     d.setTextSize(1);
     for (int i = 0; i < 6; i++) {
-        const char *l = GB[s_page][i]; if (!l[0]) continue;
+        const char *l = nucleo_tr_en(GB[s_page][i]); if (!l[0]) continue;
         bool legal = (s_page == GUIDE_PAGES - 1 && i >= 4) || (s_page == 3 && i >= 5);
         d.setTextColor(legal ? YEL : FG, BG); d.setCursor(10, 46 + i * 11); d.print(l);
     }
@@ -509,11 +509,11 @@ static void lg_consent(int W, int H)
     d.drawString(TR("Test autorizzati", "Authorized testing"), 12, y); y += 26;
     const char *L_it[] = { "Attacchi L2/L3 cablati: scan, ARP", "MITM/poison, DHCP starve, MAC flood,",
                            "rogue DHCP, PCAP.", "Solo reti tue o con permesso scritto." };
-    const char *L_en[] = { "Wired L2/L3 attacks: scan, ARP MITM/", "poison, DHCP starve, MAC flood,",
-                           "rogue DHCP, PCAP.", "Your own networks or written consent." };
+    const char *L_en[] = { I18N_EN("Wired L2/L3 attacks: scan, ARP MITM/", "Attacchi L2/L3 cablati:"), I18N_EN("poison, DHCP starve, MAC flood,", "scan, ARP MITM/poison,"),
+                           I18N_EN("rogue DHCP, PCAP.", "DHCP starve, MAC flood,"), I18N_EN("Your own networks or written consent.", "rogue DHCP, PCAP.") };
     const char *const *L = nucleo_i18n_is_it() ? L_it : L_en;
     lg::font(0);
-    for (int i = 0; i < 4; i++) { d.setTextColor(i < 3 ? FG : MUTED, BG); d.drawString(L[i], 12, y); y += 18; }
+    for (int i = 0; i < 4; i++) { d.setTextColor(i < 3 ? FG : MUTED, BG); d.drawString(nucleo_tr_en(L[i]), 12, y); y += 18; }
     const int bw = (W - 36) / 2, by = H - 52;
     lg::button(12, by, bw, 40, TR("Esci", "Leave"), LINE, FG, NK_BACK, 0);
     lg::button(24 + bw, by, bw, 40, TR("Accetto", "Accept"), ATK, INK, NK_ENTER, 0);
@@ -528,7 +528,7 @@ static void lg_nomodule(int W, int H)
     const char *L[] = { TR("Collega un W5500 SPI sul bus microSD:", "Connect a W5500 SPI on the microSD bus:"),
                         "SCLK 40   MOSI 14   MISO 39", TR("CS -> G1 (Grove), saldato.", "CS -> G1 (Grove), soldered.") };
     lg::font(0);
-    for (int i = 0; i < 3; i++) { d.setTextColor(i == 0 ? FG : MUTED, BG); d.drawString(L[i], 12, y); y += 18; }
+    for (int i = 0; i < 3; i++) { d.setTextColor(i == 0 ? FG : MUTED, BG); d.drawString(nucleo_tr_en(L[i]), 12, y); y += 18; }
     lg::button(12, H - 52, W - 24, 40, TR("Rileva ora", "Detect now"), ATK, INK, NK_ENTER, 0);
 }
 
@@ -687,10 +687,10 @@ static void lg_guide(int W, int H)
 {
     char rt[10]; snprintf(rt, sizeof rt, "%d/%d", s_page + 1, GUIDE_PAGES);
     eth_lg_header(TR("Guida", "Guide"), rt, NK_BACK, 0);
-    lg::font(2); d.setTextColor(YEL, BG); d.setTextDatum(top_left); d.drawString(GH[s_page], 12, 38);
+    lg::font(2); d.setTextColor(YEL, BG); d.setTextDatum(top_left); d.drawString(nucleo_tr_en(GH[s_page]), 12, 38);
     lg::font(0); int y = 68;
     for (int i = 0; i < 6; i++) {
-        const char *l = GB[s_page][i]; if (!l[0]) continue;
+        const char *l = nucleo_tr_en(GB[s_page][i]); if (!l[0]) continue;
         bool legal = (s_page == GUIDE_PAGES - 1 && i >= 4) || (s_page == 3 && i >= 5);
         d.setTextColor(legal ? YEL : FG, BG); char lf[52]; lg::fit(lf, sizeof lf, l, W - 24); d.drawString(lf, 12, y); y += 20;
     }
@@ -726,7 +726,7 @@ static void draw_companion(void)
     int y = lg::comp_head("ETHERNET", ATK);
     d.setFont(&fonts::FreeSansBold9pt7b);
     if (s_panel) {
-        d.setTextColor(YEL, BG); d.drawString(GH[s_page], 8, y + 2);
+        d.setTextColor(YEL, BG); d.drawString(nucleo_tr_en(GH[s_page]), 8, y + 2);
         lg::comp_keys(TR("su/giu pagina  invio chiudi", "up/dn page  enter close"));
         return;
     }

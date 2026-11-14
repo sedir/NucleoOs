@@ -1,0 +1,20 @@
+{
+  "_lang": "pt",
+  "title": "Metrônomo",
+  "tab.metronome": "Metrônomo",
+  "tab.tuner": "Afinador",
+  "start": "Iniciar",
+  "stop": "Parar",
+  "tap": "Tempo de toque",
+  "sig": "Bater / barra",
+  "subdiv": "Subdivisão",
+  "kbd.startstop": "iniciar/parar",
+  "kbd.tap": "toque",
+  "a4": "A4",
+  "tuner.listen": "Ouve",
+  "tuner.stop": "Parar",
+  "tuner.hint": "Toque uma única nota perto do microfone.",
+  "tuner.busy": "Microfone em uso",
+  "tuner.denied": "Acesso ao microfone negado.",
+  "tuner.err": "Microfone indisponível."
+}

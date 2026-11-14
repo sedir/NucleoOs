@@ -76,7 +76,7 @@ console.log(`    knobs (browser == native): ${Object.entries(knobs).map(([k, v])
 
 // ---- reference: drive anima.exe in interactive mode, one reset per query ----
 function exeReply(q, lang) {
-    const input = (lang === 'en' ? '/en\n' : '/it\n') + '/reset\n' + q + '\n';
+    const input = '/' + lang + '\n/reset\n' + q + '\n';
     let out = '';
     try { out = execFileSync(exe, [], { input, encoding: 'utf8', env: exeEnv, stdio: ['pipe', 'pipe', 'ignore'] }); }
     catch (e) { out = (e.stdout || '').toString(); }
@@ -95,6 +95,12 @@ function wasmReply(q, lang) {
 
 // ---- representative, session-independent queries across the tiers (no live-state / follow-ups) ----
 const Q = [
+    ['pt', 'abre a calculadora'],
+    ['pt', 'aumenta o volume'],
+    ['pt', 'coloca um timer de vinte e cinco minutos'],
+    ['pt', 'raiz quadrada de 144'],
+    ['pt', 'bom dia'],
+    ['pt', 'qual a memória livre'],
     ['it', 'apri la fotocamera'],            // L0 launch
     ['it', 'apri le impostazioni'],          // L0 launch
     ['it', 'apri la calcolatrice'],          // L0 launch via command-pack (commands.it.json)

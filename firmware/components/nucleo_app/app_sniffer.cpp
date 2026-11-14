@@ -41,7 +41,7 @@ static const unsigned short SNF = 0x07FF /*cyan*/, GRN = C_GREEN, YEL = C_YELLOW
 enum { ST_CONSENT, ST_CONFIG, ST_RUNNING, ST_ARMING, ST_STOPPING };
 enum { R_MODE, R_CHAN, R_GO, R_NROWS };
 static const char *MODE_NAME_IT[] = { "Tutti", "Beacon", "Probe", "Handshake", "Deauth" };
-static const char *MODE_NAME_EN[] = { "All", "Beacon", "Probe", "Handshake", "Deauth" };
+static const char *MODE_NAME_EN[] = { I18N_EN("All", "Tutti"), I18N_EN("Beacon", "Beacon"), I18N_EN("Probe", "Probe"), I18N_EN("Handshake", "Handshake"), I18N_EN("Deauth", "Deauth") };
 #define MODE_NAME (nucleo_i18n_is_it() ? MODE_NAME_IT : MODE_NAME_EN)
 #define N_MODE 5
 
@@ -177,7 +177,7 @@ static void draw_config(void)
     int h = nucleo_app_content_height();
     app_ui_title("WiFi Sniffer", SNF, s_err[0] ? "ERR" : "");
     char cv[12]; if (s_chan == 0) snprintf(cv, sizeof cv, "%s", TR("Hop banda","Band hop")); else snprintf(cv, sizeof cv, TR("Canale %d","Channel %d"), s_chan);
-    row(24, s_row == R_MODE, TR("Modo","Mode"), MODE_NAME[s_mode]);
+    row(24, s_row == R_MODE, TR("Modo","Mode"), nucleo_tr_en(MODE_NAME[s_mode]));
     row(50, s_row == R_CHAN, TR("Canale","Channel"), cv);
     bool go = (s_row == R_GO);
     if (go) { d.fillRoundRect(6, 76, 228, 22, 6, GRN); d.setTextSize(2); d.setTextColor(INK, GRN); d.setCursor(88, 80); d.print(TR("AVVIA","START")); }
@@ -312,7 +312,7 @@ static void draw_large(void) {
     int y = lg::header("WiFi Sniffer", s_err[0] ? "ERR" : nullptr, SNF, NK_BACK);
     d.fillRect(0, y, Wp, Hp - y, BG);
     char cv[16]; if (s_chan == 0) snprintf(cv, sizeof cv, "%s", TR("Hop banda", "Band hop")); else snprintf(cv, sizeof cv, TR("Canale %d", "Channel %d"), s_chan);
-    lg_cfg_row(y + 14, Wp - 32, TR("Modo", "Mode"), MODE_NAME[s_mode], s_row == R_MODE, R_MODE);
+    lg_cfg_row(y + 14, Wp - 32, TR("Modo", "Mode"), nucleo_tr_en(MODE_NAME[s_mode]), s_row == R_MODE, R_MODE);
     lg_cfg_row(y + 58, Wp - 32, TR("Canale", "Channel"), cv, s_row == R_CHAN, R_CHAN);
     const bool go = (s_row == R_GO);
     d.fillRoundRect(16, y + 108, Wp - 32, 48, 11, go ? GRN : lg::card());
@@ -350,7 +350,7 @@ static void draw_companion(void) {
     d.setFont(&fonts::FreeSansBold12pt7b); d.setTextColor(SNF, BG); d.drawString(TR("Configura", "Configure"), 8, y + 4);
     d.setFont(&fonts::Font0); d.setTextColor(FG, BG);
     char ln[40]; char cv[16]; if (s_chan == 0) snprintf(cv, sizeof cv, TR("hop", "hop")); else snprintf(cv, sizeof cv, "ch%d", s_chan);
-    snprintf(ln, sizeof ln, "%s  -  %s", MODE_NAME[s_mode], cv);
+    snprintf(ln, sizeof ln, "%s  -  %s", nucleo_tr_en(MODE_NAME[s_mode]), cv);
     d.drawString(ln, 8, y + 34);
     lg::comp_keys(TR(";/. riga  > cambia  INVIO avvia", ";/. row  > change  ENTER start"));
 }

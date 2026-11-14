@@ -347,12 +347,12 @@ static void ui_list(const char *title, const char *badge, int n, int sel, row_ge
 
 // ---- per-screen row getters --------------------------------------------------
 static const char *HOME_N_IT[] = { "Civetta", "Gemello", "KARMA", "Loot" };
-static const char *HOME_N_EN[] = { "Decoy", "Twin", "KARMA", "Loot" };
+static const char *HOME_N_EN[] = { I18N_EN("Decoy", "Civetta"), I18N_EN("Twin", "Gemello"), I18N_EN("KARMA", "KARMA"), I18N_EN("Loot", "Loot") };
 #define HOME_N (nucleo_i18n_is_it() ? HOME_N_IT : HOME_N_EN)
 static const char *HOME_D_IT[] = { "AP con SSID a scelta", "clona un AP reale vicino",
                                 "esca dalle reti cercate", "credenziali catturate" };
-static const char *HOME_D_EN[] = { "AP with an SSID you pick", "clone a real nearby AP",
-                                "lure from the probed networks", "captured credentials" };
+static const char *HOME_D_EN[] = { I18N_EN("AP with an SSID you pick", "AP con SSID a scelta"), I18N_EN("clone a real nearby AP", "clona un AP reale vicino"),
+                                I18N_EN("lure from the probed networks", "esca dalle reti cercate"), I18N_EN("captured credentials", "credenziali catturate") };
 #define HOME_D (nucleo_i18n_is_it() ? HOME_D_IT : HOME_D_EN)
 static const unsigned short HOME_C[] = { GRN, EP_CYAN, YEL, EP_RED };
 static void get_targets(int i, char *name, int nc, char *val, int vc, unsigned short *dot)
@@ -401,12 +401,12 @@ static void draw_consent(int h)
     d.setTextSize(2); d.setTextColor(YEL, BG); d.setCursor(10, 28); d.print(TR("Test autorizzati","Authorized testing"));
     const char *L_it[] = { "AP civetta + pagina di login", "clonata: salva su SD le",
                         "credenziali inviate.", "", "Solo reti tue o con permesso", "scritto (CTF, audit)." };
-    const char *L_en[] = { "Decoy AP + cloned login", "page: saves the submitted",
-                        "credentials to SD.", "", "Your own networks or with", "written permission (CTF, audit)." };
+    const char *L_en[] = { I18N_EN("Decoy AP + cloned login", "AP civetta + pagina di login"), I18N_EN("page: saves the submitted", "clonata: salva su SD le"),
+                        I18N_EN("credentials to SD.", "credenziali inviate."), I18N_EN("", ""), I18N_EN("Your own networks or with", "Solo reti tue o con permesso"), I18N_EN("written permission (CTF, audit).", "scritto (CTF, audit).") };
     const char *const *L = nucleo_i18n_is_it() ? L_it : L_en;
     unsigned short C[] = { FG, FG, FG, BG, MUTED, MUTED };
     d.setTextSize(1);
-    for (int i = 0; i < 6; i++) { d.setTextColor(C[i], BG); d.setCursor(10, 52 + i * 11); d.print(L[i]); }
+    for (int i = 0; i < 6; i++) { d.setTextColor(C[i], BG); d.setCursor(10, 52 + i * 11); d.print(nucleo_tr_en(L[i])); }
     (void)h;
 }
 
@@ -418,10 +418,10 @@ static void draw_home(int h)
         int y = 24 + i * 25; bool s = (i == s_home_sel);
         if (s) d.fillRoundRect(6, y - 2, 228, 23, 6, PANEL);
         else   d.fillCircle(13, y + 8, 3, HOME_C[i]);
-        d.setTextSize(2); d.setTextColor(s ? FG : MUTED, s ? PANEL : BG); d.setCursor(s ? 12 : 22, y); d.print(HOME_N[i]);
+        d.setTextSize(2); d.setTextColor(s ? FG : MUTED, s ? PANEL : BG); d.setCursor(s ? 12 : 22, y); d.print(nucleo_tr_en(HOME_N[i]));
         if (i == 3) { int c = nucleo_evilportal_captures(); if (c) { char b[8]; snprintf(b, sizeof b, "%d", c);
                       d.setTextColor(s ? YEL : EP_RED, s ? PANEL : BG); d.setCursor(210, y + 2); d.print(b); } }
-        d.setTextSize(1); d.setTextColor(s ? YEL : DIM, s ? PANEL : BG); d.setCursor(s ? 12 : 22, y + 15); d.print(HOME_D[i]);
+        d.setTextSize(1); d.setTextColor(s ? YEL : DIM, s ? PANEL : BG); d.setCursor(s ? 12 : 22, y + 15); d.print(nucleo_tr_en(HOME_D[i]));
     }
     if (nucleo_evilportal_running()) { d.setTextSize(1); d.setTextColor(EP_RED, BG); d.setCursor(10, h - 9);
                                        d.print(TR("portale ATTIVO - invio su Loot per gestirlo","portal ACTIVE - enter on Loot to manage")); }
@@ -581,21 +581,21 @@ static void draw_guide(int h)
         "Solo test autorizzati.",
     };
     const char *L_EN[] = {
-        "Decoy: fake AP, SSID you pick",
-        "Twin: clone a real AP +",
-        " deauth to move its clients over",
-        " capture=open (downgrade, visible)",
-        " matched=real WPA2 (no login)",
-        "KARMA: use the networks devices",
-        " are probing for as the lure",
-        "Clone page: copies the login of",
-        " an open captive (CSS included)",
-        "Authorized testing only.",
+        I18N_EN("Decoy: fake AP, SSID you pick", "Civetta: AP finto, SSID a scelta"),
+        I18N_EN("Twin: clone a real AP +", "Gemello: clona un AP reale +"),
+        I18N_EN(" deauth to move its clients over", " deauth per spostarne i client"),
+        I18N_EN(" capture=open (downgrade, visible)", " cattura=open (declassa, visibile)"),
+        I18N_EN(" matched=real WPA2 (no login)", " coerente=WPA2 reale (no login)"),
+        I18N_EN("KARMA: use the networks devices", "KARMA: usa le reti che i device"),
+        I18N_EN(" are probing for as the lure", " cercano come esca"),
+        I18N_EN("Clone page: copies the login of", "Clona pagina: copia il login di"),
+        I18N_EN(" an open captive (CSS included)", " un captive aperto (CSS inclusi)"),
+        I18N_EN("Authorized testing only.", "KARMA: usa le reti che i device"),
     };
     const char *const *L = nucleo_i18n_is_it() ? L_IT : L_EN;
     d.setTextSize(1);
-    for (int i = 0; i < 10; i++) { d.setTextColor(i == 9 ? YEL : (L[i][0] == ' ' ? DIM : FG), BG);
-                                   d.setCursor(8, 24 + i * 11); d.print(L[i]); }
+    for (int i = 0; i < 10; i++) { d.setTextColor(i == 9 ? YEL : (nucleo_tr_en(L[i])[0] == ' ' ? DIM : FG), BG);
+                                   d.setCursor(8, 24 + i * 11); d.print(nucleo_tr_en(L[i])); }
     (void)h;
 }
 
@@ -621,7 +621,7 @@ static void draw_menu(int h)   // TAB overlay
 static void lg_home_row(int i, int x, int y, int w, int h, bool focus, unsigned short bg, void *) {
     char right[8] = "";
     if (i == 3) { int c = nucleo_evilportal_captures(); if (c) snprintf(right, sizeof right, "%d", c); }
-    lg::row_text(x, y, w, h, focus, bg, HOME_N[i], right, focus ? INK : HOME_C[i]);
+    lg::row_text(x, y, w, h, focus, bg, nucleo_tr_en(HOME_N[i]), right, focus ? INK : HOME_C[i]);
 }
 static void lg_ssid_row(int i, int x, int y, int w, int h, bool focus, unsigned short bg, void *) {
     if (i == 0) { lg::row_text(x, y, w, h, focus, bg, TR("Scrivi un nome...", "Type a name..."), nullptr, focus ? INK : EP_CYAN); return; }
@@ -694,10 +694,10 @@ static void draw_large(void) {
         const int dx = LW + 4, dw = Wp - LW - 10;
         lg::panel(dx, y + 6, dw, Hp - y - 14);
         const unsigned short cb = lg::card();
-        lg::font(2); d.setTextColor(HOME_C[s_home_sel], cb); d.drawString(HOME_N[s_home_sel], dx + 10, y + 16);
+        lg::font(2); d.setTextColor(HOME_C[s_home_sel], cb); d.drawString(nucleo_tr_en(HOME_N[s_home_sel]), dx + 10, y + 16);
         d.drawFastHLine(dx + 10, y + 44, dw - 20, LINE);
         lg::font(0); d.setTextColor(FG, cb);
-        lg::wrap(HOME_D[s_home_sel], dx + 10, y + 54, dw - 20, 18, 4);
+        lg::wrap(nucleo_tr_en(HOME_D[s_home_sel]), dx + 10, y + 54, dw - 20, 18, 4);
         if (nucleo_evilportal_running()) { lg::font(0); d.setTextColor(EP_RED, cb); d.drawString(TR("PORTALE ATTIVO", "PORTAL ACTIVE"), dx + 10, Hp - 24); }
         lg::button(dx + 8, Hp - 50, dw - 16, 34, TR("Apri", "Open"), EP_RED, INK, NK_ENTER, 0);
         nucleo_touch_commit(); return;
@@ -768,12 +768,12 @@ static void draw_large(void) {
         const char *L_IT[] = { "Civetta: AP finto, SSID a scelta.", "Gemello: clona un AP reale + deauth.",
                                "Cattura = open (visibile).", "Coerente = WPA2 reale (no login).",
                                "KARMA: usa le reti cercate come esca.", "Solo test autorizzati." };
-        const char *L_EN[] = { "Decoy: fake AP, SSID you pick.", "Twin: clone a real AP + deauth.",
-                               "Capture = open (visible).", "Matched = real WPA2 (no login).",
-                               "KARMA: lure from probed networks.", "Authorized testing only." };
+        const char *L_EN[] = { I18N_EN("Decoy: fake AP, SSID you pick.", "Civetta: AP finto, SSID a scelta"), I18N_EN("Twin: clone a real AP + deauth.", "Gemello: clona un AP reale +"),
+                               I18N_EN("Capture = open (visible).", " deauth per spostarne i client"), I18N_EN("Matched = real WPA2 (no login).", " cattura=open (declassa, visibile)"),
+                               I18N_EN("KARMA: lure from probed networks.", " coerente=WPA2 reale (no login)"), I18N_EN("Authorized testing only.", "KARMA: usa le reti che i device") };
         const char *const *L = nucleo_i18n_is_it() ? L_IT : L_EN;
         lg::font(0);
-        for (int i = 0; i < 6; i++) { d.setTextColor(i == 5 ? YEL : FG, cb); d.drawString(L[i], 24, y + 18 + i * 24); }
+        for (int i = 0; i < 6; i++) { d.setTextColor(i == 5 ? YEL : FG, cb); d.drawString(nucleo_tr_en(L[i]), 24, y + 18 + i * 24); }
         nucleo_touch_commit(); return;
     }
     if (s_state == ST_LURE) {
@@ -914,7 +914,7 @@ static void draw_companion(void) {
     // menu-ish states (home/setup/lists/type): show the picked item
     const char *what; char buf[48];
     switch (s_state) {
-        case ST_HOME:  what = HOME_N[s_home_sel]; break;
+        case ST_HOME:  what = nucleo_tr_en(HOME_N[s_home_sel]); break;
         case ST_SSID:  snprintf(buf, sizeof buf, "%s", s_sel == 0 ? TR("Scrivi un nome", "Type a name") : nucleo_evilportal_ssid_preset(s_sel - 1)); what = buf; break;
         case ST_PAGE:  what = s_tpl_n ? nucleo_evilportal_template_name(s_sel) : "-"; break;
         case ST_LOOT:  snprintf(buf, sizeof buf, "%d loot", nucleo_evilportal_recent_count()); what = buf; break;
@@ -924,7 +924,7 @@ static void draw_companion(void) {
     }
     d.setFont(&fonts::FreeSansBold12pt7b); d.setTextColor(EP_RED, BG); d.drawString(what, 8, y + 4);
     d.setFont(&fonts::Font0); d.setTextColor(MUTED, BG);
-    if (s_state == ST_HOME) lg::wrap(HOME_D[s_home_sel], 8, y + 32, 224, 12, 2);
+    if (s_state == ST_HOME) lg::wrap(nucleo_tr_en(HOME_D[s_home_sel]), 8, y + 32, 224, 12, 2);
     lg::comp_keys(s_state == ST_TYPE ? TR("scrivi  INVIO ok  ESC indietro", "type  ENTER ok  ESC back")
                 : TR(";/. scegli  INVIO apri  ESC indietro", ";/. pick  ENTER open  ESC back"));
 }

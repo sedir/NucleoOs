@@ -1,0 +1,8 @@
+{
+  "_lang": "pt",
+  "header_name": "Imagens",
+  "btn_wallpaper": "Definir como papel de parede",
+  "img_failed": "Não foi possível carregar {path}",
+  "dir_failed": "Não foi possível ler {dir} — é o dispositivo acessível?",
+  "dir_empty": "Sem imagens em {dir}"
+}

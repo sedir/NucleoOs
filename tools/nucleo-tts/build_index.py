@@ -20,7 +20,10 @@ def main():
     # slug -> path; slug = file name without .wav, truncated to 47 (must match the planner)
     items = {}
     for p in wavs:
-        slug = os.path.splitext(os.path.basename(p))[0][:SLUG-1]
+        # The firmware removes a trailing separator AFTER truncating to its
+        # 48-byte buffer too. A long phrase ending at '_' otherwise becomes an
+        # unreachable clip (e.g. the Portuguese HTTP/DNA seed replies).
+        slug = os.path.splitext(os.path.basename(p))[0][:SLUG-1].rstrip("_")
         if slug: items[slug] = p
     slugs = sorted(items, key=lambda s: s.encode("ascii", "ignore"))   # byte-order == the device strcmp
     if not slugs: sys.exit("nessun .wav in %s" % args.indir)

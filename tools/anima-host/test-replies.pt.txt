@@ -70,3 +70,28 @@ Falta 1 dia para 25 de dezembro de 2026.
 25 de dezembro de 2026 e hoje.
 25 de dezembro de 2026 cai em sexta-feira.
 O resultado e 78.5398.
+
+Ola!
+Bom dia!
+Boa tarde!
+Boa noite!
+De nada!
+A raiz quadrada de 144 e 12.
+A capital do Brasil e Brasilia.
+A capital da Franca e Paris.
+A capital do Japao e Toquio.
+Santos Dumont foi um pioneiro brasileiro da aviacao.
+NucleoOS funciona offline no M5Stack Cardputer.
+A RAM guarda dados e programas em uso; seu conteudo se perde quando a energia e desligada.
+PSRAM e uma memoria RAM externa que gerencia sua propria atualizacao.
+O Cardputer nao tem PSRAM.
+Flash e uma memoria que preserva os dados sem energia.
+Um microcontrolador reune processador, memoria e perifericos em um chip.
+O DNS associa nomes de dominio a enderecos de rede.
+HTTP e um protocolo de troca de recursos entre clientes e servidores.
+HTML descreve a estrutura das paginas da web.
+CSS define a apresentacao visual das paginas da web.
+JSON e um formato de texto para trocar dados estruturados.
+Um LED e um diodo semicondutor que emite luz.
+A fotossintese usa energia da luz para produzir compostos organicos a partir de dioxido de carbono e agua.
+O DNA armazena informacoes geneticas nos seres vivos.

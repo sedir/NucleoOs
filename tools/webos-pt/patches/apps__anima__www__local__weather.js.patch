@@ -1,0 +1,64 @@
+--- a/apps/anima/www/local/weather.js
++++ b/apps/anima/www/local/weather.js
+@@ -311,6 +311,22 @@
+ 
+ // ---- top-level -------------------------------------------------------------
+ export function parseWeather(q, opts = {}) {
++  if (opts.lang === 'pt') {
++    let text = normWeather(q);
++    if (/^(?:o que e|o que significa|definicao de)\b/.test(text))
++      return { isWeather: false, city: '', dayOffset: 0, tooFar: false, aspect: 'general', dateLabel: 'hoje' };
++    const words = [['depois de amanha','the day after tomorrow'], ['fim de semana','weekend'],
++      ['previsao do tempo','weather forecast'], ['clima','weather'], ['tempo','weather'],
++      ['amanha','tomorrow'], ['hoje','today'], ['temperatura','temperature'], ['chuva','rain'],
++      ['chover','rain'], ['chovendo','rain'], ['neve','snow'], ['sol','sun'], ['vai','will'],
++      ['em','in'], ['no','in'], ['na','in'], ['londres','london'], ['toquio','tokyo']];
++    for (const [pt, en] of words) text = text.replace(new RegExp('\\b' + pt + '\\b', 'g'), en);
++    const out = parseWeather(text, { ...opts, lang: 'en' });
++    const date = opts.now instanceof Date ? new Date(opts.now) : new Date();
++    date.setDate(date.getDate() + out.dayOffset);
++    out.dateLabel = ['hoje', 'amanhã', 'depois de amanhã'][out.dayOffset] || date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
++    return out;
++  }
+   const lang = ['en', 'es', 'fr', 'de'].includes(opts.lang) ? opts.lang : 'it';
+   const now = opts.now instanceof Date ? opts.now : new Date();
+   const nf = normWeather(q);
+@@ -353,7 +369,11 @@
+   56:'gefrierender Nieselregen', 57:'gefrierender Nieselregen', 61:'Regen', 63:'Regen', 65:'starker Regen', 66:'gefrierender Regen', 67:'gefrierender Regen',
+   71:'Schnee', 73:'Schnee', 75:'starker Schneefall', 77:'Schneegriesel', 80:'Schauer', 81:'Schauer', 82:'starke Schauer', 85:'Schneeschauer', 86:'Schneeschauer',
+   95:'Gewitter', 96:'Gewitter mit Hagel', 99:'Gewitter mit Hagel' };
+-const VAR = { it: 'variabile', en: 'variable', es: 'variable', fr: 'variable', de: 'wechselhaft' };
++WMO.pt = { 0:'céu limpo', 1:'parcialmente nublado', 2:'parcialmente nublado', 3:'encoberto', 45:'nevoeiro', 48:'nevoeiro',
++  51:'garoa', 53:'garoa', 55:'garoa', 56:'garoa congelante', 57:'garoa congelante', 61:'chuva', 63:'chuva', 65:'chuva forte',
++  66:'chuva congelante', 67:'chuva congelante', 71:'neve', 73:'neve', 75:'neve forte', 77:'grãos de neve', 80:'pancadas de chuva',
++  81:'pancadas de chuva', 82:'pancadas fortes de chuva', 85:'pancadas de neve', 86:'pancadas de neve', 95:'trovoada', 96:'trovoada com granizo', 99:'trovoada com granizo' };
++const VAR = { pt: 'variável', it: 'variabile', en: 'variable', es: 'variable', fr: 'variable', de: 'wechselhaft' };
+ export function wmoText(code, lang) {
+   const tbl = WMO[lang] || WMO.it;
+   return tbl[code] || VAR[lang] || VAR.it;
+@@ -390,6 +410,17 @@
+     city: 'Welche Stadt? Zum Beispiel: „Wetter in Berlin“.', far: (l) => `Ich habe nur eine Vorhersage für etwa 15 Tage: ${l} ist zu weit weg.`,
+     off: 'Ich brauche Internet, um das Wetter abzurufen.', miss: (c) => `Ich bekomme das Wetter für ${c} nicht.` },
+ };
++WX_T.pt = { rel: ['hoje', 'amanhã', 'depois de amanhã'], at: p => `Em ${p}`,
++  yesRain: (w,p) => `Sim, há previsão de chuva ${w} em ${p}`, noRain: (w,p) => `Não há previsão de chuva ${w} em ${p}`,
++  prob: (pp,d,lo,hi) => ` (probabilidade ${pp}%, ${d}, ${lo}–${hi} °C).`, par: (d,lo,hi) => ` (${d}, ${lo}–${hi} °C).`,
++  yesSun: (w,p) => `Sim, deve fazer sol ${w} em ${p}`, noSun: (w,p,d,lo,hi) => `Não inteiramente: ${w} em ${p}, ${d}, ${lo}–${hi} °C.`,
++  yesSnow: (w,p) => `Sim, há previsão de neve ${w} em ${p}`, noSnow: (w,p) => `Não há previsão de neve ${w} em ${p}`,
++  nowT: (p,t,d,lo,hi) => `Em ${p}, agora: ${t} °C (${d}, mínima ${lo} / máxima ${hi} °C).`,
++  day: (at,w,d,lo,hi) => `${at}, ${w}: ${d}, mínima ${lo} °C / máxima ${hi} °C.`,
++  dayT: (at,w,d,lo,hi) => `${at}, ${w}: ${lo}–${hi} °C (${d}).`,
++  nowG: (p,d,t,lo,hi) => `Em ${p}, agora: ${d}, ${t} °C (mínima ${lo} / máxima ${hi} °C).`,
++  city: 'Qual cidade? Por exemplo: "clima em São Paulo".', far: l => `Só tenho previsão para cerca de 15 dias: ${l} está longe demais.`,
++  off: 'Preciso de internet para consultar o clima.', miss: c => `Não consegui consultar o clima de ${c}.` };
+ function formatWeatherXL(parsed, place, fc, lang) {
+   const T = WX_T[lang], desc = wmoText(fc.code, lang);
+   const hi = Math.round(fc.tmax), lo = Math.round(fc.tmin);
+@@ -409,6 +440,7 @@
+   return T.day(T.at(place), when, desc, lo, hi);
+ }
+ export function formatWeather(parsed, place, fc, lang) {
++  if (lang === 'pt') return formatWeatherXL(parsed, place, fc, lang);
+   if (WX_T[lang]) return formatWeatherXL(parsed, place, fc, lang);
+   const en = lang === 'en';
+   const desc = wmoText(fc.code, lang);

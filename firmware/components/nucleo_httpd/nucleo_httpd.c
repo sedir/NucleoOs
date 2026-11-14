@@ -1488,7 +1488,7 @@ static esp_err_t anima_get(httpd_req_t *req)
         // es/fr/de user gets an online answer in their own language. Unknown codes keep the OS default.
         if (httpd_query_key_value(query, "lang", lv, sizeof(lv)) == ESP_OK && lv[0] && lv[1]) {
             char a = (char)(lv[0] | 0x20), b = (char)(lv[1] | 0x20);
-            static const char *ok[] = { "it", "en", "es", "fr", "de" };
+            static const char *ok[] = { "it", "en", "es", "fr", "de", "pt" };
             for (size_t i = 0; i < sizeof(ok) / sizeof(ok[0]); i++)
                 if (a == ok[i][0] && b == ok[i][1]) { lang[0] = a; lang[1] = b; lang[2] = 0; break; }
         }
@@ -1503,6 +1503,7 @@ static esp_err_t anima_get(httpd_req_t *req)
             else                              mode_ov = 2;        // on   -> hybrid
         }
     }
+    const bool pt = !strcmp(lang, "pt");
     bool en = !(lang[0] == 'i' && lang[1] == 't');   // English floor for the handler's own text (es/fr/de -> English); the LLM reply uses the real code
 
     // Low-heap guard (see NUCLEO_TLS_MIN_BLOCK/_FREE): when SRAM is too tight for a safe
@@ -1628,16 +1629,19 @@ static esp_err_t anima_get(httpd_req_t *req)
     // Resolve a live SYSTEM value into the reply template's {value} placeholder (localized).
     char reply[1100];  // capabilities/agenda answers are long; a code snippet from the online model longer
     if (r.action == ANIMA_ACT_SYSTEM) {
-        char value[640]; snprintf(value, sizeof(value), "%s", en ? "unavailable" : "non disponibile");
+        char value[640]; snprintf(value, sizeof(value), "%s", pt ? "indisponivel" : en ? "unavailable" : "non disponibile");
         if (!strcmp(r.arg, "time")) {
             time_t now = time(NULL); struct tm *tm = localtime(&now);
-            if (tm && now > 1672531200) nucleo_tts_speak_time(value, (int)sizeof(value), tm->tm_hour, tm->tm_min, en ? "en" : "it");
-            else snprintf(value, sizeof(value), "%s", en ? "I don't know the time: the clock isn't set" : "Non conosco l'ora: l'orologio non e' impostato");
+            if (tm && now > 1672531200) nucleo_tts_speak_time(value, (int)sizeof(value), tm->tm_hour, tm->tm_min, pt ? "pt" : en ? "en" : "it");
+            else snprintf(value, sizeof(value), "%s", pt ? "Nao sei a hora: o relogio nao esta ajustado" : en ? "I don't know the time: the clock isn't set" : "Non conosco l'ora: l'orologio non e' impostato");
+        } else if (!strcmp(r.arg, "battery")) {
+            int pct = nucleo_power_battery_pct();
+            if (pct >= 0) snprintf(value, sizeof value, "%d%%", pct);
         } else if (!strcmp(r.arg, "storage")) {
             nucleo_storage_refresh();
             const nucleo_storage_info_t *st = nucleo_storage_info();
             if (st->mounted)
-                snprintf(value, sizeof(value), en ? "%.1f GB free of %.1f GB" : "%.1f GB liberi su %.1f GB",
+                snprintf(value, sizeof(value), pt ? "%.1f GB livres de %.1f GB" : en ? "%.1f GB free of %.1f GB" : "%.1f GB liberi su %.1f GB",
                          st->free_bytes / 1e9, st->total_bytes / 1e9);
         } else if (!strcmp(r.arg, "date") || !strcmp(r.arg, "year") || !strcmp(r.arg, "season")) {
             // Computed-from-state: derive date/year/season from the (NTP-synced) RTC. Always exact.
@@ -1647,6 +1651,9 @@ static esp_err_t anima_get(httpd_req_t *req)
             static const char *MO_EN[] = {"January","February","March","April","May","June","July","August","September","October","November","December"};
             static const char *SE_IT[] = {"inverno","primavera","estate","autunno"};
             static const char *SE_EN[] = {"winter","spring","summer","autumn"};
+            static const char *WD_PT[] = {"domingo","segunda-feira","terca-feira","quarta-feira","quinta-feira","sexta-feira","sabado"};
+            static const char *MO_PT[] = {"janeiro","fevereiro","marco","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"};
+            static const char *SE_PT[] = {"inverno","primavera","verao","outono"};
             time_t now = time(NULL); struct tm *tm = localtime(&now);
             if (tm) {
                 int y = tm->tm_year + 1900, mo = tm->tm_mon, wd = tm->tm_wday, d = tm->tm_mday;
@@ -1659,16 +1666,17 @@ static esp_err_t anima_get(httpd_req_t *req)
                           : ((mo == 5 && d >= 21) || mo == 6 || mo == 7 || (mo == 8 && d <= 22)) ? 2   // summer
                           : ((mo == 8 && d >= 23) || mo == 9 || mo == 10 || (mo == 11 && d <= 20)) ? 3 // autumn
                           : 0;                                                                          // winter
-                    snprintf(value, sizeof(value), "%s", en ? SE_EN[s] : SE_IT[s]);
+                    snprintf(value, sizeof(value), "%s", pt ? SE_PT[s] : en ? SE_EN[s] : SE_IT[s]);
                 } else {  // date
-                    if (en) snprintf(value, sizeof(value), "Today is %s, %s %d %d", WD_EN[wd], MO_EN[mo], d, y);
+                    if (pt) snprintf(value, sizeof(value), "Hoje e %s, %d de %s de %d", WD_PT[wd], d, MO_PT[mo], y);
+                    else if (en) snprintf(value, sizeof(value), "Today is %s, %s %d %d", WD_EN[wd], MO_EN[mo], d, y);
                     else    snprintf(value, sizeof(value), "Oggi e %s %d %s %d", WD_IT[wd], d, MO_IT[mo], y);
                 }
             }
         } else if (!strcmp(r.arg, "agenda")) {
             // Read today's appointments from the OS calendar (/system/config/calendar.json,
             // { events: { "YYYY-MM-DD": [ {time,text,id} ] } }) and filter by the RTC date.
-            snprintf(value, sizeof(value), en ? "you have no events today" : "oggi non hai impegni");
+            snprintf(value, sizeof(value), pt ? "voce nao tem eventos hoje" : en ? "you have no events today" : "oggi non hai impegni");
             time_t now = time(NULL); struct tm *tm = localtime(&now);
             FILE *f = tm ? fopen(NUCLEO_SD_MOUNT "/system/config/calendar.json", "rb") : NULL;
             if (f) {
@@ -1691,7 +1699,8 @@ static esp_err_t anima_get(httpd_req_t *req)
                             if (list[0] && strlen(list) + strlen(one) + 3 < sizeof(list)) strncat(list, "; ", sizeof(list) - strlen(list) - 1);
                             if (strlen(list) + strlen(one) + 1 < sizeof(list)) strncat(list, one, sizeof(list) - strlen(list) - 1);
                         }
-                        if (en) snprintf(value, sizeof(value), "you have %d today: %s", cnt, list);
+                        if (pt) snprintf(value, sizeof(value), "voce tem %d hoje: %s", cnt, list);
+                        else if (en) snprintf(value, sizeof(value), "you have %d today: %s", cnt, list);
                         else    snprintf(value, sizeof(value), "oggi hai %d %s: %s", cnt, cnt == 1 ? "impegno" : "impegni", list);
                     }
                     if (root) cJSON_Delete(root);
@@ -1707,7 +1716,8 @@ static esp_err_t anima_get(httpd_req_t *req)
                 if (applist[0] && strlen(applist) + strlen(nm) + 3 < sizeof(applist)) strncat(applist, ", ", sizeof(applist) - strlen(applist) - 1);
                 if (strlen(applist) + strlen(nm) + 1 < sizeof(applist)) { strncat(applist, nm, sizeof(applist) - strlen(applist) - 1); shown++; }
             }
-            if (en) snprintf(value, sizeof(value),
+            if (pt) snprintf(value, sizeof(value), "Posso abrir seus %d apps (%s...), dizer hora, data, espaco, bateria e RAM, criar lembretes, timers e arquivos, fazer contas e conversoes. Perguntas gerais em portugues usam a base local revisada ou o modelo online.", n, applist);
+            else if (en) snprintf(value, sizeof(value),
                 "I can open your %d apps (%s...), tell time/date/season/space/battery, give a city's weather online, manage your calendar (add reminders, read today's), solve math/physics/geometry/vectors and Ohm's law, convert units, write spreadsheet formulas, create files, and answer about NucleoOS, C, electronics and general topics. I fix typos and, when a topic is both a fact and a skill, I ask which you mean.", n, applist);
             else snprintf(value, sizeof(value),
                 "Posso aprire le tue %d app (%s...), darti ora/data/stagione/spazio/batteria, il meteo online di una citta, gestire il calendario (aggiungo promemoria e leggo gli impegni), risolvere matematica/fisica/geometria/vettori e la legge di Ohm, fare conversioni, scrivere formule per il foglio di calcolo, creare file, e rispondere su NucleoOS, C, elettronica e cultura generale. Correggo i refusi e, se un argomento e sia nozione sia skill, ti chiedo quale intendi.", n, applist);
@@ -1715,22 +1725,22 @@ static esp_err_t anima_get(httpd_req_t *req)
             // Live Wi-Fi state (the same source as /api/status): mode + SSID + IP.
             const char *mode = nucleo_setup_mode(), *ssid = nucleo_setup_ssid(), *ip = nucleo_setup_ip();
             if (mode && !strcmp(mode, "ap"))
-                snprintf(value, sizeof(value), en ? "I'm a Wi-Fi hotspot \"%s\", IP %s" : "Sono un hotspot Wi-Fi \"%s\", IP %s", ssid, ip);
+                snprintf(value, sizeof(value), pt ? "Sou um hotspot Wi-Fi \"%s\", IP %s" : en ? "I'm a Wi-Fi hotspot \"%s\", IP %s" : "Sono un hotspot Wi-Fi \"%s\", IP %s", ssid, ip);
             else if (ssid && ssid[0])
-                snprintf(value, sizeof(value), en ? "connected to \"%s\", IP %s" : "connesso a \"%s\", IP %s", ssid, ip);
+                snprintf(value, sizeof(value), pt ? "conectado a \"%s\", IP %s" : en ? "connected to \"%s\", IP %s" : "connesso a \"%s\", IP %s", ssid, ip);
             else
-                snprintf(value, sizeof(value), en ? "not connected" : "non connesso");
+                snprintf(value, sizeof(value), pt ? "sem conexao" : en ? "not connected" : "non connesso");
         } else if (!strcmp(r.arg, "ram")) {
             // Free heap right now (MALLOC_CAP_DEFAULT), in KB — the live RAM headroom.
             unsigned kb = (unsigned)(heap_caps_get_free_size(MALLOC_CAP_DEFAULT) / 1024);
-            snprintf(value, sizeof(value), en ? "%u KB of RAM free" : "%u KB di RAM liberi", kb);
+            snprintf(value, sizeof(value), pt ? "%u KB de RAM livres" : en ? "%u KB of RAM free" : "%u KB di RAM liberi", kb);
         } else if (!strcmp(r.arg, "version")) {
             const esp_app_desc_t *d = esp_app_get_description();
             snprintf(value, sizeof(value), "NucleoOS %s", d ? d->version : "?");
         } else if (!strcmp(r.arg, "uptime")) {
             long s = (long)(esp_timer_get_time() / 1000000);
             int dd = (int)(s / 86400), hh = (int)((s % 86400) / 3600), mm = (int)((s % 3600) / 60);
-            if (dd)      snprintf(value, sizeof(value), en ? "%dd %dh" : "%dg %dh", dd, hh);
+            if (dd)      snprintf(value, sizeof(value), pt ? "%d dias e %d horas" : en ? "%dd %dh" : "%dg %dh", dd, hh);
             else if (hh) snprintf(value, sizeof(value), "%dh %dm", hh, mm);
             else         snprintf(value, sizeof(value), "%dm", mm);
         }

@@ -277,7 +277,7 @@ export function fmtMB(bytes) {
 export async function fillToolTemplate(out, lang, deps = {}) {
   if (!out || typeof out.reply !== 'string' || !out.reply.includes('{value}')) return out;
   const f = deps.fetch;
-  const en = lang === 'en';
+  const en = lang !== 'it';
   const arg = out.arg || out.intent || '';
   let value = '';
 
@@ -498,7 +498,7 @@ export function createAnimaLocal(opts = {}) {
     // Run the offline cascade. Returns the /api/anima-shaped result object.
     query(text, lang) {
       if (!loaded) throw Object.assign(new Error('ANIMA Local: engine not loaded'), { code: 'ENGINE_NOT_LOADED' });
-      const out = shape(JSON.parse(_q(text || '', lang === 'en' ? 'en' : 'it')), text || '', lang === 'en' ? 'en' : 'it');
+      const out = shape(JSON.parse(_q(text || '', lang === 'pt' ? 'pt' : lang === 'it' ? 'it' : 'en')), text || '', lang === 'pt' ? 'pt' : lang === 'it' ? 'it' : 'en');
       scheduleFlush();   // persist any learn/profile write this turn (debounced; usually a no-op)
       return out;
     },

@@ -71,7 +71,7 @@ export function engineInputs() {
   const reached = includeClosure([...engineSources(), PRELUDE]);
   const sources = new Set(engineSources());
   const headers = reached.filter((f) => !sources.has(f)).sort();
-  return [...engineSources(), ...headers, join(here, 'build.ps1')];
+  return [...engineSources(), ...headers, join(here, 'build.ps1'), join(here, 'build.mjs')];
 }
 
 export function engineHash() {

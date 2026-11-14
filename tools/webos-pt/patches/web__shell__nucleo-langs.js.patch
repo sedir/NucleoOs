@@ -1,0 +1,10 @@
+--- a/web/shell/nucleo-langs.js
++++ b/web/shell/nucleo-langs.js
+@@ -19,6 +19,7 @@
+   { code: 'es', label: 'Español',  flag: '🇪🇸', dir: 'ltr', locale: 'es-ES', name: 'Spanish', device: true },
+   { code: 'fr', label: 'Français', flag: '🇫🇷', dir: 'ltr', locale: 'fr-FR', name: 'French',  device: true },
+   { code: 'de', label: 'Deutsch',  flag: '🇩🇪', dir: 'ltr', locale: 'de-DE', name: 'German',  device: true },
++  { code: 'pt', label: 'Português (Brasil)', flag: '🇧🇷', dir: 'ltr', locale: 'pt-BR', name: 'Brazilian Portuguese', device: true },
+   // Browser-only: every firmware released so far stores only the five above and turns any other code into 'en'.
+   { code: 'zh', label: '简体中文', flag: '🇨🇳', dir: 'ltr', locale: 'zh-CN', name: 'Simplified Chinese', device: false },
+ ].map(Object.freeze));

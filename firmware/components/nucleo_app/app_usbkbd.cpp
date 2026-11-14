@@ -255,14 +255,14 @@ static void on_tick(void)
 static void tabbar(int top)
 {
     static const char *IT[] = { "Digita", "Macro", "Info", "Imp" };
-    static const char *EN[] = { "Type", "Macro", "Info", "Set" };
+    static const char *EN[] = { I18N_EN("Type", "Digita"), I18N_EN("Macro", "Macro"), I18N_EN("Info", "Info"), I18N_EN("Set", "Imp") };
     const char *const *N = nucleo_i18n_is_it() ? IT : EN;
     int x = 6;
     for (int i = 0; i <= T_SET; i++) {
-        bool on = (i == s_tab); int w = (int)strlen(N[i]) * 6 + 10;
+        bool on = (i == s_tab); int w = (int)strlen(nucleo_tr_en(N[i])) * 6 + 10;
         d.fillRoundRect(x, top + 2, w, 14, 3, on ? ACC : LINE);
         d.setTextColor(on ? INK : MUTED, on ? ACC : LINE);
-        d.setCursor(x + 5, top + 5); d.print(N[i]);
+        d.setCursor(x + 5, top + 5); d.print(nucleo_tr_en(N[i]));
         x += w + 4;
     }
     d.drawFastHLine(0, top + 20, 240, LINE);   // launcher-consistent hairline anchor under the tabs
@@ -323,7 +323,7 @@ static void draw(void)
 // HID/host/LED state card, Settings is the US/IT layout as two big touch buttons. Tabs tap as 1..4. The Cardputer
 // — where you actually type — is the companion: the tab, what is selected, and the keys. Touch is the content.
 static const char *const LG_TABS_IT[] = { "Digita", "Macro", "Info", "Imp" };
-static const char *const LG_TABS_EN[] = { "Type", "Macro", "Info", "Set" };
+static const char *const LG_TABS_EN[] = { I18N_EN("Type", "Digita"), I18N_EN("Macro", "Macro"), I18N_EN("Info", "Info"), I18N_EN("Set", "Imp") };
 
 // Name the host key a macro sends, so the preview reads like "Ctrl + Alt + Del", not a hex code.
 static const char *macro_keyname(uint8_t key)
@@ -406,7 +406,8 @@ static void kbd_draw_large(void)
     s_tfull = true;
     int y = lg::header("USB Keyboard", conn ? "host ok" : TR("attendo PC", "waiting PC"), ACC, NK_BACK, 0);
     const char *const *N = nucleo_i18n_is_it() ? LG_TABS_IT : LG_TABS_EN;
-    y = lg::tabs(y + 2, N, 4, s_tab, ACC, "1234");
+    const char *tabs[4]; for (int i = 0; i < 4; i++) tabs[i] = nucleo_tr_en(N[i]);
+    y = lg::tabs(y + 2, tabs, 4, s_tab, ACC, "1234");
     d.fillRect(0, y, W, H - y, BG);
 
     if (s_tab == T_TYPE) {
@@ -477,7 +478,7 @@ static void draw_companion(void)
     const bool conn = nucleo_usbhid_ready();
     const char *const *N = nucleo_i18n_is_it() ? LG_TABS_IT : LG_TABS_EN;
     d.setFont(&fonts::FreeSansBold9pt7b); d.setTextColor(ACC, BG);
-    char t[48]; snprintf(t, sizeof t, "%s", N[s_tab]); d.drawString(t, 8, y + 2);
+    char t[48]; snprintf(t, sizeof t, "%s", nucleo_tr_en(N[s_tab])); d.drawString(t, 8, y + 2);
     d.setFont(&fonts::Font0); d.setTextColor(conn ? GRN : WARN, BG);
     d.drawString(conn ? TR("host collegato", "host connected") : TR("attendo il PC", "waiting for the PC"), 120, y + 6);
 

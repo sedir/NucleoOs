@@ -81,6 +81,8 @@ SOURCE_MAP = [
     # state -> always written, never deleted. (The LISTENING voice — split-part Vosk models —
     # rides the 'apps' rule above.)
     dict(dest="data/tts",        kind="tree", gz=False, src=_src("deploy/sd-safe/data/tts")),
+    dict(dest="data/tts/pt",     kind="tree", gz=False,
+         src=_src("build/tts-staging/pt", "deploy/sd-safe/data/tts/pt")),
     # payload-only extras — captive portals are served gz (the firmware prefers .gz)
     dict(dest="evilportal",      kind="tree", gz=True,  src=_src("deploy/sd-safe/evilportal")),
     dict(dest="wallpapers",      kind="tree", gz=False, src=_src("deploy/sd-safe/wallpapers")),
@@ -100,6 +102,8 @@ COMPLETENESS = [
     ("TTS voice it (clips)", "data/tts/it/clips.pcm"),
     ("TTS voice en (clips)", "data/tts/en/clips.pcm"),
     ("voce TTS it (idx)",  "data/tts/it/index.bin"),
+    ("TTS voice pt (clips)", "data/tts/pt/clips.pcm"),
+    ("TTS voice pt (index)", "data/tts/pt/index.bin"),
     ("dettatura Vosk it",  "apps/anima/www/vosk/models/vosk-model-small-it-0.4.tar.gz.000"),
     ("dettatura Vosk en",  "apps/anima/www/vosk/models/vosk-model-small-en-us-0.15.tar.gz.000"),
 ]
@@ -599,7 +603,7 @@ def release_path_allowed(rel):
             if len(parts) == 4 and name == "learned" and parts[3] in ("facets.it.jsonl", "facets.en.jsonl"):
                 return ""
             return "anima-state"
-        if len(parts) == 4 and parts[1] == "tts" and parts[2] in ("it", "en"):
+        if len(parts) == 4 and parts[1] == "tts" and parts[2] in ("it", "en", "pt"):
             return ""
         # a game's arcade sound pack (data/<game>/pack/<cue>.wav, rendered by tools/sfx-gen): shipped
         # content, never the game's own saves/config next to it

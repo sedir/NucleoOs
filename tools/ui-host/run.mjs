@@ -22,7 +22,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..', '..');
 const FW = join(root, 'firmware', 'components');
 const GFX = join(root, 'firmware', 'managed_components', 'm5stack__m5gfx', 'src');
-const CJSON = 'C:/esp/esp-idf/components/json/cJSON';
+const buildEnv = join(root, 'firmware', 'build', 'config.env');
+const idf = process.env.IDF_PATH || (existsSync(buildEnv) ? JSON.parse(readFileSync(buildEnv, 'utf8')).IDF_PATH : 'C:/esp/esp-idf');
+const CJSON = join(idf, 'components/json/cJSON');
 const OUT = join(root, 'build', 'ui-host');
 const OBJ = join(OUT, 'obj');
 const LGFX_OBJ = join(OUT, 'lgfx');
@@ -36,7 +38,7 @@ const only = args.includes('--only') ? args[args.indexOf('--only') + 1] : null;
 const MINGW = 'C:/msys64/mingw64/bin';
 const GPP = existsSync(`${MINGW}/g++.exe`) ? `${MINGW}/g++.exe` : 'g++';
 const GCC = existsSync(`${MINGW}/gcc.exe`) ? `${MINGW}/gcc.exe` : 'gcc';
-const env = { ...process.env, PATH: `${MINGW};${process.env.PATH}` };
+const env = { ...process.env, PATH: process.platform === 'win32' ? `${MINGW};${process.env.PATH}` : process.env.PATH };
 if (!existsSync(join(CJSON, 'cJSON.c'))) { console.error(`ui-host: cJSON not found at ${CJSON} (ESP-IDF)`); process.exit(1); }
 
 for (const d of [OBJ, LGFX_OBJ, SHOTS]) mkdirSync(d, { recursive: true });
@@ -104,7 +106,7 @@ const fwSrc = [
   join(FW, 'nucleo_app', 'launcher_render.cpp'), join(FW, 'nucleo_app', 'launcher_menu.cpp'),
   join(FW, 'nucleo_app', 'app_ui.cpp'), join(FW, 'nucleo_app', 'app_large.cpp'), join(FW, 'nucleo_app', 'app_wifi.cpp'), join(FW, 'nucleo_ui', 'nucleo_theme.cpp'),
   join(FW, 'nucleo_ui', 'nucleo_ui_modal.cpp'),
-  join(FW, 'nucleo_storage', 'nucleo_i18n.c'), join(CJSON, 'cJSON.c'),
+  join(FW, 'nucleo_storage', 'nucleo_i18n.c'), join(FW, 'nucleo_storage', 'nucleo_i18n_pt.c'), join(CJSON, 'cJSON.c'),
   join(FW, 'nucleo_app', 'app_updates.cpp'), join(FW, 'nucleo_app', 'update_policy.c'),   // native Updates app
   join(FW, 'nucleo_app', 'app_store.cpp'), join(FW, 'nucleo_app', 'store_apps.cpp'), join(FW, 'nucleo_store', 'store_engine.c'),   // native Store app + its launcher apps
   join(FW, 'nucleo_sdcontent', 'sdc_sha256.c'), join(FW, 'nucleo_sdcontent', 'sdc_registry.c'), join(here, 'store_stubs.cpp'),

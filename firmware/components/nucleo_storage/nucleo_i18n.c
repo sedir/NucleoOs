@@ -43,6 +43,16 @@ static void norm_lang(char *dst, size_t cap, const char *code)
 }
 
 bool nucleo_i18n_is_en(void) { return s_lang[0] == 'e' && s_lang[1] == 'n'; }
+void nucleo_i18n_next_lang(void)
+{
+    static const char *const langs[] = { "en", "it", "es", "fr", "de", "pt" };
+    for (size_t i = 0; i < sizeof langs / sizeof langs[0]; i++)
+        if (!strcmp(s_lang, langs[i])) {
+            nucleo_i18n_set_lang(langs[(i + 1) % (sizeof langs / sizeof langs[0])]);
+            return;
+        }
+    nucleo_i18n_set_lang("en");
+}
 bool nucleo_i18n_is_it(void) { return s_lang[0] == 'i' && s_lang[1] == 't'; }
 const char *nucleo_i18n_lang(void) { return s_lang; }
 uint32_t nucleo_i18n_gen(void) { return s_gen; }

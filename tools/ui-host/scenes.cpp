@@ -508,7 +508,7 @@ static const Scene VIDEO[] = {
     { "empty",     [] { video_open(false); video_draw(); } },
 };
 
-static const char *LANGS[]  = { "en", "it", "es", "fr", "de" };
+static const char *LANGS[]  = { "en", "it", "es", "fr", "de", "pt" };
 static const char *THEMES[] = { "classic", "nano_banana", "hacker", "amoled", "cyberdeck" };
 
 // Every scene runs in its OWN process (run.mjs fans them out): Settings and the Control Center keep

@@ -8,6 +8,7 @@
 //   Consent : Enter = accept, Esc = leave
 //   Running : Enter stops the spam (Esc also stops, via on_exit)
 #include "nucleo_app.h"
+#include "nucleo_i18n.h"
 #include "nucleo_exclusive.h"   // NX_SOLO: beacon runs in a fresh, unfragmented heap (see registration)
 #include "app_ui.h"
 #include <M5GFX.h>
@@ -34,7 +35,7 @@ const char   *nucleo_wifiatk_beacon_custom_ssid(int i);
 
 enum { MODE_FUNNY = 0, MODE_RANDOM = 1, MODE_CLONE = 2, MODE_CUSTOM = 3, N_MODE = 4 };
 static const char *MODE_NAME_IT[N_MODE]  = { "Divertenti", "Casuali", "Clona vicine", "Personalizzate" };
-static const char *MODE_NAME_EN[N_MODE]  = { "Funny", "Random", "Clone nearby", "Custom" };
+static const char *MODE_NAME_EN[N_MODE]  = { I18N_EN("Funny", "Divertenti"), I18N_EN("Random", "Casuali"), I18N_EN("Clone nearby", "Clona vicine"), I18N_EN("Custom", "Personalizzate") };
 #define MODE_NAME (nucleo_i18n_is_it() ? MODE_NAME_IT : MODE_NAME_EN)
 static const char *MODE_BLURB_IT[N_MODE] = {
     "muro di SSID buffi/plausibili",
@@ -43,10 +44,10 @@ static const char *MODE_BLURB_IT[N_MODE] = {
     "scrivi tu i nomi delle reti",
 };
 static const char *MODE_BLURB_EN[N_MODE] = {
-    "wall of funny/plausible SSIDs",
-    "fake networks at random",
-    "twins of the real networks here",
-    "type the network names yourself",
+    I18N_EN("wall of funny/plausible SSIDs", "muro di SSID buffi/plausibili"),
+    I18N_EN("fake networks at random", "reti finte generate a caso"),
+    I18N_EN("twins of the real networks here", "gemelle delle reti reali qui"),
+    I18N_EN("type the network names yourself", "scrivi tu i nomi delle reti"),
 };
 #define MODE_BLURB (nucleo_i18n_is_it() ? MODE_BLURB_IT : MODE_BLURB_EN)
 
@@ -190,14 +191,14 @@ static void draw_consent(void)
         bool sel = (i == s_sel);
         unsigned short bg = sel ? HLBG : BG;
         if (sel) d.fillRect(6, y - 2, 228, step + 1, HLBG);
-        char head[26]; snprintf(head, sizeof head, "%d  %s", i + 1, MODE_NAME[i]);
+        char head[26]; snprintf(head, sizeof head, "%d  %s", i + 1, nucleo_tr_en(MODE_NAME[i]));
         d.setTextSize(2); d.setTextColor(sel ? FG : MUTED, bg); d.setCursor(12, y); d.print(head);
     }
 
     d.setTextSize(1);
     int by = bot - 8;                                // blurb baseline just clears the hint bar
     if (s_err[0]) { d.setTextColor(BCN, BG); d.setCursor(10, by); d.print(s_err); }
-    else          { d.setTextColor(GRN, BG); d.setCursor(10, by); d.print(MODE_BLURB[s_sel]); }
+    else          { d.setTextColor(GRN, BG); d.setCursor(10, by); d.print(nucleo_tr_en(MODE_BLURB[s_sel])); }
 }
 
 static void draw_custom(void)
@@ -255,7 +256,7 @@ static void draw_running(void)
 
     d.setTextSize(1); d.setTextColor(GRN, BG); d.setCursor(10, 28);
     char ss[40]; snprintf(ss, sizeof ss, "%d reti finte - %s",
-                          nucleo_wifiatk_beacon_count(), MODE_NAME[nucleo_wifiatk_beacon_mode() % N_MODE]);
+                          nucleo_wifiatk_beacon_count(), nucleo_tr_en(MODE_NAME[nucleo_wifiatk_beacon_mode() % N_MODE]));
     d.print(ss);
 
     char fr[12]; unsigned long f = nucleo_wifiatk_beacon_frames();
@@ -281,7 +282,7 @@ static void draw_running(void)
 // the running flood is big BEACON / SSID counters with the injection health and a STOP button. The Cardputer
 // becomes the companion: the picked mode (or the live counters) and the key hints.
 static void lg_mode_row(int i, int x, int y, int w, int h, bool focus, unsigned short bg, void *) {
-    char lbl[28]; snprintf(lbl, sizeof lbl, "%d  %s", i + 1, MODE_NAME[i]);
+    char lbl[28]; snprintf(lbl, sizeof lbl, "%d  %s", i + 1, nucleo_tr_en(MODE_NAME[i]));
     lg::row_text(x, y, w, h, focus, bg, lbl, nullptr, focus ? INK : FG);
 }
 
@@ -301,10 +302,10 @@ static void draw_large(void) {
         const int dx = LW + 4, dw = Wp - LW - 10;
         lg::panel(dx, ly, dw, Hp - ly - 4);
         const unsigned short cb = lg::card();
-        lg::font(1); d.setTextColor(BCN, cb); d.drawString(MODE_NAME[s_sel], dx + 10, ly + 10);
+        lg::font(1); d.setTextColor(BCN, cb); d.drawString(nucleo_tr_en(MODE_NAME[s_sel]), dx + 10, ly + 10);
         d.drawFastHLine(dx + 10, ly + 32, dw - 20, LINE);
         lg::font(0); d.setTextColor(FG, cb);
-        lg::wrap(MODE_BLURB[s_sel], dx + 10, ly + 42, dw - 20, 18, 5);
+        lg::wrap(nucleo_tr_en(MODE_BLURB[s_sel]), dx + 10, ly + 42, dw - 20, 18, 5);
         lg::button(dx + 8, Hp - 48, dw - 16, 34, s_sel == MODE_CUSTOM ? TR("Scrivi", "Write") : TR("Avvia", "Arm"), BCN, INK, NK_ENTER, 0);
         nucleo_touch_commit(); return;
     }
@@ -346,7 +347,7 @@ static void draw_large(void) {
     int y = lg::header("Beacon Spam", el, BCN, NK_BACK);
     d.fillRect(0, y, Wp, Hp - y, BG);
     char ms[40]; snprintf(ms, sizeof ms, TR("%d reti finte - %s", "%d fake nets - %s"),
-                          nucleo_wifiatk_beacon_count(), MODE_NAME[nucleo_wifiatk_beacon_mode() % N_MODE]);
+                          nucleo_wifiatk_beacon_count(), nucleo_tr_en(MODE_NAME[nucleo_wifiatk_beacon_mode() % N_MODE]));
     lg::font(1); d.setTextColor(GRN, BG); d.drawString(ms, 14, y + 6);
     char fr[12]; unsigned long f = nucleo_wifiatk_beacon_frames();
     if (f >= 100000) snprintf(fr, sizeof fr, "%luk", f / 1000); else snprintf(fr, sizeof fr, "%lu", f);
@@ -377,7 +378,7 @@ static void draw_companion(void) {
         if (f >= 100000) snprintf(fr, sizeof fr, "%luk", f / 1000); else snprintf(fr, sizeof fr, "%lu", f);
         d.setFont(&fonts::FreeSansBold18pt7b); d.setTextColor(BCN, BG); d.drawString(fr, 8, y + 2);
         d.setFont(&fonts::Font0); d.setTextColor(MUTED, BG); d.drawString(TR("beacon TX", "beacons TX"), 8, y + 34);
-        char ln[40]; snprintf(ln, sizeof ln, TR("%d SSID  -  %s", "%d SSID  -  %s"), nucleo_wifiatk_beacon_count(), MODE_NAME[nucleo_wifiatk_beacon_mode() % N_MODE]);
+        char ln[40]; snprintf(ln, sizeof ln, TR("%d SSID  -  %s", "%d SSID  -  %s"), nucleo_wifiatk_beacon_count(), nucleo_tr_en(MODE_NAME[nucleo_wifiatk_beacon_mode() % N_MODE]));
         d.setTextColor(GRN, BG); d.drawString(ln, 8, y + 50);
         char hs[20]; snprintf(hs, sizeof hs, TR("iniezione %d%%", "injection %d%%"), nucleo_wifiatk_beacon_health());
         d.setTextColor(FG, BG); d.drawString(hs, 8, y + 64);
@@ -396,9 +397,9 @@ static void draw_companion(void) {
         d.setFont(&fonts::Font0); return;
     }
     // CONSENT
-    d.setFont(&fonts::FreeSansBold12pt7b); d.setTextColor(BCN, BG); d.drawString(MODE_NAME[s_sel], 8, y + 4);
+    d.setFont(&fonts::FreeSansBold12pt7b); d.setTextColor(BCN, BG); d.drawString(nucleo_tr_en(MODE_NAME[s_sel]), 8, y + 4);
     d.setFont(&fonts::Font0); d.setTextColor(MUTED, BG);
-    lg::wrap(MODE_BLURB[s_sel], 8, y + 32, 224, 12, 2);
+    lg::wrap(nucleo_tr_en(MODE_BLURB[s_sel]), 8, y + 32, 224, 12, 2);
     lg::comp_keys(TR(";/. scegli  INVIO avvia  ESC esci", ";/. pick  ENTER arm  ESC back"));
 }
 

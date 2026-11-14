@@ -4026,6 +4026,7 @@ anima_result_t nucleo_anima_query(const char *input, const char *lang)
     // Snapshot the conversation transcript ONCE for every online-teacher call this turn (the ring is
     // only appended at the epilogue, so this stays valid throughout). Oldest->newest; nctx may be 0.
     anima_turn_t ctx[ANIMA_CHAT]; int nctx = chat_context(ctx, ANIMA_CHAT);
+    if (pt && a_pt_smalltalk(input, &r)) goto done;
 
     // Resolve a pending L1 knowledge clarify ("intendi 1) … o 2) …?"): an ordinal picks one of
     // the two offered cards. Not a pick -> drop the clarify and handle the input normally.

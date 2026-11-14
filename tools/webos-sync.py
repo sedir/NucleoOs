@@ -28,7 +28,7 @@ never be found again. Large third-party files outside git (external-resources.js
 from the sibling repositories. The .gz twins come with the build (profile "cardputer": the firmware's webfs
 serves <file>.gz first); the lock lists sources only.
 """
-import fnmatch, hashlib, json, os, re, shutil, subprocess, sys, tempfile
+import fnmatch, hashlib, json, os, re, runpy, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOCK = os.path.join(ROOT, "webos.lock")
@@ -68,7 +68,7 @@ def to_repo(build_rel):
 
 def tracked(gz=False):
     """{repository path: full path} of the tracked managed files (sources, or the .gz twins with gz=True)."""
-    out = git("ls-files", "-z", "--", "web/shell", "apps")
+    out = git("ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", "web/shell", "apps")
     files = {}
     for p in out.split("\0"):
         if p and managed(p[:-3] if p.endswith(".gz") else p) and p.endswith(".gz") == gz \
@@ -130,6 +130,12 @@ def check(strict=False):
               % lock["uncommitted_files"])
         print("Commit in nucleo-webos, then: python tools/webos-sync.py update")
         return 1
+    if lock.get("pt_overlay"):
+        try:
+            runpy.run_path(os.path.join(ROOT, "tools", "webos-pt", "overlay.py"))["apply"](check=True)
+        except RuntimeError as exc:
+            print(str(exc))
+            return 1
     dirty = " (FROM UNCOMMITTED CHANGES: update again before committing)" if lock.get("uncommitted_files") else ""
     print("webos.lock: ok, %d files from nucleo-webos %s%s" % (len(want), lock["commit"][:10], dirty))
     return 0
@@ -195,6 +201,15 @@ def update(webos, allow_dirty):
                         os.remove(full)
                         orphans.append(rel)
         missing, extra = sync_registry_versions({a["id"]: a["version"] for a in info["apps"]})
+        # This edition owns a reproducible pt-BR translation layer. Apply it to
+        # the pinned upstream files; changed upstream bases require a patch rebase.
+        overlay_meta = None
+        overlay_path = os.path.join(ROOT, "tools", "webos-pt", "overlay.py")
+        if os.path.isfile(overlay_path):
+            overlay_files, overlay_meta = runpy.run_path(overlay_path)["apply"](update_lock=False)
+            for rel in overlay_files:
+                built[rel] = os.path.join(ROOT, rel)
+            kept = sorted(set(kept) - set(overlay_files))
         files = {rel: digest(os.path.join(ROOT, rel)) for rel in sorted(built)}
         lock = {
             "_doc": "Written by tools/webos-sync.py: web/shell/ and apps/<id>/{manifest.json,www/} come from nucleo-webos. Do not edit by hand.",
@@ -211,6 +226,8 @@ def update(webos, allow_dirty):
             "files": files,
             "kept": kept,
         }
+        if overlay_meta:
+            lock["pt_overlay"] = overlay_meta
         with open(LOCK, "w", encoding="utf-8", newline="\n") as f:
             f.write(json.dumps(lock, indent=1, sort_keys=True, ensure_ascii=False) + "\n")
         print("webos.lock: %d files from nucleo-webos %s%s; removed %d sources and %d .gz twins"

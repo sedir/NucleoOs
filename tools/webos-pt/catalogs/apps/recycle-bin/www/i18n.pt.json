@@ -1,0 +1,29 @@
+{
+  "_lang": "pt",
+  "title": "Lixeira",
+  "restore_all": "Restaurar tudo",
+  "empty_bin": "Esvaziar a caixa",
+  "restore": "Restaurar",
+  "count": {
+    "one": "· {count} item",
+    "other": "· {count} itens"
+  },
+  "count_empty": "· vazio",
+  "empty_title": "A Lixeira está vazia.",
+  "empty_hint": "Os arquivos excluídos pelo Gerenciador de arquivos ficam aqui e podem ser restaurados.",
+  "toast_restored_to": "Restaurado para {path}",
+  "toast_restore_failed": "A restauração falhou",
+  "toast_deleted_perm": "Apagado permanentemente",
+  "toast_restored_all": "Restaurou tudo",
+  "toast_bin_emptied": "Encaixe esvaziado",
+  "confirm_empty": {
+    "one": "Excluir permanentemente {count} item? Essa ação não pode ser desfeita.",
+    "other": "Excluir permanentemente {count} itens? Essa ação não pode ser desfeita."
+  },
+  "confirm_purge": "Apagar permanentemente “{name}”? Isto não pode ser desfeito.",
+  "toast_delete_failed": "A remoção falhou — o item ainda está no bin",
+  "err_index_unreadable": "Não é possível ler a Lixeira agora — nada foi alterado. Tente novamente.",
+  "load_failed": "Não é possível ler a Lixeira agora. Tente novamente em um momento.",
+  "toast_pair_needed": "Pareamento necessário no dispositivo",
+  "toast_restore_partial": "{count} não restaurado (Tente novamente)"
+}

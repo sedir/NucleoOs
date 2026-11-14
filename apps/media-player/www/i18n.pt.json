@@ -1,0 +1,7 @@
+{
+  "_lang": "pt",
+  "app_title": "Reprodutor de Mídia",
+  "library_hint": "Biblioteca · /data/Music — decodificado pelo seu navegador",
+  "empty_list": "Sem áudio /data/Music",
+  "load_failed": "Não é possível alcançar a biblioteca — é o dispositivo online?"
+}

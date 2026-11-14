@@ -300,7 +300,14 @@ if ($To) {
     # adds/updates, never deletes; Is-Voice also shields them from the mirror pass above. The
     # Vosk models (the mic that LISTENS) ride the normal apps/ flow and are already pushed.
     $ttsSrc = Join-Path $repo 'deploy\sd-safe\data\tts'
-    if (Test-Path (Join-Path $ttsSrc 'it\clips.pcm')) {
+    # The pt-BR pack is generated locally; copy only its matched pair to canonical staging.
+    $ptSrc = Join-Path $repo 'build\tts-staging\pt'
+    if ((Test-Path (Join-Path $ptSrc 'index.bin')) -and (Test-Path (Join-Path $ptSrc 'clips.pcm')) -and -not $DryRun) {
+        $ptDest = Join-Path $ttsSrc 'pt'
+        New-Item -ItemType Directory -Force -Path $ptDest | Out-Null
+        Copy-Item (Join-Path $ptSrc 'index.bin'), (Join-Path $ptSrc 'clips.pcm') $ptDest -Force
+    }
+    if ((Test-Path (Join-Path $ttsSrc 'it\clips.pcm')) -or (Test-Path (Join-Path $ttsSrc 'pt\clips.pcm'))) {
         if (-not $DryRun) {
             & robocopy $ttsSrc (Join-Path $To 'data\tts') *.* /E /NJH /NJS /NDL /NFL /NP /R:1 /W:1 | Out-Null
             if ($LASTEXITCODE -ge 8) { throw "robocopy TTS ha riportato un errore (exit $LASTEXITCODE)" }

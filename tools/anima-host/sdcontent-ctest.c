@@ -59,6 +59,8 @@ static void test_allow(void)
     OK(!sdc_path_writable("data//atlas.bin"), "game atlas: empty game name refused");
     OK(sdc_path_writable("data/tts/it/clips.pcm"), "tts bank it allowed (pipeline parity)");
     OK(sdc_path_writable("data/tts/en/index.bin"), "tts bank en allowed (pipeline parity)");
+    OK(sdc_path_writable("data/tts/pt/index.bin"), "tts bank pt index allowed (pipeline parity)");
+    OK(sdc_path_writable("data/tts/pt/clips.pcm"), "tts bank pt clips allowed (pipeline parity)");
     OK(!sdc_path_writable("data/tts/speak.cfg"), "tts runtime cfg refused");
     OK(!sdc_path_writable("data/tts/fr/x.bin"), "tts other lang refused");
     OK(!sdc_path_writable("data/Documents/note.txt"), "user documents refused");

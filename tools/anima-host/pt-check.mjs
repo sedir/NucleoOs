@@ -21,6 +21,25 @@ const show = process.argv.includes('--show');
 // [lang, query, intent, arg, reply, content?]  (null = not checked; reply/content may be a RegExp).
 // content = the tool payload the device writes (calendar entry, note body): the user's own words must survive.
 const CASES = [
+  ['pt', 'oi', 'greeting', null, 'Ola!'],
+  ['pt', 'Olá!', 'greeting', null, 'Ola!'],
+  ['pt', 'bom dia', 'greeting', null, 'Bom dia!'],
+  ['pt', 'boa tarde', 'greeting', null, 'Boa tarde!'],
+  ['pt', 'boa noite', 'greeting', null, 'Boa noite!'],
+  ['pt', 'obrigado', 'thanks', null, 'De nada!'],
+  ['pt', 'muito obrigada', 'thanks', null, 'De nada!'],
+  ['pt', 'qual a memória livre', 'ram', 'ram', '{value}'],
+  ['pt', 'quanto de memória RAM está livre', 'ram', 'ram', '{value}'],
+  ['pt', 'raiz quadrada de 144', 'calc', null, 'A raiz quadrada de 144 e 12.'],
+  ['pt', 'qual a capital do Brasil', 'knowledge', null, 'A capital do Brasil e Brasilia.'],
+  ['pt', 'o que é RAM', 'knowledge', null, /^A RAM guarda/],
+  ['pt', 'o que é NucleoOS', 'knowledge', null, 'NucleoOS funciona offline no M5Stack Cardputer.'],
+  ...[['vinte e cinco', 25], ['trinta e cinco', 35], ['quarenta e cinco', 45],
+      ['setenta', 70], ['oitenta', 80], ['cento e vinte e cinco', 125]].map(([words, minutes]) =>
+    ['pt', `coloca um timer de ${words} minutos`, 'add_event', null,
+      new RegExp(`^Timer de ${minutes < 60 ? minutes + ' min' : Math.floor(minutes / 60) + 'h' + String(minutes % 60).padStart(2, '0')}: aviso as \\d\\d:\\d\\d\\.$`), /;text=Timer$/]),
+  ['pt', 'me lembra de ligar para a mãe daqui a vinte e cinco minutos', 'add_event', null,
+    /^Lembrete "ligar para a mãe": aviso as \d\d:\d\d\.$/, /;text=ligar para a mãe$/],
   // open / close an app
   ['pt', 'abre a calculadora',                 'open_app',       'calculator',   'Abrindo a Calculadora.'],
   ['pt', 'Abra as configurações, por favor',    'open_app',       'settings',     'Abrindo as Configuracoes.'],
@@ -62,6 +81,8 @@ const CASES = [
   ['pt', 'lembrete de pagar a conta amanhã',   'add_event',      null,           'Lembrete "pagar a conta" amanha.', 'off=1;time=;text=pagar a conta'],
   // notes and files
   ['pt', 'anota: comprar leite e café',        'create_file',    null,           'Criando note.txt com: comprar leite e café', 'comprar leite e café'],
+  ['pt', 'anota: vinte e cinco minutos, amanhã às 10!', 'create_file', null,
+    'Criando note.txt com: vinte e cinco minutos, amanhã às 10!', 'vinte e cinco minutos, amanhã às 10!'],
   ['pt', 'cria uma nota chamada compras',      'create_file',    null,           'Criando compras.txt em Documentos.'],
   ['pt', 'cria o arquivo teste.txt',           'create_file',    null,           'Criando teste.txt em Documentos.'],
   // arithmetic, percentages, conversions, calendar

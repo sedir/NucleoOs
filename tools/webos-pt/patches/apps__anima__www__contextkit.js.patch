@@ -1,0 +1,38 @@
+--- a/apps/anima/www/contextkit.js
++++ b/apps/anima/www/contextkit.js
+@@ -208,14 +208,15 @@
+ // The OS speaks five languages. The Italian prompt serves Italian; every other language gets the English
+ // prompt plus an explicit "reply in <language>" — before, es/fr/de users got the ITALIAN prompt, which
+ // ends in "Rispondi in italiano", so ANIMA answered a German user in Italian.
+-const LANG_NAME = { it: 'Italian', en: 'English', es: 'Spanish', fr: 'French', de: 'German', zh: 'Simplified Chinese' };
+-const LOCALE = { it: 'it-IT', en: 'en-GB', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN' };
++const LANG_NAME = { it: 'Italian', en: 'English', es: 'Spanish', fr: 'French', de: 'German', pt: 'Brazilian Portuguese', zh: 'Simplified Chinese' };
++const LOCALE = { it: 'it-IT', en: 'en-GB', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', pt: 'pt-BR', zh: 'zh-CN' };
+ export const replyLanguage = (lang) => LANG_NAME[lang] || 'English';
+ // The language a message is written in (it/en/es/fr/de), or null when it does not show. "Reply in the language of the
+ // user's latest message" alone did not hold: on the Italian desktop qwen3.5:9b answered "Turn the brightness down" and a
+ // Spanish file task in Italian (ADV battery, 2026-10-10) — the prompt now NAMES the language when it differs.
+ // Function words only (no content words), Unicode edges; a few letters only one language uses count double.
+ const LANG_WORDS = {
++  pt: /(?<!\p{L})(voce|você|vocês|não|nao|são|sao|qual|quais|quanto|quanta|quantas|quantos|obrigado|obrigada|olá|ola|hoje|amanhã|amanha|memória|memoria|brilho|tela|configurações|configuracoes|lembra|lembrete|coloca|coloque|diminui|abaixa|arquivo|escreva|salve|crie|mude|meu|minha)(?!\p{L})/giu,
+   it: /(?<!\p{L})(il|lo|gli|che|non|per|sono|della|delle|dello|nella|questo|questa|quanto|quanti|quante|come|cosa|perché|dimmi|scrivi|ciao|grazie|anche|più|è|ho|hai|di|mi|da|dal|dalla|nel|sul|sulla|rimuovi|togli|leggi|mostra|mostrami|apri|aggiungi|cancella|cerca|trova|correggi|salva|cambia|metti)(?!\p{L})/giu,
+   en: /(?<!\p{L})(the|is|are|and|what|how|you|with|this|that|of|to|my|please|tell|can|do|does|which|it|me|an|be|from|on|remove|delete|create|write|read|show|add|find|fix|save|rename|replace)(?!\p{L})/giu,
+   es: /(?<!\p{L})(el|los|las|es|está|están|por|para|qué|cómo|cuánto|cuántos|cuál|dime|hola|gracias|del|también|más|y|tengo|hay|mis|sin|lo|en|quita|escribe|lee|muestra|abre|añade|anade|busca|cambia|borra)(?!\p{L})/giu,
+@@ -224,7 +225,7 @@
+ };
+ // accents one language owns here: Spanish acute on a/i/o/u (Italian and French use the grave or none), German umlauts,
+ // French circumflex / cedilla; "qu'" and "j'" (l' and d' are Italian too: l'app, dell'utente)
+-const LANG_MARKS = { es: /[¿¡ñáíóú]/g, de: /[äöüß]/g, fr: /[çœêâîôûëï]|(?<!\p{L})(?:qu|j)['’]/giu };
++const LANG_MARKS = { pt: /[ãõ]|ções|ção/g, es: /[¿¡ñáíóú]/g, de: /[äöüß]/g, fr: /[çœêâîôûëï]|(?<!\p{L})(?:qu|j)['’]/giu };
+ export function userLanguage(text) {
+   // code, links and quoted text are no evidence ('Traduci in tedesco: "buongiorno"' is an Italian request)
+   const t = String(text || '').toLowerCase().replace(/```[\s\S]*?```|`[^`]*`|https?:\/\/\S+|"[^"]*"|“[^”]*”|«[^»]*»/g, ' ');
+@@ -236,7 +237,7 @@
+   const words = t.split(/\s+/).filter(Boolean).length;
+   return (bestN >= 2 && bestN > second) || (bestN === 1 && second === 0 && words <= 8) ? best : null;   // a short order: one clean cue
+ }
+-const LANG_NAME_IT = { it: 'italiano', en: 'inglese', es: 'spagnolo', fr: 'francese', de: 'tedesco', zh: 'cinese semplificato' };
++const LANG_NAME_IT = { it: 'italiano', en: 'inglese', es: 'spagnolo', fr: 'francese', de: 'tedesco', pt: 'portoghese brasiliano', zh: 'cinese semplificato' };
+ // The last line of the prompt when the user wrote in another language than the OS one (most salient place).
+ const replyLangLine = (en, userLang) => en
+   ? 'REPLY LANGUAGE: the user\'s latest message is in ' + replyLanguage(userLang) + ' — write your whole reply in ' + replyLanguage(userLang) + '.'

@@ -33,6 +33,9 @@ const char *nucleo_i18n_lang(void);
 // not collapsed to it/en on the device. On an ACTUAL change it bumps the generation + fires the hook.
 void nucleo_i18n_set_lang(const char *code);
 
+// Cycle the complete native language list, including catalog languages.
+void nucleo_i18n_next_lang(void);
+
 // Convenience for the native IT/EN toggle sites: equivalent to set_lang("en"|"it").
 void nucleo_i18n_set_en(bool en);
 
@@ -73,4 +76,10 @@ const char *nucleo_tr5(const char *it, const char *en, const char *es, const cha
 #endif
 #ifndef TR5
 #define TR5(it_, en_, es_, fr_, de_) nucleo_tr5((it_), (en_), (es_), (fr_), (de_))
+#endif
+
+// Mark English literals in static tables for catalog extraction. Translate the
+// selected value with nucleo_tr_en() at render time; initializers stay constant.
+#ifndef I18N_EN
+#define I18N_EN(text_, ...) text_
 #endif

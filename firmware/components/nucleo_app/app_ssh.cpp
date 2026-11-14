@@ -230,13 +230,13 @@ static int pin_hostkey(LIBSSH2_SESSION *sess) {
     int chk = libssh2_knownhost_checkp(kh, s_host, 22, hkey, klen,
                                        LIBSSH2_KNOWNHOST_TYPE_PLAIN | LIBSSH2_KNOWNHOST_KEYENC_RAW, NULL);
     int rc = 0;
-    if (chk == LIBSSH2_KNOWNHOST_CHECK_MISMATCH) { sb_info(s_en ? "!! HOST KEY CHANGED - possible MITM, aborting" : "!! HOST KEY CHANGED - possibile MITM, annullo"); set_status(s_en ? "host key changed - aborted" : "host key cambiata - annullato"); rc = -1; }
+    if (chk == LIBSSH2_KNOWNHOST_CHECK_MISMATCH) { sb_info(TR("!! HOST KEY CHANGED - possibile MITM, annullo", "!! HOST KEY CHANGED - possible MITM, aborting")); set_status(TR("host key cambiata - annullato", "host key changed - aborted")); rc = -1; }
     else if (chk == LIBSSH2_KNOWNHOST_CHECK_NOTFOUND) {
         libssh2_knownhost_addc(kh, s_host, NULL, hkey, klen, "nucleoos", 8,
                                LIBSSH2_KNOWNHOST_TYPE_PLAIN | LIBSSH2_KNOWNHOST_KEYENC_RAW | kh_keybit(ktype), NULL);
         libssh2_knownhost_writefile(kh, KH_PATH, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
-        sb_info(s_en ? "new host - trusted (TOFU), saved" : "host nuovo - fidato (TOFU), salvato");
-    } else sb_info(s_en ? "host key OK (known)" : "host key OK (conosciuta)");
+        sb_info(TR("host nuovo - fidato (TOFU), salvato", "new host - trusted (TOFU), saved"));
+    } else sb_info(TR("host key OK (conosciuta)", "host key OK (known)"));
     libssh2_knownhost_free(kh);
     return rc;
 }
@@ -256,37 +256,37 @@ static int term_cols() { return s_zoom == 2 ? 19 : 39; }
 
 static void ssh_task(void *arg) {
     int sock = -1; LIBSSH2_SESSION *sess = nullptr; LIBSSH2_CHANNEL *chan = nullptr; int authok = 0;
-    set_status(s_en ? "resolving host..." : "risolvo host...");
+    set_status(TR("risolvo host...", "resolving host..."));
     sock = tcp_connect(s_host, 22);
-    if (sock < 0) { set_status(s_en ? "host unreachable" : "host non raggiungibile"); goto done; }
+    if (sock < 0) { set_status(TR("host non raggiungibile", "host unreachable")); goto done; }
     if (libssh2_init(0) != 0) { set_status("libssh2 init failed"); goto done; }
     sess = libssh2_session_init();
     if (!sess) { set_status("session failed"); goto done; }
     libssh2_session_set_blocking(sess, 1);
-    set_status(s_en ? "handshake..." : "handshake...");
-    if (libssh2_session_handshake(sess, sock) != 0) { set_status(s_en ? "handshake failed" : "handshake fallito"); goto done; }
+    set_status(TR("handshake...", "handshake..."));
+    if (libssh2_session_handshake(sess, sock) != 0) { set_status(TR("handshake fallito", "handshake failed")); goto done; }
     if (pin_hostkey(sess) < 0) goto done;                            // abort on a changed host key
-    set_status(s_en ? "authenticating..." : "autenticazione...");
+    set_status(TR("autenticazione...", "authenticating..."));
     if (s_auth == AUTH_KEY) {
         char priv[160]; snprintf(priv, sizeof priv, "%s/%s", KEYS_DIR, s_keysN ? s_keys[s_keyIdx] : "");
         authok = (libssh2_userauth_publickey_fromfile_ex(sess, s_user, strlen(s_user), NULL, priv, s_passph[0] ? s_passph : NULL) == 0);
     } else {
         authok = (libssh2_userauth_password(sess, s_user, s_pass) == 0);
     }
-    if (!authok) { set_status(s_en ? "auth refused" : "autenticazione rifiutata"); goto done; }
+    if (!authok) { set_status(TR("autenticazione rifiutata", "auth refused")); goto done; }
     chan = libssh2_channel_open_session(sess);
     if (!chan) { set_status("channel failed"); goto done; }
     libssh2_channel_request_pty_ex(chan, "vt100", 5, NULL, 0, term_cols(), 14, 0, 0);
     if (libssh2_channel_shell(chan) != 0) { set_status("shell failed"); goto done; }
     memset(s_pass, 0, sizeof s_pass); memset(s_passph, 0, sizeof s_passph);
-    s_state = ST_SHELL; set_status(s_en ? "connected" : "connesso");
+    s_state = ST_SHELL; set_status(TR("connesso", "connected"));
     libssh2_session_set_blocking(sess, 0);
     while (!s_quit) {
         char buf[512];
         int n = libssh2_channel_read(chan, buf, sizeof buf);
         if (n > 0) { sb_feed(buf, n); nucleo_app_request_draw(); }
-        else if (n == 0) { if (libssh2_channel_eof(chan)) { set_status(s_en ? "closed by server" : "chiuso dal server"); break; } }
-        else if (n != LIBSSH2_ERROR_EAGAIN) { set_status(s_en ? "read error" : "errore lettura"); break; }
+        else if (n == 0) { if (libssh2_channel_eof(chan)) { set_status(TR("chiuso dal server", "closed by server")); break; } }
+        else if (n != LIBSSH2_ERROR_EAGAIN) { set_status(TR("errore lettura", "read error")); break; }
         char ib[256]; size_t got = s_in ? xStreamBufferReceive(s_in, ib, sizeof ib, 0) : 0;
         if (got > 0) { int off = 0; while (off < (int)got) { int w = libssh2_channel_write(chan, ib + off, got - off); if (w > 0) off += w; else break; } }
         if (n == LIBSSH2_ERROR_EAGAIN && got == 0) vTaskDelay(pdMS_TO_TICKS(12));
@@ -302,8 +302,8 @@ done:
 }
 
 static void start_connect() {
-    if (!s_host[0] || !s_user[0]) { set_status(s_en ? "host and user required" : "host e utente obbligatori"); return; }
-    if (s_auth == AUTH_KEY && !s_keysN) { set_status(s_en ? "no key in /sd/data/ssh/keys" : "nessuna chiave in /sd/data/ssh/keys"); return; }
+    if (!s_host[0] || !s_user[0]) { set_status(TR("host e utente obbligatori", "host and user required")); return; }
+    if (s_auth == AUTH_KEY && !s_keysN) { set_status(TR("nessuna chiave in /sd/data/ssh/keys", "no key in /sd/data/ssh/keys")); return; }
     // Exclusive is already active (declarative, entered at app open). This idempotent re-enter just
     // re-reads the live heap into inf for the RAM gate — it adds no flags and never exits on failure
     // here (the framework owns the lifetime and restores on close).
@@ -314,7 +314,7 @@ static void start_connect() {
     s_sb = (char *)malloc((size_t)SB_LINES * SB_W);
     if (!s_sb || inf.largest_after < 34 * 1024) {
         free(s_sb); s_sb = nullptr;
-        set_status(s_en ? "not enough RAM for SSH" : "RAM insufficiente per SSH"); s_state = ST_CLOSED; return;
+        set_status(TR("RAM insufficiente per SSH", "not enough RAM for SSH")); s_state = ST_CLOSED; return;
     }
     // colour plane only when RAM is comfortable; otherwise run monochrome
     s_sbcol = (inf.free_after > 90 * 1024) ? (uint8_t *)malloc((size_t)SB_LINES * SB_W) : nullptr;
@@ -323,7 +323,7 @@ static void start_connect() {
     if (!s_lock) s_lock = xSemaphoreCreateMutex();
     if (!s_in) s_in = xStreamBufferCreate(1024, 1);
     s_quit = false; s_line[0] = 0; s_linelen = s_cur_x = 0;
-    s_state = ST_CONNECTING; set_status(s_en ? "starting..." : "avvio...");
+    s_state = ST_CONNECTING; set_status(TR("avvio...", "starting..."));
     if (xTaskCreate(ssh_task, "ssh", 16384, nullptr, tskIDLE_PRIORITY + 2, &s_task) != pdPASS) {
         set_status("task failed"); s_state = ST_CLOSED;   // exclusive stays (declarative); freed on app close
     }
@@ -473,9 +473,9 @@ static void draw_text(int x, int y, const char *s, unsigned short fg, unsigned s
 static const char *form_field(int i, char *val, int cap) {
     const char *lab = "Passphrase", *pw = s_passph;
     if (i == 0) { snprintf(val, cap, "%s", s_host); return "Host"; }
-    if (i == 1) { snprintf(val, cap, "%s", s_user); return s_en ? "User" : "Utente"; }
-    if (i == 2) { snprintf(val, cap, "< %s >", s_auth == AUTH_PW ? "Password" : (s_en ? "Key" : "Chiave")); return "Auth"; }
-    if (s_auth == AUTH_KEY && i == 3) { snprintf(val, cap, s_keysN ? "< %s >" : "%s", s_keysN ? s_keys[s_keyIdx] : (s_en ? "(none in keys/)" : "(nessuna in keys/)")); return s_en ? "Key" : "Chiave"; }
+    if (i == 1) { snprintf(val, cap, "%s", s_user); return TR("Utente", "User"); }
+    if (i == 2) { snprintf(val, cap, "< %s >", s_auth == AUTH_PW ? "Password" : (TR("Chiave", "Key"))); return "Auth"; }
+    if (s_auth == AUTH_KEY && i == 3) { snprintf(val, cap, s_keysN ? "< %s >" : "%s", s_keysN ? s_keys[s_keyIdx] : (TR("(nessuna in keys/)", "(none in keys/)"))); return TR("Chiave", "Key"); }
     if (i == 3) { lab = "Password"; pw = s_pass; }
     int n = strlen(pw), k = 0; for (; k < n && k < cap - 1; k++) val[k] = '*'; val[k] = 0;
     return lab;
@@ -484,10 +484,10 @@ static const char *const HELP_IT[] = { "Invio  esegui comando", "Su/Giu  cronolo
     "Sin/Des  cursore", "Esc  cancella riga", "Fn+Su/Giu  scorri output", "Fn+Z  zoom font",
     "Fn+H  guida", "Fn+Esc  esci", "Auth: Password o Chiave", "Chiavi in /sd/data/ssh/keys",
     "host key fidata al 1o uso", "(no editor full-screen)", nullptr };
-static const char *const HELP_EN[] = { "Enter  run command", "Up/Down  history", "Tab  complete (cmd+hist)",
-    "Left/Right  cursor", "Esc  clear line", "Fn+Up/Down  scroll output", "Fn+Z  zoom font",
-    "Fn+H  help", "Fn+Esc  quit", "Auth: Password or Key", "Keys in /sd/data/ssh/keys",
-    "host key trusted on 1st use", "(no full-screen editors)", nullptr };
+static const char *const HELP_EN[] = { I18N_EN("Enter  run command", "Invio  esegui comando"), I18N_EN("Up/Down  history", "Su/Giu  cronologia"), I18N_EN("Tab  complete (cmd+hist)", "Tab  completa (cmd+storia)"),
+    I18N_EN("Left/Right  cursor", "Sin/Des  cursore"), I18N_EN("Esc  clear line", "Esc  cancella riga"), I18N_EN("Fn+Up/Down  scroll output", "Fn+Su/Giu  scorri output"), I18N_EN("Fn+Z  zoom font", "Fn+Z  zoom font"),
+    I18N_EN("Fn+H  help", "Fn+H  guida"), I18N_EN("Fn+Esc  quit", "Fn+Esc  esci"), I18N_EN("Auth: Password or Key", "Auth: Password o Chiave"), I18N_EN("Keys in /sd/data/ssh/keys", "Chiavi in /sd/data/ssh/keys"),
+    I18N_EN("host key trusted on 1st use", "host key fidata al 1o uso"), I18N_EN("(no full-screen editors)", "(no editor full-screen)"), nullptr };
 static void draw_form() {
     int top = nucleo_app_content_top();
     d.fillRect(0, top, 240, nucleo_app_content_height(), C_BG);
@@ -547,9 +547,9 @@ static void draw_connecting() {
 static void draw_manual() {
     int top = nucleo_app_content_top(), H = nucleo_app_content_height();
     d.fillRect(0, top, 240, H, C_BG);
-    draw_text(8, top + 3, s_en ? "SSH - quick help" : "SSH - guida rapida", ACCENT, C_BG, 1);
+    draw_text(8, top + 3, TR("SSH - guida rapida", "SSH - quick help"), ACCENT, C_BG, 1);
     const char *const *m = s_en ? HELP_EN : HELP_IT;
-    for (int i = 0; m[i]; i++) draw_text(8, top + 15 + i * 8, m[i], i >= 9 ? C_DIM : C_INK, C_BG, 1);
+    for (int i = 0; nucleo_tr_en(m[i]); i++) draw_text(8, top + 15 + i * 8, nucleo_tr_en(m[i]), i >= 9 ? C_DIM : C_INK, C_BG, 1);
 }
 // ===== two screens =============================================================================================
 // The panel is the terminal at 320x240 — more columns and rows than the Cardputer — while the typing, history,
@@ -575,7 +575,7 @@ static void draw_form_large() {
         ry += rh + gap;
     }
     const int bh = 42, by = H - bh - 12;
-    lg::button(cx, by, cw, bh, s_en ? "Connect" : "Connetti", ACCENT, C_BG, NK_CHAR, (char)(NUCLEO_TOUCH_ROW + nf));
+    lg::button(cx, by, cw, bh, TR("Connetti", "Connect"), ACCENT, C_BG, NK_CHAR, (char)(NUCLEO_TOUCH_ROW + nf));
     nucleo_touch_commit();
 }
 
@@ -635,7 +635,7 @@ static void draw_status_large(const char *head, const char *sub, unsigned short 
 static void draw_manual_large() {
     const int W = d.width(), H = d.height();
     nucleo_touch_clear();
-    int y = lg::header(s_en ? "SSH - help" : "SSH - guida", nullptr, ACCENT);
+    int y = lg::header(TR("SSH - guida", "SSH - help"), nullptr, ACCENT);
     d.fillRect(0, y, W, H - y, C_BG);
     const char *const *m = s_en ? HELP_EN : HELP_IT;
     lg::font(0);
@@ -643,7 +643,7 @@ static void draw_manual_large() {
     for (int i = 0; i < 12; i++) {                      // two columns of six (the "no editors" note is compact-only)
         const int col = i / 6, row = i % 6;
         d.setTextColor(i >= 9 ? C_DIM : C_INK, C_BG);
-        d.drawString(m[i], 16 + col * colw, y + 12 + row * 24);
+        d.drawString(nucleo_tr_en(m[i]), 16 + col * colw, y + 12 + row * 24);
     }
     nucleo_touch_commit();
 }
@@ -653,8 +653,8 @@ static void draw_large() {
     if (s_state == ST_FORM) { draw_form_large(); return; }
     if (s_state == ST_SHELL) { draw_shell_large(); return; }
     if (s_state == ST_CLOSED) {
-        draw_status_large(s_status[0] ? s_status : (s_en ? "Disconnected" : "Disconnesso"),
-                          s_en ? "press a key for the form" : "premi un tasto per il form", C_WARN);
+        draw_status_large(s_status[0] ? s_status : (TR("Disconnesso", "Disconnected")),
+                          TR("premi un tasto per il form", "press a key for the form"), C_WARN);
         return;
     }
     char head[120]; snprintf(head, sizeof head, "SSH %s@%s", s_user, s_host);
@@ -667,40 +667,41 @@ static void draw_companion() {
     int y = lg::comp_head("SSH", ACCENT);
     if (s_manual) {
         d.setFont(&fonts::FreeSansBold9pt7b); d.setTextColor(C_INK, C_BG);
-        lg::wrap(s_en ? "Quick help on the panel" : "Guida rapida sul pannello", 8, y + 4, 224, 20, 2);
-        lg::comp_keys(s_en ? "Fn+H closes it" : "Fn+H la chiude");
+        lg::wrap(TR("Guida rapida sul pannello", "Quick help on the panel"), 8, y + 4, 224, 20, 2);
+        lg::comp_keys(TR("Fn+H la chiude", "Fn+H closes it"));
         return;
     }
     if (s_state == ST_FORM) {
         d.setFont(&fonts::FreeSansBold9pt7b); d.setTextColor(C_INK, C_BG);
-        char ln[64]; snprintf(ln, sizeof ln, "%s@%s", s_user[0] ? s_user : (s_en ? "user" : "utente"), s_host[0] ? s_host : "host");
+        char ln[64]; snprintf(ln, sizeof ln, "%s@%s", s_user[0] ? s_user : (TR("utente", "user")), s_host[0] ? s_host : "host");
         lg::wrap(ln, 8, y + 4, 224, 20, 2);
         d.setFont(&fonts::Font0); d.setTextColor(C_DIM, C_BG);
         static const char *FN_IT[] = { "campo: Host", "campo: Utente", "campo: Auth", "campo: Password/Chiave", "campo: Passphrase" };
-        static const char *FN_EN[] = { "field: Host", "field: User", "field: Auth", "field: Password/Key", "field: Passphrase" };
-        d.drawString((s_en ? FN_EN : FN_IT)[s_field < 5 ? s_field : 4], 8, y + 34);
-        char ab[40]; snprintf(ab, sizeof ab, "Auth: %s", s_auth == AUTH_PW ? "Password" : (s_en ? "Key" : "Chiave")); d.drawString(ab, 8, y + 48);
-        lg::comp_keys(s_en ? "type fields  Enter next  </>auth" : "scrivi campi  Invio avanti  </>auth");
+        static const char *FN_EN[] = { I18N_EN("field: Host", "campo: Host"), I18N_EN("field: User", "campo: Utente"), I18N_EN("field: Auth", "campo: Auth"), I18N_EN("field: Password/Key", "campo: Password/Chiave"), I18N_EN("field: Passphrase", "campo: Passphrase") };
+        d.drawString(nucleo_tr(FN_IT[s_field < 5 ? s_field : 4], FN_EN[s_field < 5 ? s_field : 4]), 8, y + 34);
+        char ab[40]; snprintf(ab, sizeof ab, "Auth: %s", s_auth == AUTH_PW ? "Password" : (TR("Chiave", "Key"))); d.drawString(ab, 8, y + 48);
+        lg::comp_keys(TR("scrivi campi  Invio avanti  </>auth", "type fields  Enter next  </>auth"));
         return;
     }
     if (s_state == ST_SHELL) {
         d.setFont(&fonts::FreeSansBold9pt7b); d.setTextColor(s_scroll ? C_WARN : ACCENT, C_BG);
         char ln[64]; snprintf(ln, sizeof ln, "%s@%s %s", s_user, s_host, s_scroll ? "[scroll]" : "[live]");
         lg::wrap(ln, 8, y + 2, 224, 18, 2);
-        d.setFont(&fonts::Font0); d.setTextColor(C_DIM, C_BG); d.drawString(s_en ? "typing:" : "digiti:", 8, y + 34);
+        d.setFont(&fonts::Font0); d.setTextColor(C_DIM, C_BG); d.drawString(TR("digiti:", "typing:"), 8, y + 34);
         const int icw = 12, icols = 18, from = s_cur_x > icols ? s_cur_x - icols : 0;
         char shown[24]; int k = 0; for (int i = from; i < s_linelen && k < icols; i++, k++) shown[k] = s_mask ? '*' : s_line[i]; shown[k] = 0;
         d.setTextSize(2); d.setTextColor(C_INK, C_BG); d.setCursor(8, y + 46); d.print(shown[0] ? shown : " ");
         d.fillRect(8 + (int)strlen(shown) * icw, y + 44, 3, 18, ACCENT); d.setTextSize(1);
-        lg::comp_keys(s_en ? "Enter send  Tab compl  Fn+Up/Dn scroll  Fn+Esc" : "Invio invia  Tab compl  Fn+Su/Giu scorri  Fn+Esc");
+        lg::comp_keys(TR("Invio invia  Tab compl  Fn+Su/Giu scorri  Fn+Esc", "Enter send  Tab compl  Fn+Up/Dn scroll  Fn+Esc"));
         return;
     }
     d.setFont(&fonts::FreeSansBold9pt7b); d.setTextColor(C_WARN, C_BG);
     lg::wrap(s_status[0] ? s_status : "...", 8, y + 4, 224, 20, 2);
-    lg::comp_keys(s_en ? "ESC cancels" : "ESC annulla");
+    lg::comp_keys(TR("ESC annulla", "ESC cancels"));
 }
 
 static void on_draw() {
+    s_en = !nucleo_i18n_is_it();
     s_dirty = false;
     if (nucleo_app_two_screens()) { draw_companion(); return; }
     if (s_manual) draw_manual();
@@ -709,8 +710,8 @@ static void on_draw() {
     else if (s_state == ST_CLOSED) {
         int top = nucleo_app_content_top();
         d.fillRect(0, top, 240, nucleo_app_content_height(), C_BG);
-        draw_text(8, top + 18, s_status[0] ? s_status : (s_en ? "Disconnected" : "Disconnesso"), C_WARN, C_BG, 1);
-        draw_text(8, top + 38, s_en ? "press a key for the form" : "premi un tasto per il form", C_DIM, C_BG, 1);
+        draw_text(8, top + 18, s_status[0] ? s_status : (TR("Disconnesso", "Disconnected")), C_WARN, C_BG, 1);
+        draw_text(8, top + 38, TR("premi un tasto per il form", "press a key for the form"), C_DIM, C_BG, 1);
     } else draw_connecting();
 }
 static void on_tick() { if (s_dirty) nucleo_app_request_draw(); }
@@ -729,7 +730,7 @@ static void on_enter() {
     nucleo_screen_release();
     nucleo_app_set_direct_draw(true);
     scan_keys(); hist_load();
-    nucleo_app_set_hint(s_en ? "arrows/Tab  </>auth/key  Enter go  Fn+H" : "frecce/Tab  </>auth  invio vai  Fn+H");
+    nucleo_app_set_hint(TR("frecce/Tab  </>auth  invio vai  Fn+H", "arrows/Tab  </>auth/key  Enter go  Fn+H"));
     nucleo_app_set_back_handler(back_handler);
     nucleo_app_set_tab_handler(ssh_tab);
     nucleo_app_request_draw();

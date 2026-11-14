@@ -1,0 +1,17 @@
+{
+  "_lang": "pt",
+  "title": "Placar",
+  "undo": "Desfazer",
+  "add": "+ Jogador",
+  "target": "Pontuação vencedora",
+  "sort": "Ordenar por pontuação",
+  "reset": "Novo jogo",
+  "foot": "Gravado neste dispositivo. Funciona sem conexão.",
+  "player": "Jogador",
+  "name": "Nome",
+  "remove": "Remover",
+  "winner": "Vitórias!",
+  "empty": "Adicionar jogadores com + Jogador.",
+  "confirm.remove": "Remover {name}?",
+  "confirm.reset": "Reiniciar cada pontuação para zero?"
+}
