@@ -108,6 +108,7 @@ static const char *act_name(anima_action_t a) {
     }
 }
 
+extern char g_anima_pt_bridged[256];   // anima_pt.c (ANIMA_HOST): the pt line as the bridge rewrote it
 extern bool g_anima_pt_miss;   // anima_pt.c (ANIMA_HOST): the pt reply catalog had no row
 static void print_result(const char *q, const anima_result_t *r) {
     printf("Q: %s\n", q);
@@ -124,6 +125,8 @@ static void print_result(const char *q, const anima_result_t *r) {
         printf("   [trace] L1 top1=%.3f top2=%.3f\n", c1, c2);
     }
     printf("   reply: %s\n", r->reply[0] ? r->reply : "(vuoto)");
+    if (g_anima_pt_bridged[0] && getenv("ANIMA_PT_BRIDGE")) printf("   pt-bridge: %s\n", g_anima_pt_bridged);   // opt-in: parity compares replies
+    g_anima_pt_bridged[0] = 0;
     if (g_anima_pt_miss) printf("   pt: untranslated\n");
     g_anima_pt_miss = false;
     printf("\n");

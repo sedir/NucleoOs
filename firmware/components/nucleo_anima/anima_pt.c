@@ -41,6 +41,96 @@ static const a_pt_word_t PT_WORDS[] = {
     { "obrigada", "thanks", PT_CUE },
     { "muito obrigado", "thank you", PT_CUE },
     { "muito obrigada", "thank you", PT_CUE },
+    { "valeu",            "thanks", PT_CUE },
+    { "brigado",          "thanks", PT_CUE },
+    // --- the IDEAS deck / skill templates (app_anima.cpp LEAVES, pt catalog) -> the en template phrasing ----
+    { "qual a versao do nucleoos", "what nucleoos version is this", PT_CUE },
+    { "qual e a versao do nucleoos", "what nucleoos version is this", PT_CUE },
+    { "que dia da semana e",  "what day is", PT_CUE },
+    { "que dia da semana cai","what day is", PT_CUE },
+    { "quantos dias tem",     "how many days in", PT_CUE },
+    { "qual a idade de quem nasceu em", "how old is someone born in", PT_CUE },
+    { "quantos anos tem quem nasceu em", "how old is someone born in", PT_CUE },
+    { "que horas sao em",     "what time is it in", PT_CUE },
+    { "que horas sao no",     "what time is it in", PT_CUE },
+    { "que horas sao na",     "what time is it in", PT_CUE },
+    { "qual o signo de quem nasceu em", "what star sign is someone born on", PT_CUE },
+    { "qual o signo de quem nasceu no dia", "what star sign is someone born on", PT_CUE },
+    { "quantas horas de",     "how many hours from", PT_CUE },
+    { "quantas horas sao de", "how many hours from", PT_CUE },
+    { "logaritmo base",       "logarithm base", PT_CUE },
+    { "logaritmo na base",    "logarithm base", PT_CUE },
+    { "maximo divisor comum de", "greatest common divisor of", PT_CUE },
+    { "mdc de",               "greatest common divisor of", PT_CUE },
+    { "minimo multiplo comum de", "least common multiple of", PT_CUE },
+    { "mmc de",               "least common multiple of", PT_CUE },
+    { "fatorial de",          "factorial of", PT_CUE },
+    { "e um numero primo",    "is prime", PT_CUE },
+    { "e primo",              "is prime", PT_CUE },
+    { "escreve",              "write", PT_CUE },
+    { "escreva",              "write", PT_CUE },
+    { "em romano",            "in roman numerals", PT_CUE },
+    { "em algarismos romanos","in roman numerals", PT_CUE },
+    { "em numeros romanos",   "in roman numerals", PT_CUE },
+    { "em binario",           "to binary", PT_CUE },
+    { "para binario",         "to binary", PT_CUE },
+    { "em hexadecimal",       "to hex", PT_CUE },
+    { "area de circulo com raio", "area of a circle radius", PT_CUE },
+    { "area do circulo com raio", "area of a circle radius", PT_CUE },
+    { "area do circulo de raio",  "area of a circle radius", PT_CUE },
+    { "circunferencia de circulo com raio", "circumference of a circle radius", PT_CUE },
+    { "circunferencia do circulo de raio",  "circumference of a circle radius", PT_CUE },
+    { "area de retangulo",    "area of a rectangle", PT_CUE },
+    { "area do retangulo",    "area of a rectangle", PT_CUE },
+    { "area de triangulo base","area of a triangle base", PT_CUE },
+    { "area do triangulo base","area of a triangle base", PT_CUE },
+    { "altura",               "height", 0 },
+    { "hipotenusa com catetos","hypotenuse with legs", PT_CUE },
+    { "volume de cubo lado",  "volume of a cube side", PT_CUE },
+    { "volume do cubo de lado","volume of a cube side", PT_CUE },
+    { "volume de esfera raio","volume of a sphere radius", PT_CUE },
+    { "volume da esfera de raio","volume of a sphere radius", PT_CUE },
+    { "tensao com",           "voltage with", PT_CUE },
+    { "potencia eletrica com","electrical power with", PT_CUE },
+    { "velocidade",           "speed for", PT_CUE },
+    { "quais meus eventos hoje", "agenda today", PT_CUE },
+    { "quais sao meus eventos hoje", "agenda today", PT_CUE },
+    { "meus eventos de hoje", "agenda today", PT_CUE },
+    { "minha agenda",         "agenda today", PT_CUE },
+    { "agenda de hoje",       "agenda today", PT_CUE },
+    { "o que tenho hoje",     "agenda today", PT_CUE },
+    { "meus compromissos",    "agenda today", PT_CUE },
+    { "clima em",             "weather in", PT_CUE },
+    { "clima amanha em",      "weather tomorrow in", PT_CUE },
+    { "tempo em",             "weather in", PT_CUE },
+    { "previsao do tempo em", "weather in", PT_CUE },
+    { "previsao para amanha em", "weather tomorrow in", PT_CUE },
+    { "traduz",               "translate", PT_CUE },
+    { "traduza",              "translate", PT_CUE },
+    { "traduzir",             "translate", PT_CUE },
+    { "para ingles",          "to english", 0 },
+    { "em ingles",            "to english", 0 },
+    { "para italiano",        "to italian", 0 },
+    { "em italiano",          "to italian", 0 },
+    // city names the world clock / weather know in English
+    { "toquio",               "tokyo", 0 },
+    { "londres",              "london", 0 },
+    { "nova york",            "new york", 0 },
+    { "nova iorque",          "new york", 0 },
+    { "lisboa",               "lisbon", 0 },
+    { "roma",                 "rome", 0 },
+    { "pequim",               "beijing", 0 },
+    { "moscou",               "moscow", 0 },
+    { "berlim",               "berlin", 0 },
+    { "madri",                "madrid", 0 },
+    { "sao paulo",            "sao paulo", 0 },   // longest match: "sao" alone is not the verb here
+    { "rio de janeiro",       "rio de janeiro", 0 },
+    { "cidade do mexico",     "mexico city", 0 },
+    { "buenos aires",         "buenos aires", 0 },
+    // months (dates in templates: "25 de dezembro de 2026", "10 de marco", "fevereiro")
+    { "janeiro", "january", 0 }, { "fevereiro", "february", 0 }, { "marco", "march", 0 }, { "abril", "april", 0 },
+    { "maio", "may", 0 }, { "junho", "june", 0 }, { "julho", "july", 0 }, { "agosto", "august", 0 },
+    { "setembro", "september", 0 }, { "outubro", "october", 0 }, { "novembro", "november", 0 }, { "dezembro", "december", 0 },
     { "quanto de memoria ram esta livre", "how much free ram", PT_CUE },
     { "qual a memoria livre", "how much free ram", PT_CUE },
     { "quanto de ram livre", "how much free ram", PT_CUE },
@@ -49,9 +139,11 @@ static const a_pt_word_t PT_WORDS[] = {
     { "livre", "free", 0 },
     { "ha quanto tempo ligado", "what is your uptime", PT_CUE },
     { "ha quanto tempo esta ligado", "what is your uptime", PT_CUE },
-    { "qual a minha rede", "what network am i on", PT_CUE },
+    { "qual a minha rede", "am i connected", PT_CUE },   // the en cascade has no "what network am i on"
+    { "qual minha rede", "am i connected", PT_CUE },
+    { "em que rede estou", "am i connected", PT_CUE },
+    { "estou conectado", "am i connected", PT_CUE },
     { "qual meu ip", "what is my ip", PT_CUE },
-    { "o que voce faz", "what can you do", PT_CUE },
     // --- time / date / readings ---------------------------------------------------------------------
     { "que horas sao",        "what time is it", 1 },
     { "que hora e",           "what time is it", 1 },
@@ -290,7 +382,9 @@ static const a_pt_word_t PT_WORDS[] = {
     { "graus fahrenheit",     "fahrenheit", PT_UNIT },
     { "celsius",              "celsius", PT_UNIT },
     { "fahrenheit",           "fahrenheit", PT_UNIT },
-    { "km",                   "km", PT_UNIT },   // abbreviations: same word in English, flagged as units
+    { "km",                   "km", PT_UNIT },
+    { "c",                    "c", PT_UNIT },   // "quantos F sao 30 C": counts only with a number and a 2nd unit
+    { "f",                    "f", PT_UNIT },   // abbreviations: same word in English, flagged as units
     { "kg",                   "kg", PT_UNIT },
     { "cm",                   "cm", PT_UNIT },
     { "mm",                   "mm", PT_UNIT },
@@ -314,6 +408,8 @@ static const a_pt_word_t PT_WORDS[] = {
     { "que dia e amanha",     "what day is tomorrow", PT_CUE },
     // --- glue (never a cue on its own) ----------------------------------------------------------------
     { "por favor",            "", 0 },
+    { "desconto",             "", 0 },   // "com 20% de desconto": "com" already became "minus"
+    { "de desconto",          "", 0 },
     { "pra mim",              "", 0 },
     { "para mim",             "", 0 },
     { "o",                    "the", 0 },
@@ -330,7 +426,6 @@ static const a_pt_word_t PT_WORDS[] = {
     { "na",                   "to", 0 },
     { "e",                    "is", 0 },
     { "esta",                 "is", 0 },
-    { "sao",                  "is", 0 },
     { "tem",                  "", 0 },
     { "resta",                "", 0 },
     { "sobrou",               "", 0 },
@@ -470,6 +565,32 @@ static const char *pt_context(const pt_tok_t *w, int n, int i, int *used, char *
                        : (!strcmp(w[i + 2].f, "tarde") || !strcmp(w[i + 2].f, "noite")) ? "pm" : NULL;
         if (ap) { snprintf(num, numcap, "%s%s", f, ap); *used = 3; return num; }
     }
+    // between two numbers: "de 9 a 17" -> "9 to 17", "4 por 5" -> "4 by 5", "catetos 3 e 4" -> "3 and 4"
+    if (prev_num && next_num) {
+        if (!strcmp(f, "a") || !strcmp(f, "ate")) return "to";
+        if (!strcmp(f, "por")) return "by";
+        if (!strcmp(f, "e") && isdigit((unsigned char)w[i - 1].f[0]) && isdigit((unsigned char)w[i + 1].f[0])) return "and";
+    }
+    // "10 ohm e 2 amp": "e" between a measured value and the next number
+    if (!strcmp(f, "e") && i >= 2 && next_num && isdigit((unsigned char)w[i + 1].f[0]) && isdigit((unsigned char)w[i - 2].f[0]) &&
+        !pt_isnum(&w[i - 1])) return "and";
+    // "quantos km sao 13 milhas": the verb before a number ("Sao Paulo" stays a name)
+    if (!strcmp(f, "sao") && next_num) return "is";
+    // "80 euros com 20% (de) desconto" -> "80 euros minus 20%" (the en calculator's discount phrasing)
+    if (!strcmp(f, "com") && next_num && i + 2 < n &&
+        (!strcmp(w[i + 2].f, "desconto") || (i + 3 < n && !strcmp(w[i + 2].f, "de") && !strcmp(w[i + 3].f, "desconto")))) return "minus";
+    // "22% (de) IVA (de|sobre) 100 euros" -> "100 plus 22%": the en calculator adds a percentage this way
+    if (isdigit((unsigned char)f[0]) && strchr(f, '%')) {
+        int k = i + 1;
+        if (k < n && !strcmp(w[k].f, "de")) k++;
+        if (k < n && (!strcmp(w[k].f, "iva") || !strcmp(w[k].f, "imposto"))) {
+            k++;
+            if (k < n && (!strcmp(w[k].f, "de") || !strcmp(w[k].f, "sobre") || !strcmp(w[k].f, "em"))) k++;
+            if (k < n && isdigit((unsigned char)w[k].f[0])) {
+                snprintf(num, numcap, "%s plus %s", w[k].f, f); *used = k + 1 - i; return num;
+            }
+        }
+    }
     // "as 7" / "para as 7" / "ate as 7" -> "at 7"
     if ((!strcmp(f, "para") || !strcmp(f, "ate")) && i + 2 < n && !strcmp(w[i + 1].f, "as") && pt_isnum(&w[i + 2])) { *used = 2; return "at"; }
     if ((!strcmp(f, "as") || !strcmp(f, "a")) && next_num && !(i + 2 < n && pt_unit(w[i + 2].f))) return "at";
@@ -501,7 +622,7 @@ static const char *pt_context(const pt_tok_t *w, int n, int i, int *used, char *
 bool a_pt_bridge(const char *in, char *out, size_t cap)
 {
     pt_tok_t w[PT_MAXW];
-    char num[12];
+    char num[32];   // a context rewrite can be "100 plus 22%"
     if (!in || !out || cap < 2) return false;
     int nw = pt_split(in, w);
     size_t n = 0; bool cue = false, text = false, literal_text = false, has_num = false; int units = 0;
@@ -557,6 +678,7 @@ static const struct { const char *q, *en, *pt; } PT_KNOWLEDGE[] = {
     { "qual a capital da franca", "France's capital is Paris.", "A capital da Franca e Paris." },
     { "qual a capital do japao", "Japan's capital is Tokyo.", "A capital do Japao e Toquio." },
     { "quem foi santos dumont", "Santos Dumont was a Brazilian aviation pioneer.", "Santos Dumont foi um pioneiro brasileiro da aviacao." },
+    { "quem e santos dumont", "Santos Dumont was a Brazilian aviation pioneer.", "Santos Dumont foi um pioneiro brasileiro da aviacao." },
     { "o que e nucleoos", "NucleoOS runs offline on the M5Stack Cardputer.", "NucleoOS funciona offline no M5Stack Cardputer." },
     { "o que e ram", "RAM holds data and programs while a device runs; its contents are lost when power is removed.", "A RAM guarda dados e programas em uso; seu conteudo se perde quando a energia e desligada." },
     { "o que e psram", "PSRAM is external RAM that manages its own refresh.", "PSRAM e uma memoria RAM externa que gerencia sua propria atualizacao." },
@@ -577,18 +699,50 @@ bool a_pt_smalltalk(const char *in, anima_result_t *out)
 {
     pt_tok_t w[PT_MAXW];
     int n = pt_split(in, w);
-    static const struct { const char *q, *reply; } rows[] = {
-        { "oi", "Hello!" }, { "ola", "Hello!" }, { "bom dia", "Good morning!" },
-        { "boa tarde", "Good afternoon!" }, { "boa noite", "Good evening!" },
+    // Whole-line small talk. The replies are English rows of the reply catalog (the done: epilogue localizes them).
+    // greet=1 marks a greeting: "oi, tudo bem?" = a greeting followed by another row -> that row answers.
+    static const struct { const char *q, *reply; unsigned char greet; } rows[] = {
+        { "oi", "Hello!", 1 }, { "ola", "Hello!", 1 }, { "e ai", "Hello!", 1 }, { "opa", "Hello!", 1 },
+        { "bom dia", "Good morning!", 1 }, { "boa tarde", "Good afternoon!", 1 }, { "boa noite", "Good evening!", 1 },
+        { "tudo bem", "I'm well, ready to help.", 0 }, { "tudo bom", "I'm well, ready to help.", 0 },
+        { "tudo certo", "I'm well, ready to help.", 0 }, { "beleza", "I'm well, ready to help.", 0 },
+        { "como vai", "I'm well, ready to help.", 0 }, { "como vai voce", "I'm well, ready to help.", 0 },
+        { "como voce esta", "I'm well, ready to help.", 0 }, { "como esta", "I'm well, ready to help.", 0 },
+        { "como voce vai", "I'm well, ready to help.", 0 }, { "e voce", "I'm well, ready to help.", 0 },
+        { "tudo bem com voce", "I'm well, ready to help.", 0 },
+        { "tchau", "See you soon!", 0 }, { "ate logo", "See you soon!", 0 }, { "ate mais", "See you soon!", 0 },
+        { "ate amanha", "See you soon!", 0 }, { "ate depois", "See you soon!", 0 }, { "falou", "See you soon!", 0 },
+        { "qual o seu nome", "I'm ANIMA, NucleoOS's offline assistant.", 0 },
+        { "qual e o seu nome", "I'm ANIMA, NucleoOS's offline assistant.", 0 },
+        { "qual seu nome", "I'm ANIMA, NucleoOS's offline assistant.", 0 },
+        { "como voce se chama", "I'm ANIMA, NucleoOS's offline assistant.", 0 },
+        { "como te chamas", "I'm ANIMA, NucleoOS's offline assistant.", 0 },
+        { "desculpa", "No problem!", 0 }, { "desculpe", "No problem!", 0 }, { "foi mal", "No problem!", 0 },
+        { "ok", "Okay!", 0 }, { "certo", "Okay!", 0 }, { "legal", "Okay!", 0 }, { "entendi", "Okay!", 0 },
+        { "show", "Okay!", 0 }, { "perfeito", "Okay!", 0 },
+        { "voce e incrivel", "Thank you!", 0 }, { "bom trabalho", "Thank you!", 0 }, { "muito bem", "Thank you!", 0 },
+        { "parabens", "Thank you!", 0 }, { "voce e otima", "Thank you!", 0 }, { "voce e demais", "Thank you!", 0 },
+        { "de nada", "Anytime!", 0 }, { "por nada", "Anytime!", 0 },
     };
-    for (size_t i = 0; i < sizeof rows / sizeof rows[0]; i++) {
-        if (n < 1 || pt_match_words(w, n, 0, rows[i].q) != n) continue;
-        memset(out, 0, sizeof *out);
-        out->tier = ANIMA_TIER_COMMAND; out->action = ANIMA_ACT_ANSWER; out->confidence = 100;
-        snprintf(out->intent, sizeof out->intent, "greeting");
-        snprintf(out->state, sizeof out->state, "idle");
-        snprintf(out->reply, sizeof out->reply, "%s", rows[i].reply);
-        return true;
+    // a leading greeting followed by another row ("oi tudo bem", "bom dia, como vai"): the second row answers
+    int start = 0;
+    for (size_t i = 0; i < sizeof rows / sizeof rows[0] && !start; i++) {
+        if (!rows[i].greet) continue;
+        int u = pt_match_words(w, n, 0, rows[i].q);
+        if (u > 0 && u < n) start = u;
+    }
+    for (int pass = 0; pass < 2; pass++) {
+        int from = pass ? 0 : start;                  // with a greeting prefix, try the remainder first
+        if (pass == 0 && !start) continue;
+        for (size_t i = 0; i < sizeof rows / sizeof rows[0]; i++) {
+            if (n - from < 1 || pt_match_words(w, n, from, rows[i].q) != n - from) continue;
+            memset(out, 0, sizeof *out);
+            out->tier = ANIMA_TIER_COMMAND; out->action = ANIMA_ACT_ANSWER; out->confidence = 100;
+            snprintf(out->intent, sizeof out->intent, "%s", rows[i].greet ? "greeting" : "smalltalk");
+            snprintf(out->state, sizeof out->state, "idle");
+            snprintf(out->reply, sizeof out->reply, "%s", rows[i].reply);
+            return true;
+        }
     }
     for (size_t i = 0; i < sizeof PT_KNOWLEDGE / sizeof PT_KNOWLEDGE[0]; i++) {
         if (n < 1 || pt_match_words(w, n, 0, PT_KNOWLEDGE[i].q) != n) continue;
@@ -667,6 +821,49 @@ static const a_pt_reply_t PT_REPLIES[] = {
     { NULL,       "I'm ANIMA, NucleoOS's offline assistant. I work with no internet, on the device.",
                   "Sou a ANIMA, a assistente offline do NucleoOS. Funciono sem internet, no proprio aparelho." },
     { NULL,       "I don't know.",                   "Nao sei." },
+    // small talk (a_pt_smalltalk) and the en L1 small-talk replies
+    { NULL,       "I'm well, ready to help.",        "Tudo bem! Como posso ajudar?" },
+    { NULL,       "See you soon!",                   "Ate logo!" },
+    { NULL,       "I'm ANIMA, NucleoOS's offline assistant.", "Sou a ANIMA, a assistente offline do NucleoOS." },
+    { NULL,       "No problem!",                     "Sem problema!" },
+    { NULL,       "Okay!",                           "Certo!" },
+    { NULL,       "Thank you!",                      "Obrigada!" },
+    { NULL,       "Anytime!",                        "Disponha!" },
+    // math, number theory, geometry, physics (the en solver's formats; symbols and numbers stay)
+    { "calc",     "%s^%s = %s.",                     "%1 elevado a %2 = %3." },
+    { "calc",     "log base %s of %s = %s.",         "Logaritmo na base %1 de %2 = %3." },
+    { "calc",     "gcd(%s, %s) = %s.",               "MDC de %1 e %2 = %3." },
+    { "calc",     "lcm(%s, %s) = %s.",               "MMC de %1 e %2 = %3." },
+    { "calc",     "%s! = %s.",                       "Fatorial de %1 = %2." },
+    { "prime",    "Is %s prime? Yes.",               "%1 e primo? Sim." },
+    { "prime",    "Is %s prime? No.",                "%1 e primo? Nao." },
+    { "prime",    "Is %s prime? No (%s).",           "%1 e primo? Nao (%2)." },
+    { "roman",    "%s in roman numerals = %s.",      "%1 em algarismos romanos = %2." },
+    { "base",     "%s in base %s = %s.",             "%1 na base %2 = %3." },
+    { "geo",      "Circle area = %s",                "Area do circulo = %1" },
+    { "geo",      "Circumference = %s",              "Circunferencia = %1" },
+    { "geo",      "Rectangle area = %s",             "Area do retangulo = %1" },
+    { "geo",      "Triangle area = %s",              "Area do triangulo = %1" },
+    { "geo",      "Hypotenuse = %s",                 "Hipotenusa = %1" },
+    { "geo",      "Cube volume = %s",                "Volume do cubo = %1" },
+    { "geo",      "Sphere volume = %s",              "Volume da esfera = %1" },
+    { "ohm",      "V=%s",                            "V=%1" },
+    { "phys",     "v = %s",                          "v = %1" },
+    // calendar skills
+    { "date",     "%s %s has %s days.",              "Em %1 de %2 ha %3 dias." },
+    { "date",     "%s has %s days.",                 "%1 tem %2 dias." },
+    { "date",     "Someone born in %s is %s or %s in %s (depending on the month).",
+                  "Quem nasceu em %1 tem %2 ou %3 anos em %4 (depende do mes)." },
+    { "date",     "Someone born on %s %s is a %s.",  "Quem nasceu em %2 de %1 e de %3." },
+    { "date",     "Someone born on %s %s is an %s.", "Quem nasceu em %2 de %1 e de %3." },
+    { "date",     "From %s to %s: %s hours.",        "De %1 a %2: %3 horas." },
+    { "date",     "From %s to %s: %s.",              "De %1 a %2: %3." },
+    { "worldclock", "In %s it's %s.",                "Em %1 sao %2." },
+    // translator (IT<->EN dictionary only)
+    { "translate", "I don't have \"%s\" in the offline IT<->EN dictionary.",
+                   "Nao tenho \"%1\" no dicionario offline italiano-ingles." },
+    { "translate", "\"%s\" in English: %s.",       "\"%1\" em ingles: %2." },
+    { "translate", "\"%s\" in Italian: %s.",       "\"%1\" em italiano: %2." },
 };
 
 // Capture -> Portuguese: app ids (article included: "Abrindo a Calculadora"), weekdays, months.
@@ -679,6 +876,11 @@ static const a_pt_app_t PT_TERMS[] = {
     { "January", "janeiro" }, { "February", "fevereiro" }, { "March", "marco" }, { "April", "abril" },
     { "May", "maio" }, { "June", "junho" }, { "July", "julho" }, { "August", "agosto" },
     { "September", "setembro" }, { "October", "outubro" }, { "November", "novembro" }, { "December", "dezembro" },
+    { "Aries", "Aries" }, { "Taurus", "Touro" }, { "Gemini", "Gemeos" }, { "Cancer", "Cancer" }, { "Leo", "Leao" },
+    { "Virgo", "Virgem" }, { "Libra", "Libra" }, { "Scorpio", "Escorpiao" }, { "Sagittarius", "Sagitario" },
+    { "Capricorn", "Capricornio" }, { "Aquarius", "Aquario" }, { "Pisces", "Peixes" },
+    { "Tokyo", "Toquio" }, { "London", "Londres" }, { "New York", "Nova York" }, { "Lisbon", "Lisboa" }, { "Rome", "Roma" },
+    { "Beijing", "Pequim" }, { "Moscow", "Moscou" }, { "Berlin", "Berlim" }, { "Mexico City", "Cidade do Mexico" },
     { "Alarm", "Alarme" }, { "reminder", "lembrete" }, { "Documents", "Documentos" }, { "Notes", "Notas" },
     { "miles", "milhas" }, { "mile", "milha" }, { "meters", "metros" }, { "feet", "pes" }, { "inches", "polegadas" },
     { "pounds", "libras" }, { "grams", "gramas" }, { "liters", "litros" }, { "gallons", "galoes" },
@@ -723,6 +925,7 @@ static bool pt_tmatch(const char *t, const char *s, const char **cap, size_t *cl
 
 #ifdef ANIMA_HOST
 bool g_anima_pt_miss;   // host harness only: the last pt reply had no catalog row (pt-check lists them)
+char g_anima_pt_bridged[256];  // host harness only: the pt line after the bridge (pt-check / debugging)
 #endif
 
 bool a_pt_reply(const char *intent, char *reply, size_t cap)

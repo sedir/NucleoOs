@@ -1230,6 +1230,11 @@ static bool fill_system_value_pt(const char *arg, char *out, size_t n, time_t no
         if (mode && !strcmp(mode, "ap")) snprintf(out, n, "Sou um hotspot Wi-Fi \"%s\", IP %s", ssid, ip);
         else if (ssid && ssid[0])        snprintf(out, n, "conectado a \"%s\", IP %s", ssid, ip);
         else                             snprintf(out, n, "sem conexao");
+    } else if (!strcmp(arg, "agenda") && tm) {
+        snprintf(out, n, "hoje voce nao tem compromissos");
+        cal_refresh(false);                              // same cached parse as the it/en readout
+        int c = s_ses->agenda_n;
+        if (c > 0) snprintf(out, n, "hoje voce tem %d %s: %s", c, c == 1 ? "compromisso" : "compromissos", s_ses->agenda);
     } else if (!strcmp(arg, "capabilities")) {
         snprintf(out, n, "Posso dizer hora/data/espaco/RAM/bateria e o estado do Wi-Fi, mudar volume e brilho, abrir os apps do aparelho, "
                          "criar lembretes e timers e fazer contas. Offline tambem respondo perguntas de conhecimento "

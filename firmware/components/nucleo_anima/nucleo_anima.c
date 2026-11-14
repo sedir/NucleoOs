@@ -3995,7 +3995,11 @@ anima_result_t nucleo_anima_query(const char *input, const char *lang)
     const char *pt_raw = input; // retrieval sees the original Portuguese, before command bridging
     char *pt_line = NULL;
     if (pt && input && (pt_line = (char *)malloc(A_PT_LINE)) != NULL) {
-        if (a_pt_bridge(input, pt_line, A_PT_LINE)) input = pt_line;
+        bool cue = a_pt_bridge(input, pt_line, A_PT_LINE);
+#ifdef ANIMA_HOST
+        { snprintf(g_anima_pt_bridged, sizeof g_anima_pt_bridged, "%s%s", cue ? "" : "(no cue) ", pt_line); }
+#endif
+        if (cue) input = pt_line;
     }
     // RAM policy: stand the offline L1/HDC brain down for this turn ONLY in ONLINE-ONLY mode, where the
     // cloud LLM is the sole brain and L1's index would be dead weight competing for the TLS handshake's

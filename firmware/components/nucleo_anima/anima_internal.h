@@ -76,6 +76,9 @@ bool l0_legacy(void);
 #define A_PT_LINE 256   // bridged line buffer (heap, pt turns only)
 // a_pt_bridge: fold + rewrite known pt words to the English the cascade reads; true if a command cue was seen.
 bool a_pt_bridge(const char *in, char *out, size_t cap);
+#ifdef ANIMA_HOST
+extern char g_anima_pt_bridged[256];   // host harness: the pt line after the bridge
+#endif
 bool a_pt_knowledge(const char *in, anima_result_t *out);
 bool a_pt_smalltalk(const char *in, anima_result_t *out);
 // a_pt_reply: rewrite an English reply in place from the pt catalog; false (unchanged) if unknown.

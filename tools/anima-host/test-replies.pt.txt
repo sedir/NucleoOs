@@ -95,3 +95,72 @@ JSON e um formato de texto para trocar dados estruturados.
 Um LED e um diodo semicondutor que emite luz.
 A fotossintese usa energia da luz para produzir compostos organicos a partir de dioxido de carbono e agua.
 O DNA armazena informacoes geneticas nos seres vivos.
+
+# ============ IDEAS deck, small talk and skill replies (pt-suggestions.mjs) ============
+10 km = 6.21371 milhas.
+10 litros = 2.64172 galoes.
+10 na base 2 = 1010.
+100 f = 37.7778 c.
+13 milhas = 20.9215 km.
+15% de 200 = 30.
+15% de 80 = 12.
+17 e primo? Sim.
+2 elevado a 10 = 1024.
+2026 em algarismos romanos = MMXXVI.
+25 de dezembro de 2026 cai em sexta-feira.
+30 c = 86 f.
+5 milhas = 8.04672 km.
+5 polegadas = 12.7 cm.
+5000000 bytes = 4882.81 kb.
+70 kg = 154.324 libras.
+A fotossintese usa energia da luz para produzir compostos organicos a partir de dioxido de carbono e agua.
+A raiz quadrada de 144 e 12.
+A raiz quadrada de 81 e 9.
+Abrindo a Calculadora.
+Abrindo as Configuracoes.
+Abrindo o Player de musica.
+Alarme para amanha as 07:00.
+Ate logo!
+Boa noite!
+Boa tarde!
+Bom dia!
+Capital de França: Paris.
+Certo!
+Criando teste.txt em Documentos.
+Da 122.
+Da 1776.
+Da 25.
+Da 42.
+Da 432.
+Da 60.
+Da 84.
+De 9:00 a 17:00: 8 horas.
+De nada!
+Disponha!
+Em Toquio sao 11:12.
+Em fevereiro de 2026 ha 28 dias.
+Faltam 41 dias para 25 de dezembro de 2026.
+Fatorial de 5 = 120.
+Hoje e sabado, 14 de novembro de 2026.
+Lembrete "comprar pao" hoje as 18:00.
+Lembrete "compras" amanha as 18:00.
+Lembrete "ligar para a mae" amanha as 10:00.
+Lembrete "treino" amanha as 07:00.
+Logaritmo na base 2 de 8 = 3.
+MDC de 12 e 18 = 6.
+MMC de 4 e 6 = 12.
+NucleoOS funciona offline no M5Stack Cardputer.
+O DNA armazena informacoes geneticas nos seres vivos.
+Obrigada!
+Ola!
+Quem nasceu em 10 de marco e de Peixes.
+Quem nasceu em 1990 tem 35 ou 36 anos em 2026 (depende do mes).
+Santos Dumont foi um pioneiro brasileiro da aviacao.
+Sem problema!
+Sou a ANIMA, a assistente offline do NucleoOS.
+Sou a ANIMA, a assistente offline do NucleoOS. Funciono sem internet, no proprio aparelho.
+Timer de 5 min: aviso as 11:17.
+Tudo bem! Como posso ajudar?
+V=12 V, I=2 A, R=6 ohm, P=24 W.
+V=20 V, I=2 A, R=10 ohm, P=40 W.
+v = s/t = 120000/7200 = 16.6667 m/s.

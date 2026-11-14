@@ -240,3 +240,20 @@ esp32	ésse pê trinta e dois
 s3	ésse três
 s2	ésse dois
 o2	ó dois
+
+# ===== Small talk replies (a_pt_smalltalk) and the skill replies of the IDEAS deck =====
+Tudo bem! Como posso ajudar?
+Até logo!
+Sem problema!
+Certo!
+Obrigada!
+Disponha!
+Sou a ANIMA, a assistente offline do NucleoOS.
+algarismos romanos
+em algarismos romanos
+fatorial
+logaritmo
+logaritmo na base
+mdc	ême dê cê
+mmc	ême ême cê
+dicionário offline italiano-inglês
