@@ -1,0 +1,86 @@
+--- a/apps/dictation/www/asr.js
++++ b/apps/dictation/www/asr.js
+@@ -8,12 +8,13 @@
+ //
+ // Vosk lib + models are REUSED from the ANIMA app on SD (absolute paths) so we
+ // don't duplicate the ~40 MB model. Online-first model load (browser fetches the
+-// model directly from a CDN, never through the device) with an SD fallback.
++// IT/EN model directly from a CDN) with an SD fallback. Portuguese is local-only.
+ //
+ // handlers: onloading() · onstart() · onpartial(text) · onfinal(text)
+ //           onlevel(0..1) · onend() · onerror('model'|'busy'|'audio')
+ // ===========================================================================
+ 
++import { portugueseModel } from '/apps/anima/vosk/pt-model.js';
+ import { streamMic } from '/micgate.js';   // OS-wide single-owner gate for the Cardputer mic
+ import { whisperUrl, isVaultKey } from '/ai.js';   // the ONE Whisper endpoint builder (Groq only serves it under /openai/v1)
+ import { readMode } from '/anima-mode.js';  // the OS-wide mode: Private = no audio leaves this computer
+@@ -36,9 +37,9 @@
+     document.head.appendChild(s);
+   });
+ }
+-async function loadVosk() {
++async function loadVosk(localOnly = false) {
+   if (window.Vosk) return window.Vosk;
+-  try { return await inject(VOSK_LIB); } catch { return await inject(VOSK_CDN); }
++  try { return await inject(VOSK_LIB); } catch (e) { if (localOnly) throw e; return await inject(VOSK_CDN); }
+ }
+ 
+ // Reassemble a model split across <8 MB parts (baseUrl.000, .001, ...) into one blob: URL —
+@@ -80,8 +81,10 @@
+   // saturates the device's single-task web server; only if the CDN is unreachable do we fall
+   // back to the SD copy (whole file, then split parts) served by the Cardputer.
+   async function getModel(Vosk, lang) {
++    if (lang === 'pt') { const model = await portugueseModel(Vosk); a.source = 'sd'; return model; }
++    if (!MODELS[lang]) throw new Error('model');
+     if (_modelCache[lang]) return _modelCache[lang];
+-    const m = MODELS[lang] || MODELS.it;
++    const m = MODELS[lang];
+     const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+     const fromCdn = async () => { const mod = await Vosk.createModel(m.cdn); a.source = 'online'; return mod; };
+     const fromSdWhole = async () => { const mod = await withTimeout(Vosk.createModel(m.local), 12000); a.source = 'sd'; return mod; };
+@@ -103,22 +106,23 @@
+     (async () => {
+       // Private mode: the audio never leaves this computer — no Groq, not even as Vosk's fallback.
+       const priv = (() => { try { return readMode() === 'private'; } catch { return false; } })();
+-      if (a.engine === 'groq' && priv) { handlers.onerror && handlers.onerror('private'); stop(); return; }
++      if (a.engine === 'groq' && priv) { handlers.onerror && handlers.onerror('private'); stop(ac); return; }
+       let useGroq = (a.engine === 'groq');
+       let Vosk = null, model = null;
+       try {
+         handlers.onloading && handlers.onloading();
+         if (!useGroq) {
+-          try { Vosk = await loadVosk(); model = await getModel(Vosk, lang); }
++          try { Vosk = await loadVosk(lang === 'pt'); model = await getModel(Vosk, lang); if (ac.signal.aborted) return; }
+           catch (err) {
+-            if (a.engine !== 'vosk' && a.groqKey && !priv) { useGroq = true; a.source = 'online'; }
++            if (lang !== 'pt' && a.engine !== 'vosk' && a.groqKey && !priv) { useGroq = true; a.source = 'online'; }
+             else throw err;
+           }
+         } else { a.source = 'online'; }
+       } catch (e) {
+         const msg = e && e.message;
+-        if (!ac.signal.aborted) handlers.onerror && handlers.onerror((msg === 'model' || msg === 'vosk-load') ? 'model' : 'audio');
+-        stop(); return;
++        if (ac.signal.aborted) return;
++        handlers.onerror && handlers.onerror((msg === 'model' || msg === 'vosk-load') ? 'model' : 'audio');
++        stop(ac); return;
+       }
+ 
+       // Vosk recognizer (offline path) — stays alive across the gate's transparent reconnects.
+@@ -164,12 +168,13 @@
+           }
+         },
+         onerror(kind, who) { if (!ac.signal.aborted) handlers.onerror && handlers.onerror(kind, who); },   // 'busy'(+holder) | 'auth' | 'audio'
+-        onend() { if (useGroq) sendBuffer(); stop(); },
++        onend() { if (useGroq) sendBuffer(); stop(ac); },
+       });
+     })();
+   };
+ 
+-  function stop() {
++  function stop(ac = a._ac) {
++    if (ac && ac !== a._ac) return; // an old stream cannot stop its replacement
+     const h = a._h;
+     try { a._reader && a._reader.cancel(); } catch {}
+     try { a._ac && a._ac.abort(); } catch {}

@@ -114,3 +114,7 @@ tools/.device-sessions.json
 # Costellazioni art/music sources (regenerable from prompts.json + seeds; only the compressed set ships)
 tools/costellazioni-assets/raw/
 tools/costellazioni-assets/music/
+
+# Portuguese knowledge mirrors are generated from the canonical tools/sd-sim pack.
+/deploy/sd/data/anima/anima-pt-knowledge.bin*
+/deploy/sd-safe/data/anima/anima-pt-knowledge.bin*

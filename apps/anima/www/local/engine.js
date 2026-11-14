@@ -16,6 +16,7 @@
 // Flat-index brain: full-corpus recall, RAM-resident. `req` files must be present (L1 core); the
 // rest (learned facts, dictionaries) are best-effort — the cascade abstains gracefully if absent.
 const PACK = [
+  { p: 'data/anima/anima-pt-knowledge.bin', req: false },
   { p: 'data/anima/anima-it-encoder.bin',     req: true  },
   { p: 'data/anima/anima-it-index.bin',       req: true  },
   { p: 'data/anima/commands.it.json',         req: true  },

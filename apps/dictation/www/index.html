@@ -163,7 +163,7 @@
     </div>
     <div class="row2">
       <div class="lang" id="lang">
-        <button data-l="it">IT</button><button data-l="en" class="on">EN</button>
+        <button data-l="it">IT</button><button data-l="en" class="on">EN</button><button data-l="pt">PT-BR</button>
       </div>
       <button class="tgl" id="btnNew" data-i18n-attr="title:new_title"><span class="ic">🗒</span><span data-i18n="new">Nuovo</span></button>
       <button class="tgl" id="btnSummary" data-i18n-attr="title:summary_title"><span class="ic">✨</span><span data-i18n="sum_btn">Riassumi</span></button>
@@ -182,7 +182,7 @@ import os from '/nucleo-shell.js';    // the OS dialogs and clipboard history
 import * as AI from '/ai.js';   // automatic model choice + fallback + plain-words errors; on a sealed vault the keys stay on the device
 
 // Centralized OS i18n: paints [data-i18n] now, auto-translates DOM added later, and live-switches
-// with the OS language. NOTE: this is the OS *UI* language (anima.lang), distinct from the IT/EN
+// with the OS language. NOTE: this is the OS *UI* language (anima.lang), distinct from the IT/EN/PT
 // buttons below, which choose the ASR *recognition* language (dictation.lang) — kept separate.
 const t = await I18N.init('dictation');
 
@@ -196,7 +196,8 @@ const stamp = () => { const d = new Date(), p = n => String(n).padStart(2,'0');
 let file = localStorage.getItem('dictation.file') || `trascrizione-${stamp()}.txt`;
 let finalText = localStorage.getItem('dictation.text') || '';
 let partial = '';
-let lang = localStorage.getItem('dictation.lang') === 'it' ? 'it' : 'en';
+const savedLang = localStorage.getItem('dictation.lang');
+let lang = ['it', 'en', 'pt'].includes(savedLang) ? savedLang : (['it', 'en', 'pt'].includes(I18N.lang) ? I18N.lang : 'en');
 localStorage.setItem('dictation.file', file);
 
 const path = () => `${TDIR}/${file}`;
@@ -354,7 +355,7 @@ for(const b of $('lang').children) b.addEventListener('click', ()=>{
   if(b.dataset.l===lang) return;
   lang = b.dataset.l; localStorage.setItem('dictation.lang', lang);
   for(const x of $('lang').children) x.classList.toggle('on', x.dataset.l===lang);
-  if(asr.recognizing){ asr.stop(); setTimeout(startASR, 150); }   // reload the model for the new language
+  if(!paused && !$('btnRec').disabled){ asr.stop(); setTimeout(startASR, 150); }   // also cancel a model still loading
 });
 $('btnExit').addEventListener('click', ()=>{
   cleanup();

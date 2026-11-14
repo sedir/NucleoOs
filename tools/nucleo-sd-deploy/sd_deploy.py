@@ -105,6 +105,7 @@ COMPLETENESS = [
     ("TTS voice pt (clips)", "data/tts/pt/clips.pcm"),
     ("TTS voice pt (index)", "data/tts/pt/index.bin"),
     ("dettatura Vosk it",  "apps/anima/www/vosk/models/vosk-model-small-it-0.4.tar.gz.000"),
+    ("Vosk dictation pt",  "apps/anima/www/vosk/models/vosk-model-small-pt-0.3.tar.gz.000"),
     ("dettatura Vosk en",  "apps/anima/www/vosk/models/vosk-model-small-en-us-0.15.tar.gz.000"),
 ]
 MIN_AKB5_SHARDS = 40
@@ -561,6 +562,7 @@ RELEASE_REQUIRED = [
     "system/ir/presets.bin",
     "data/anima/anima-it-encoder.bin",
     "data/anima/anima-it-index.bin",
+    "data/anima/anima-pt-knowledge.bin",
     "data/anima/anima-it-akb5.bin",
     "data/anima/learned/facets.it.jsonl",
     "data/anima/learned/facets.en.jsonl",

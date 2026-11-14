@@ -25,6 +25,9 @@ jobs:
       - name: Web i18n parity (including pt-BR)
         run: node tools/i18n-check.mjs
 
+      - name: Portuguese offline knowledge and Vosk (real Chrome when available)
+        run: npm run anima:pt:offline
+
       - name: Native pt-BR catalog, including static tables
         run: node tools/native-i18n/native-i18n.mjs gen pt --check
 

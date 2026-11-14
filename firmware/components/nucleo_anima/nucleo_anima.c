@@ -3992,6 +3992,7 @@ anima_result_t nucleo_anima_query(const char *input, const char *lang)
     // heap, taken on pt turns only: it/en pay nothing, and this frame (the anima-solo stack's biggest) does
     // not grow. Allocation failure = the raw line, never an error.
     const bool pt = lang && (lang[0] | 0x20) == 'p' && (lang[1] | 0x20) == 't';
+    const char *pt_raw = input; // retrieval sees the original Portuguese, before command bridging
     char *pt_line = NULL;
     if (pt && input && (pt_line = (char *)malloc(A_PT_LINE)) != NULL) {
         if (a_pt_bridge(input, pt_line, A_PT_LINE)) input = pt_line;
@@ -4027,6 +4028,10 @@ anima_result_t nucleo_anima_query(const char *input, const char *lang)
     // only appended at the epilogue, so this stays valid throughout). Oldest->newest; nctx may be 0.
     anima_turn_t ctx[ANIMA_CHAT]; int nctx = chat_context(ctx, ANIMA_CHAT);
     if (pt && a_pt_smalltalk(input, &r)) goto done;
+    if (pt) {
+        memset(&r, 0, sizeof r);
+        if (a_pt_knowledge(pt_raw, &r)) { mem_update(&r); goto done; }
+    }
 
     // Resolve a pending L1 knowledge clarify ("intendi 1) … o 2) …?"): an ordinal picks one of
     // the two offered cards. Not a pick -> drop the clarify and handle the input normally.
@@ -4753,6 +4758,21 @@ done: {
         }
         if (r.tier == ANIMA_TIER_NONE && r.action == ANIMA_ACT_NONE && !r.awaiting && !r.reply[0])
             snprintf(r.reply, sizeof r.reply, "%s", en ? "I don't know." : "Non lo so.");
+        // Localize/decline before recording history, trace and telemetry.
+        if (pt && r.tier != ANIMA_TIER_REMOTE) {           // the LLM already wrote pt
+            if (!a_pt_reply(r.intent, r.reply, sizeof r.reply)) {
+                // An untranslated IT/EN corpus hit is not a Portuguese answer.
+                // Preserve device actions; knowledge misses stay honest until an online model answers.
+                if (r.action == ANIMA_ACT_ANSWER) {
+                    r.tier = ANIMA_TIER_NONE; r.action = ANIMA_ACT_NONE; r.confidence = 0;
+                    r.arg[0] = 0; r.awaiting = 0;
+                    snprintf(r.intent, sizeof r.intent, "unknown");
+                    snprintf(r.reply, sizeof r.reply, "I don't know.");
+                    a_pt_reply(r.intent, r.reply, sizeof r.reply);
+                }
+            }
+            if (!strcmp(r.intent, "add_event")) a_pt_event_label(s_tool_content, sizeof s_tool_content);
+        }
         if (replayed && r.action != ANIMA_ACT_NONE) { r.from_memory = 1; snprintf(r.state, sizeof(r.state), "followup"); }
         const char *domain = a_domain(&r);
         // Visible reasoning trace. A multi-step agent turn (compose-then-act) joins its steps with
@@ -4814,10 +4834,6 @@ done: {
         session_save();                        // persist context if it changed
         diag_count(&r);                        // cumulative tier/abstain telemetry for /api/diag (cheap)
         nucleo_anima_online_turn_end();        // disarm: other callers (transcribe...) keep their own limits
-        if (pt && r.tier != ANIMA_TIER_REMOTE) {           // the LLM already wrote pt
-            a_pt_reply(r.intent, r.reply, sizeof r.reply);
-            if (!strcmp(r.intent, "add_event")) a_pt_event_label(s_tool_content, sizeof s_tool_content);
-        }
         free(pt_line);
         return r;
     }

@@ -96,8 +96,8 @@ esp_err_t nucleo_anima_init_memory(const char *lang);
 bool nucleo_anima_ready(void);
 bool nucleo_anima_memory_only(void);
 
-// Run the cascade on a UTF-8 input line. Understands IT+EN; replies in `lang`
-// ("en" -> English, anything else -> Italian). Always returns (tier NONE if unsure).
+// Run the cascade on UTF-8 input. IT/EN use the shared neural pack; PT uses
+// its command catalog and optional Portuguese SD knowledge pack. Unknown facts decline.
 anima_result_t nucleo_anima_query(const char *input, const char *lang);
 
 // The personal-memory tiers only (profile "mi chiamo X"/"come mi chiamo", teach "ricorda che X è Y",

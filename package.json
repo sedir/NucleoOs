@@ -160,6 +160,9 @@
     "native:test": "node tools/native/test.mjs",
     "native:gen": "node tools/native/gen-exports.mjs",
     "gb:accuracy": "node tools/emu-host/gb-accuracy.mjs",
-    "discord:test": "node --test tools/discord-bot/search.test.mjs tools/discord-bot/automod.test.mjs tools/discord-bot/bot.test.mjs"
+    "discord:test": "node --test tools/discord-bot/search.test.mjs tools/discord-bot/automod.test.mjs tools/discord-bot/bot.test.mjs",
+    "anima:pt:pack": "python3 tools/anima/pt/build.py",
+    "anima:pt:offline": "node --test tools/anima/pt/knowledge.test.mjs tools/anima/pt/voice.test.mjs",
+    "anima:pt:vosk": "python3 tools/anima/prepare_vosk_pt.py"
   }
 }

@@ -37,3 +37,12 @@ apps/*/www/i18n.pt.json text eol=lf
 web/shell/i18n/*.pt.json text eol=lf
 # Unified-diff context lines intentionally contain one space on otherwise blank lines.
 tools/webos-pt/patches/*.patch whitespace=-blank-at-eol
+
+# Portuguese knowledge source and generated lexical normalizer must hash identically on every host.
+tools/anima/pt/*.jsonl text eol=lf
+tools/anima/pt/*.json text eol=lf
+firmware/components/nucleo_anima/anima_pt_lexicon.h text eol=lf
+apps/anima/www/vosk/models/*.json text eol=lf
+apps/anima/www/vosk/models/LICENSE-pt.txt text eol=lf
+apps/anima/www/vosk/pt-model.js text eol=lf
+tools/sd-sim/data/anima/anima-pt-knowledge.bin.prov text eol=lf

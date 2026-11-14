@@ -1,6 +1,14 @@
 --- a/apps/anima/www/local/engine.js
 +++ b/apps/anima/www/local/engine.js
-@@ -277,7 +277,7 @@
+@@ -16,6 +16,7 @@
+ // Flat-index brain: full-corpus recall, RAM-resident. `req` files must be present (L1 core); the
+ // rest (learned facts, dictionaries) are best-effort — the cascade abstains gracefully if absent.
+ const PACK = [
++  { p: 'data/anima/anima-pt-knowledge.bin', req: false },
+   { p: 'data/anima/anima-it-encoder.bin',     req: true  },
+   { p: 'data/anima/anima-it-index.bin',       req: true  },
+   { p: 'data/anima/commands.it.json',         req: true  },
+@@ -277,7 +278,7 @@
  export async function fillToolTemplate(out, lang, deps = {}) {
    if (!out || typeof out.reply !== 'string' || !out.reply.includes('{value}')) return out;
    const f = deps.fetch;
@@ -9,7 +17,7 @@
    const arg = out.arg || out.intent || '';
    let value = '';
  
-@@ -498,7 +498,7 @@
+@@ -498,7 +499,7 @@
      // Run the offline cascade. Returns the /api/anima-shaped result object.
      query(text, lang) {
        if (!loaded) throw Object.assign(new Error('ANIMA Local: engine not loaded'), { code: 'ENGINE_NOT_LOADED' });

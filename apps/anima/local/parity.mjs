@@ -101,6 +101,11 @@ const Q = [
     ['pt', 'raiz quadrada de 144'],
     ['pt', 'bom dia'],
     ['pt', 'qual a memória livre'],
+    ['pt', 'Você poderia explicar um ponteiro em C?'],
+    ['pt', 'me fale sobre Nikola Tesla, por gentileza'],
+    ['pt', 'qual é a capital de Portugal'],
+    ['pt', 'o que não é um ponteiro em C'],
+    ['pt', 'quem foi Albert Floonk'],
     ['it', 'apri la fotocamera'],            // L0 launch
     ['it', 'apri le impostazioni'],          // L0 launch
     ['it', 'apri la calcolatrice'],          // L0 launch via command-pack (commands.it.json)

@@ -13,3 +13,6 @@ sd/data/*
 !sd/data/anima/
 sd/data/anima/*
 !sd/data/anima/*.prov
+
+# Portuguese pack provenance is canonical in tools/sd-sim; this fixture is generated.
+sd/data/anima/anima-pt-knowledge.bin.prov

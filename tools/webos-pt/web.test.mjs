@@ -71,6 +71,15 @@ test('real browser keeps pt on the device, loads all catalogs and paints ANIMA i
       assert.ok(await page.eval(`!!document.querySelector('#set-lang [data-l="pt"]')`));
       assert.equal(await page.eval(`document.querySelector('#set-lang [data-l="pt"]').classList.contains('on')`), true);
       await page.screenshot(join(REPO, 'build/webos-pt/anima.png'));
+      await page.eval(`localStorage.removeItem('dictation.lang'); localStorage.setItem('dictation.engine','vosk')`);
+      await page.goto(sim.origin + '/apps/dictation/');
+      assert.ok(await page.waitFor(`document.querySelector('#lang [data-l="pt"]')?.classList.contains('on')`), 'Dictation defaults recognition to Portuguese with a Portuguese OS');
+      await page.eval(`document.querySelector('#lang [data-l="en"]').click()`);
+      assert.equal(await page.eval(`localStorage.getItem('dictation.lang')`), 'en');
+      await page.eval(`document.querySelector('#lang [data-l="pt"]').click()`);
+      assert.equal(await page.eval(`localStorage.getItem('dictation.lang')`), 'pt');
+      assert.ok(await page.waitFor(`document.querySelector('#loadingModal')?.style.display === 'none'`, { timeout: 30000 }), 'Dictation finishes model loading or shows its handled device error');
+      await page.screenshot(join(REPO, 'build/webos-pt/dictation.png'));
       assert.deepEqual(page.log.filter(e => e.kind === 'exception'), []);
     } finally {
       await browser.close();

@@ -5,7 +5,7 @@
  // roll goes in nucleo-webos docs/shell-cache-log.md — NOT here: it used to be one 10.5 KB comment on this
  // line, half the whole service worker, re-shipped to every browser on every update check.
 -const CACHE = 'nucleo-shell-v166-3c95cd18aa51';
-+const CACHE = 'nucleo-shell-v166-3c95cd18aa51-pt-br-r1';
++const CACHE = 'nucleo-shell-v166-3c95cd18aa51-pt-br-offline-r2';
  // Per-version cache for app assets (/apps/<id>/...). Tied to the shell version so a deploy (which
  // bumps CACHE) drops it; the shell also flushes it on apps.changed (OTA app update) via postMessage.
  const APP_CACHE = CACHE + '-apps';

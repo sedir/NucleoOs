@@ -10,6 +10,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import runpy
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -21,7 +22,7 @@ def digest(data):
 
 def inventory():
     manifest = json.loads((HERE / "manifest.json").read_text())
-    files = sorted(p for p in HERE.rglob("*") if p.is_file() and p.suffix in {".json", ".patch", ".py"})
+    files = sorted(p for p in HERE.rglob("*") if p.is_file() and (p.suffix in {".json", ".patch", ".py", ".js"} or p.is_relative_to(HERE / "assets")))
     stamp = hashlib.sha256()
     for p in files:
         stamp.update(str(p.relative_to(HERE)).encode() + b"\0" + p.read_bytes())
@@ -42,10 +43,13 @@ def apply(check=False, update_lock=True):
     for row in manifest["patches"]:
         p = ROOT / row["path"]
         if not check and digest(p.read_bytes()) != row["after"]:
-            subprocess.run(["git", "apply", str(HERE / row["patch"])], cwd=ROOT, check=True)
+            if row.get("transform"):
+                p.write_bytes(runpy.run_path(str(HERE / row["transform"]))["transform"](p.read_bytes()))
+            else:
+                subprocess.run(["git", "apply", str(HERE / row["patch"])], cwd=ROOT, check=True)
         changed.append(p)
-    for src in sorted((HERE / "catalogs").rglob("*.json")):
-        dest = ROOT / src.relative_to(HERE / "catalogs")
+    for src in sorted((HERE / "catalogs").rglob("*.json")) + sorted(p for p in (HERE / "assets").rglob("*") if p.is_file()):
+        dest = ROOT / src.relative_to(HERE / ("assets" if src.is_relative_to(HERE / "assets") else "catalogs"))
         if check:
             if not dest.exists() or dest.read_bytes() != src.read_bytes():
                 raise RuntimeError(f"Stale pt-BR catalog: {dest.relative_to(ROOT)}")
@@ -64,6 +68,9 @@ def apply(check=False, update_lock=True):
             changed.append(dest)
     lock_path = ROOT / "webos.lock"
     lock = json.loads(lock_path.read_text())
+    model_files = sorted((ROOT / "apps/anima/www/vosk/models").glob("vosk-model-small-pt-0.3.*"))
+    if not check:
+        lock["kept"] = sorted(set(lock.get("kept", [])) | {str(p.relative_to(ROOT)) for p in model_files})
     if check:
         if lock.get("pt_overlay", {}).get("sha256") != stamp:
             raise RuntimeError("pt-BR overlay changed; run python3 tools/webos-pt/overlay.py --apply")
@@ -76,6 +83,7 @@ def apply(check=False, update_lock=True):
         for p in changed:
             p.with_name(p.name + ".gz").write_bytes(gzip.compress(p.read_bytes(), compresslevel=9, mtime=0))
             lock["files"][str(p.relative_to(ROOT))] = digest(p.read_bytes())
+        lock["kept"] = [p for p in lock.get("kept", []) if p not in lock["files"]]
         lock["pt_overlay"] = {"version": 1, "sha256": stamp}
         if update_lock:
             lock_path.write_text(json.dumps(lock, ensure_ascii=False, indent=1, sort_keys=True) + "\n")

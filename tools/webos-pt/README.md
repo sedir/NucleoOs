@@ -5,6 +5,9 @@ Portuguese catalogs from the 2026-11-10 SD translation were recovered and aligne
 to the current English catalogs: 52 namespaces, 4,922 base keys. The native games
 have their own packs and are outside this work.
 
+`assets/` contains owned loader and model-metadata sources. The optional model binary
+parts are reproducibly prepared by `tools/anima/prepare_vosk_pt.py` and kept across upstream syncs.
+
 `catalogs/` is the source of truth for this edition's web translations.
 `anima-inline.pt.json` covers ANIMA's older inline UI tables. Literal slash
 commands remain unchanged; translating `/new` into a display label would also
@@ -38,6 +41,8 @@ language persistence, live-value routing and the rendered ANIMA interface using
 the device simulator and headless Chrome, without touching a real device.
 
 The earlier catalog recovery includes machine-assisted translations and manual
-corrections. Long help text still benefits from linguistic review. General offline
-knowledge remains limited to the reviewed Portuguese seed FAQ plus the existing
-IT/EN semantic corpus; see `docs/anima-pt.md` for the exact limits.
+corrections. Long help text still benefits from linguistic review. Portuguese offline knowledge now also has a separate streamed lexical pack;
+ANIMA/Dictation share the local Portuguese Vosk loader in `assets/`. The Vosk worker
+cache-key change is a small deterministic binary-bundle transform (`vosk_patch.py`),
+pinned by the same before/after hashes as textual patches. See `tools/anima/pt/README.md`
+and `docs/anima-pt.md` for packaging, provenance and retrieval/ASR limits.

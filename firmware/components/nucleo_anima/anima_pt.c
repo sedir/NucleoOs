@@ -8,7 +8,8 @@
 //      tier (whose LLM already answers in pt) instead of a half-translated pidgin.
 //   2. REPLY CATALOG — a_pt_reply(): the cascade runs with en=true; its English reply is matched against
 //      EN templates ("Opening %s.") and rewritten to Portuguese ("Abrindo %s."). A reply the catalog does
-//      not know stays English (the floor, same rule as nucleo_tr() in the UI).
+//      not know returns false; the caller declines untranslated knowledge. A separate streamed
+//      Portuguese SD pack in anima_pt_knowledge.c handles broad frozen knowledge.
 // Both tables are `static const` (flash/.rodata): zero heap, zero .bss. Frames are small (no big locals).
 // Replies are ASCII on purpose: the TFT font has no accented glyphs (same rule as tools/native-i18n/pt.json).
 #include "anima_internal.h"
@@ -530,8 +531,8 @@ bool a_pt_bridge(const char *in, char *out, size_t cap)
 }
 
 // Small, reviewed Portuguese seed corpus. Exact complete questions only: an
-// unknown subject must never borrow a nearby fact. The larger semantic corpus
-// remains IT/EN; these seeds need no encoder, SD reads, heap or static RAM.
+// unknown subject must never borrow a nearby fact. The separate Portuguese SD
+// pack broadens coverage; these seeds still need no SD reads, heap or static RAM.
 static const struct { const char *q, *en, *pt; } PT_KNOWLEDGE[] = {
     { "qual a capital do brasil", "Brazil's capital is Brasilia.", "A capital do Brasil e Brasilia." },
     { "qual e a capital do brasil", "Brazil's capital is Brasilia.", "A capital do Brasil e Brasilia." },
@@ -711,6 +712,12 @@ bool a_pt_reply(const char *intent, char *reply, size_t cap)
 #ifdef ANIMA_HOST
     g_anima_pt_miss = reply && reply[0];
 #endif
+    if (intent && !strcmp(intent, "pt_knowledge")) {
+#ifdef ANIMA_HOST
+        g_anima_pt_miss = false;
+#endif
+        return true;
+    }
     if (!reply || !reply[0]) return false;
     for (size_t i = 0; i < sizeof PT_REPLIES / sizeof PT_REPLIES[0]; i++) {
         const a_pt_reply_t *e = &PT_REPLIES[i];

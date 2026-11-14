@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "format": "APK1",
+  "language": "pt-BR",
+  "retrieval": "all-term-coverage; specificity >= 0.60; distinct-answer margin >= 0.15",
+  "cards": 1294,
+  "aliases": 2185,
+  "categories": {
+    "c-lang": 17,
+    "civics": 4,
+    "programming": 53,
+    "culture": 4,
+    "electronics": 21,
+    "esp32": 22,
+    "geography": 50,
+    "history": 8,
+    "nucleoos": 51,
+    "math": 14,
+    "person": 1002,
+    "science": 43,
+    "tech": 5
+  },
+  "bytes": 199565,
+  "sha256": "ef25ce5386e7edb7409cfb7bfefa01975471598432a323fa04ce8bd4b3f4319f",
+  "source_sha256": "a0913231c8f6d31baf631b8908a087ce1a73c8c8e49ee58f35a7019bacd9f7cd"
+}

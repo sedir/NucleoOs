@@ -24,19 +24,19 @@
       "path": "web/shell/sw.js",
       "patch": "patches/web__shell__sw.js.patch",
       "before": "6b90180e840bc2e5244060d506a01aa0a3292fcea939adf509bba4a4848e35f2",
-      "after": "018fbfedbdb4c772efe3fe4e65dffcd55d64720ebab0ca03c7c9c443f2fe0a34"
+      "after": "48d1bf8e5af89b9c9226d4df73a7e3abd4c4c37e6d106f5c491aa7f5cdcd0040"
     },
     {
       "path": "apps/anima/www/voice.js",
       "patch": "patches/apps__anima__www__voice.js.patch",
       "before": "fe508f436a4c7ac773392a1cfa185989fb21a6d46c70fabeab62a6e54af6db20",
-      "after": "a02cc060afeace26545bb3c690537a2d94a89fb37fb2dc953a73186af7b152b8"
+      "after": "b3b2710f8a3031e61ebc41a6541cffa7e7ac85203e3bc470267ccb3e9d0c51e4"
     },
     {
       "path": "apps/anima/www/local/engine.js",
       "patch": "patches/apps__anima__www__local__engine.js.patch",
       "before": "104809d7cd78a14abf4991e6190f84e6f181d802a4bbfbdab5a122642290cfcd",
-      "after": "30d594c8818c7657d4aae1b7e4083b7e32d9d64c790a4fd62980c0eb7507a635"
+      "after": "e00d5ae82fbf5611815807049cb9b926f7e1c76a91ea9dc7733c791c73c3ed3f"
     },
     {
       "path": "apps/anima/www/contextkit.js",
@@ -61,6 +61,24 @@
       "patch": "patches/apps__anima__www__index.html.patch",
       "before": "b445d421497c1b88ed38e5466ff69d433d53e1316adfe75a973cd551f6a508f3",
       "after": "bc2be5996993d5440b69e1418d190e705e1265b3fc6a148d163afc27e5619b0b"
+    },
+    {
+      "path": "apps/dictation/www/asr.js",
+      "patch": "patches/apps__dictation__www__asr.js.patch",
+      "before": "8b1a2ef8ee6f5e2a9cdbc1e4d239d13e2d4e79ec84b52af17e306946faff94e6",
+      "after": "9a3b696e314b52ddf53a4663f85c556b5e1399e99553e517cf0975950aa91557"
+    },
+    {
+      "path": "apps/dictation/www/index.html",
+      "patch": "patches/apps__dictation__www__index.html.patch",
+      "before": "c6d2e0b014fb406ca89abbf71564da41d5a8b762aaef5e3dcdb11cc2225ef009",
+      "after": "77d87f26551366cf8988d0e46788c42fd0f5c33e3c1d5b2f79d00ba4fe875acf"
+    },
+    {
+      "path": "apps/anima/www/vosk/vosk.js",
+      "transform": "vosk_patch.py",
+      "before": "11530c83271c57b68a8e274d46e085c8c9f7d0f3907c1d304604da773be2ee86",
+      "after": "a61a853eee7080eae79862c6553e7dce02568b2ff7d5ff46fe74c32a7a437f8d"
     }
   ]
 }

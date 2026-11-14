@@ -1,11 +1,12 @@
 # Offline ANIMA in Brazilian Portuguese (pt)
 
-Offline ANIMA (the on-device cascade in `firmware/components/nucleo_anima/`) reads Italian and English and
-answers in one of them. The online paths already answer in pt (`nucleo_anima_lang_name` in
+Offline ANIMA (the on-device cascade in `firmware/components/nucleo_anima/`) reads Italian/English and
+Brazilian Portuguese. Portuguese device commands use the catalog bridge below; broad frozen knowledge
+now uses a separate streamed SD pack (`tools/anima/pt/README.md`). The online paths already answer in pt (`nucleo_anima_lang_name` in
 `nucleo_anima_online.c`). This doc covers the offline side: what each language costs, the path chosen, and
 what ships today.
 
-## What is language-specific today (inventory)
+## Original inventory (before the pt completion passes)
 
 | Asset | Where | Size | pt cost if duplicated |
 |---|---|---|---|
@@ -45,8 +46,9 @@ time, date, season, SD space, uptime, RAM, network, capabilities. It now also fi
 until now that branch was missing, so "Battery: {value}" always read "not available". The spoken volume/brightness
 confirmation is pt too.
 
-Knowledge stays EN/IT: a pt L1 pack would cost ~11.6 MB of SD and a corpus nobody has. With a key, pt knowledge
-questions go to the LLM, which already answers in pt. Offline, they get the honest "Nao sei."
+The existing neural encoder/index remains IT/EN. Portuguese now uses a separate, roughly 200 KB lexical
+knowledge pack on SD, with conservative term coverage and ambiguity checks. It does not change the IT/EN
+embeddings. With a key, the configured model can use this Portuguese content as notes.
 
 ### Original implementation cost (before the completion pass, ESP-IDF 5.4.4)
 
@@ -123,17 +125,34 @@ NUCLEO_TTS_DIR=build/tts-staging npm run anima:tts-time
 NUCLEO_TTS_DIR=build/tts-staging npm run anima:tts-replies
 ```
 
+## Broad knowledge and browser dictation (2026-11-14)
+
+`tools/anima/pt/README.md` is the implementation/maintenance reference. The separate Portuguese SD pack
+contains about 1,300 indexed frozen answers in 13 categories. The same C reader serves firmware and
+WASM with no static RAM cost and no new resident encoder. Matching accepts wrappers, accents, word-order
+changes, selected aliases/synonyms and unambiguous surnames. It is lexical retrieval, not general semantic
+inference: every salient term must be covered, and ambiguous answers decline. Imported material is
+machine-assisted with reviewed overrides and retained attribution; not every original IT/EN card is translated.
+
+The browser pack loader includes `data/anima/anima-pt-knowledge.bin`. Rebuild with `npm run anima:pt:pack`;
+`npm run anima:pt:offline` exercises the Python producer against the real C consumer, held-out Portuguese
+phrasing, missing/corrupt packs and actual browser Vosk recognition.
+
+ANIMA and Dictation now share the official Portuguese Vosk small model, packaged as five SD parts and
+cached in the browser. Dictation offers PT-BR and defaults to Portuguese when the OS is Portuguese.
+Portuguese model loading is local-only; an error does not silently select an English/Italian model,
+Web Speech or Groq. Explicitly selecting Groq remains an online action. ASR runs in the browser and can
+consume the Cardputer microphone over the LAN without internet. It does not run on the MCU. The model's
+accuracy is limited; synthetic-fixture success is not a real-microphone quality certification.
+
 ## Remaining limits
 
-The broad semantic L1 corpus and encoder remain IT/EN. The Portuguese seeds are an exact-question FAQ,
-not a general Portuguese knowledge model. More questions can be answered online; unknown offline
-questions can still decline or expose an English reply whose template has not yet been cataloged.
-The Portuguese voice has no general dictionary/frequency layer, so arbitrary text can fall back to
-"Leia na tela." Browser offline dictation still has only the IT/EN Vosk models; Portuguese dictation
-uses the browser speech engine when available. The native PTT language is Portuguese, but recognition
-still uses the device's trained voice templates.
+The Portuguese corpus is finite and lexical. Unknown synonyms, entities and unsupported relations can
+decline even when a human would infer the intended topic. Existing IT/EN neural retrieval is unchanged.
+The Portuguese voice has no general dictionary/frequency layer, so arbitrary spoken answers can fall back
+to "Leia na tela." Native PTT recognition still uses the device's trained voice templates.
 
 Known bridge limits: "tempo" means the Weather app, not the clock; command parsing reads the first
 32 words (a literal note/file tail is copied directly, within the output buffer); a command-cued turn
 that falls through to an online model can still carry the bridged text. Native game packs are outside
-this completion pass.
+this completion pass. Hardware installation and real-microphone validation remain separate from host tests.
