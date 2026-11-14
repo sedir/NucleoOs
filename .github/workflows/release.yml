@@ -20,6 +20,8 @@ name: Release
 on:
   push:
     tags: ['v*']
+  # Re-run a release by hand: `gh workflow run release.yml --ref vX.Y.Z` (github.ref_name is then the tag).
+  workflow_dispatch:
 
 # Least privilege, scoped to what each stage needs:
 permissions:

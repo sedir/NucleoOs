@@ -62,11 +62,24 @@ Detalhes técnicos e limites: [docs/anima-pt.md](docs/anima-pt.md) (em inglês, 
 
 ### Como ter os recursos deste fork
 
-As releases e o instalador web oficiais (abaixo) instalam o NucleoOS **original**. Para os recursos deste fork,
-compile a partir deste repositório:
+O fork tem **releases e instalador próprios**, assinados com as chaves do fork:
+
+- **Instalador web:** abra **[sedir.github.io/NucleoOs](https://sedir.github.io/NucleoOs/)** no Chrome ou Edge,
+  conecte o Cardputer e clique em instalar.
+- **Arquivos:** [releases do fork](https://github.com/sedir/NucleoOs/releases/latest), com o firmware completo
+  (`nucleoos-latest.bin`), a imagem OTA e o conteúdo do SD (`nucleoos-latest-sd.zip`).
+- **Atualizações:** depois de instalado, o aparelho busca novas versões **neste fork** (Configurações ▸ Atualizações),
+  nunca no original.
+
+Vindo do NucleoOS original, a primeira instalação precisa ser pelo **cabo USB** (instalador web ou esptool): o
+firmware original só aceita releases assinadas pelo autor original. Daí em diante, as atualizações chegam pelo Wi‑Fi.
+
+A voz em português (~300 MB) não vai na release: gere com `tools/nucleo-tts/` (veja [docs/tts.md](docs/tts.md)) e copie
+para `/data/tts/pt/` no cartão.
+
+Para compilar você mesmo (ESP‑IDF 5.4.4, a versão que o projeto fixa):
 
 ```bash
-# ESP-IDF 5.4.4 (o projeto fixa essa versão)
 export IDF_PATH=~/esp/esp-idf-v5.4.4
 . $IDF_PATH/export.sh
 cd firmware && idf.py build
@@ -74,14 +87,10 @@ cd firmware && idf.py build
 cd build && python -m esptool --chip esp32s3 -p /dev/cu.usbmodem101 -b 460800 write_flash @flash_args
 ```
 
-Depois copie para o cartão SD o conteúdo do SD (veja *O cartão SD e a primeira inicialização*), os arquivos em
-português de `tools/sd-sim/data/anima/` (conhecimento e dicionários) para `/data/anima/`, e o pacote de voz gerado
-para `/data/tts/pt/`.
-
 ---
 
 <a id="instalar"></a>
-## 🚀 Instalar (versão oficial): três jeitos
+## 🚀 Instalar o NucleoOS original: três jeitos
 
 **Você precisa de:** um Cardputer (original ou ADV, o mesmo firmware), um cabo USB‑C de dados e um cartão microSD
 formatado em **FAT32**.
@@ -618,9 +627,11 @@ Os scripts `.ps1` são do Windows. No macOS e no Linux, use `idf.py build` e o `
 você compila uma vez e distribui. O gate da ANIMA precisa estar verde antes de qualquer flash
 (`release.ps1`/`flash.ps1` exigem isso). Veja [`docs/releasing.md`](docs/releasing.md).
 
-Aparelhos instalados descobrem novas versões sozinhos: o shell consulta o GitHub do projeto original uma vez por dia
-(pelo **navegador**; o aparelho nunca acessa a internet) e oferece uma atualização verificada de um clique em
-**Configurações ▸ Atualizações**. Atenção: essa atualização instala a versão **original**, sem os recursos deste fork.
+Aparelhos instalados descobrem novas versões sozinhos: o shell consulta o GitHub **deste fork** uma vez por dia (pelo
+**navegador**; o aparelho nunca acessa a internet) e oferece uma atualização verificada de um clique em
+**Configurações ▸ Atualizações**. Para lançar uma versão do fork: suba `firmware/version/VERSION` (e package.json,
+CITATION.cff, CHANGELOG.md), crie a tag `vX.Y.Z`, e depois que o CI publicar, assine neste Mac com
+`python3 tools/fw_sign.py release vX.Y.Z` (a chave privada fica em `~/.nucleo`).
 Design: [`docs/update-check.md`](docs/update-check.md).
 
 ---
